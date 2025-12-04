@@ -1,47 +1,76 @@
-# ADD NECESSARY PACKAGES
+# Manage project dependencies ------
+# the following will prompt you to install the various packages used in the study 
+# install.packages("renv")
+# renv::activate()
+renv::restore()
 
 library(CDMConnector)
 library(DBI)
 library(log4r)
+library(readr)
+library(DrugUtilisation)
+library(OmopSketch)
 library(dplyr)
 library(here)
+library(tidyr)
+library(CodelistGenerator)
+library(CohortConstructor)
+library(CohortCharacteristics)
+library(DrugExposureDiagnostics)
+library(omopgenerics)
+library(stringr)
+library(RPostgres)
+library(odbc)
+library(OmopConstructor)
 
-# database metadata and connection details
-# The name/ acronym for the database
-dbName <- "..."
+#database metadata and connection details
+#The name/ acronym for the database
+
+db_name <- "..."
 
 # Database connection details
 # In this study we also use the DBI package to connect to the database
 # set up the dbConnect details below
-# https://darwin-eu.github.io/CDMConnector/articles/DBI_connection_examples.html 
+# https://darwin-eu.github.io/CDMConnector/articles/DBI_connection_examples.html
 # for more details.
-# you may need to install another package for this 
-# eg for postgres 
-# db <- dbConnect(
-#   RPostgres::Postgres(), 
-#   dbname = server_dbi, 
-#   port = port, 
-#   host = host, 
-#   user = user,
-#   password = password
-# )
-db <- dbConnect("...")
+# you may need to install another package for this
+# eg for postgres
+
+db <- dbConnect("...",
+                dbname = "...",
+                port = "...",
+                host = "...",
+                user = "...",
+                password = "...",
+                bigint = c("integer")
+)
+
+# Set database details -----
 
 # The name of the schema that contains the OMOP CDM with patient-level data
-cdmSchema <- "..."
+cdm_schema <- "..."
 
-# A prefix for all permanent tables in the database
-writePrefix <- "..."
+# The name of the schema where results tables will be created
+write_schema <- "..."
 
-# The name of the schema where results tables will be created 
-writeSchema <- c(schema = "...", prefix = writePrefix)
+# Table prefix -----
+# any tables created in the database during the analysis will start with this prefix
+study_prefix <- "..."
 
-# The name of the schema that contains the results from running Achilles package
-# it can be removed if Achilles stables are not needed.
-achillesSchema <- "..."
+# create cdm reference -----
+cdm <- CDMConnector::cdmFromCon(
+  con = db,
+  cdmSchema = cdm_schema,
+  writeSchema = write_schema,
+  cdmName = db_name,
+  writePrefix = study_prefix
+)
 
-# minimum counts that can be displayed according to data governance
-minCellCount <- 5
+
+# Hospital databases should set the start date as "2022-01-01". 
+study_start <- "2012-01-01"
+
+min_cell_count <- 5
 
 # Run the study
 source(here("RunStudy.R"))
