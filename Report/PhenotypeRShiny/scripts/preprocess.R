@@ -16,6 +16,7 @@ library(shinycssloaders)
 library(stringr)
 library(CohortSurvival)
 library(tidyr)
+library(qs2)
 
 source(here::here("scripts", "functions.R"))
 
@@ -56,7 +57,8 @@ if(length(dataFiltered) > 0){
       values$shared_cohort_names <- dataFiltered$incidence |>
         visOmopResults::splitGroup() |>
         dplyr::pull("outcome_cohort_name") |>
-        unique()
+        unique() |>
+        sort()
     }else{
       values$shared_cohort_names <- rbind(dataFiltered$cohort_code_use, dataFiltered$summarise_cohort_count, dataFiltered$incidence) |>
         dplyr::mutate(group_name = gsub("outcome_cohort_name", "cohort_name", group_name)) |>
@@ -64,20 +66,22 @@ if(length(dataFiltered) > 0){
         dplyr::select("cohort_name") |>
         dplyr::distinct() |>
         dplyr::filter(cohort_name != "overall") |>
-        dplyr::pull("cohort_name")
+        dplyr::pull("cohort_name") |>
+        sort()
     }
     values$shared_cdm_names <- rbind(dataFiltered$summarise_omop_snapshot, dataFiltered$cohort_code_use, dataFiltered$summarise_cohort_count, dataFiltered$incidence) |>
       dplyr::select("cdm_name") |>
       dplyr::distinct() |>
-      dplyr::pull("cdm_name")
+      dplyr::pull("cdm_name") |>
+      sort()
   }
 }else{
   diagnostics <- ""
 }
 
 # Filter not needed values
-values <- values[!stringr::str_detect(names(values), "summarise_omop_snapshot")]
-values <- values[!stringr::str_detect(names(values), "summarise_observation_period")]
+values <- filterValues(values, prefix = "summarise_omop_snapshot", sufix_to_include = "cdm_name")
+values <- filterValues(values, prefix = "summarise_observation_period", sufix_to_include = "cdm_name")
 values <- filterValues(values, prefix = "achilles_code_use", sufix_to_include = c("cdm_name", "codelist_name"))
 values <- filterValues(values, prefix = "orphan_code_use", sufix_to_include = c("cdm_name", "codelist_name"))
 values <- filterValues(values, prefix = "cohort_code_use", sufix_to_include = c("cdm_name", "cohort_name", "domain"))
@@ -97,6 +101,10 @@ values <- values[!stringr::str_detect(names(values), "survival_summary")]
 values <- values[!stringr::str_detect(names(values), "survival_attrition")]
 
 # Pre-define some selected
+if("codelistDiagnostics" %in% diagnostics){
+  values$achilles_code_use_codelist_name <- values$achilles_code_use_codelist_name |> sort()
+  values$orphan_code_use_codelist_name   <- values$orphan_code_use_codelist_name |> sort()
+}
 if("cohortDiagnostics" %in% diagnostics){
   # Add compare large scale characteristics
   values_subset <- values[stringr::str_detect(names(values), "large_scale")]
@@ -105,7 +113,10 @@ if("cohortDiagnostics" %in% diagnostics){
   values_subset$compare_large_scale_characteristics_cohort_2 <- c("original", "sampled", "matched")
   values_subset$compare_large_scale_characteristics_cohort_name <- values$shared_cohort_names
   values_subset$compare_large_scale_characteristics_cohort_compare <- values$shared_cohort_names
+  values_subset$compare_large_scale_characteristics_variable_level <- c("-inf to -366", "-365 to -31", "-30 to -1", "0 to 0", "1 to 30", "31 to 365", "366 to inf")
   values <- append(values, values_subset)
+
+  values$summarise_large_scale_characteristics_variable_level <-c("-inf to -366", "-365 to -31", "-30 to -1", "0 to 0", "1 to 30", "31 to 365", "366 to inf")
 
   if("summarise_cohort_overlap" %in% names(dataFiltered)){
     values$summarise_cohort_overlap_cohort_comparator <- values$summarise_cohort_overlap_cohort_name_comparator
@@ -124,8 +135,10 @@ choices <- values
 selected <- choices
 
 msgMatchedSample <- ""
+msgCohortSample  <- ""
 if("cohortDiagnostics" %in% diagnostics){
-  selected$compare_large_scale_characteristics_variable_level <- "-inf to -1"
+  selected$summarise_large_scale_characteristics_variable_level <- "-inf to -366"
+  selected$compare_large_scale_characteristics_variable_level <- "-inf to -366"
   selected$compare_large_scale_characteristics_table_name     <- "condition_occurrence"
   selected$compare_large_scale_characteristics_cohort_1  <- "sampled"
   selected$compare_large_scale_characteristics_cohort_2  <- "matched"
@@ -137,11 +150,19 @@ if("cohortDiagnostics" %in% diagnostics){
 
   }
 
-  if("matchedSample" %in% (omopgenerics::settings(result) |> colnames())){
-    matchedSample <- as.numeric(omopgenerics::settings(dataFiltered$summarise_large_scale_characteristics) |> dplyr::pull("matchedSample") |> unique())
-    if(all(matchedSample != 0)){
-      matchedSample <- formatC(matchedSample, format = "f", digits = 0, big.mark = ",")
-      msgMatchedSample <- glue::glue("Matched cohorts were created based on a subsample of ", paste(matchedSample, collapse = " and ")," participants from the original cohorts.")
+  typeCohort <- "original"
+  if("cohort_sample" %in% (omopgenerics::settings(result) |> colnames())){
+    cohort_sample <- as.numeric(omopgenerics::settings(dataFiltered$summarise_large_scale_characteristics) |> dplyr::pull("cohort_sample") |> unique())
+    cohort_sample <- formatC(cohort_sample, format = "f", digits = 0, big.mark = ",")
+    msgCohortSample <- glue::glue("Cohorts were sampled to up to {cohort_sample} participants")
+    typeCohort <- "sampled"
+  }
+
+  if("matched_sample" %in% (omopgenerics::settings(result) |> colnames())){
+    matched_sample <- as.numeric(omopgenerics::settings(dataFiltered$summarise_large_scale_characteristics) |> dplyr::pull("matched_sample") |> unique())
+    if(all(matched_sample != 0)){
+      matched_sample <- formatC(matched_sample, format = "f", digits = 0, big.mark = ",")
+      msgMatchedSample <- glue::glue("Matched cohorts were created based on a subsample of ", paste(matched_sample, collapse = " and ")," participants from the {typeCohort} cohorts.")
     }
   }
 }
@@ -200,19 +221,22 @@ if("diagnostic" %in% colnames(expectations)){
   expectations <- expectations |>
     dplyr::mutate("diagnostic" = paste(all_diag, collapse = ", "))
 }
-
-phenotyper_version <- omopgenerics::settings(result) |> dplyr::pull("phenotyper_version") |> unique()
+phenotyper_version <- omopgenerics::settings(result) |>
+  dplyr::filter(!is.na(phenotyper_version)) |>
+  dplyr::pull("phenotyper_version") |>
+  unique()
 cli::cli_inform("Saving data for shiny")
-save(dataFiltered,
+qs2::qs_savem(dataFiltered,
      selected,
      choices,
      min_incidence_start,
      max_incidence_end,
+     msgCohortSample,
      msgMatchedSample,
      msgPopulationDiag,
      phenotyper_version,
      expectations,
-     file = here::here("data", "appData.RData"))
+     file = here::here("data", "appData.qs"))
 
 rm(result, data, expectations, dataFiltered, choices, selected, values, values_subset)
 

@@ -1,10 +1,10 @@
 # ensure minimum versions
 rlang::check_installed("omopgenerics", version = "1.2.0")
 rlang::check_installed("visOmopResults", version = "1.0.0")
-rlang::check_installed("CodelistGenerator", version = "3.4.0")
-rlang::check_installed("CohortCharacteristics", version = "1.0.0")
+rlang::check_installed("CodelistGenerator", version = "4.0.1")
+rlang::check_installed("CohortCharacteristics", version = "1.1.0")
 rlang::check_installed("IncidencePrevalence", version = "1.2.0")
-rlang::check_installed("OmopSketch", version = "0.5.1")
+rlang::check_installed("OmopSketch", version = "1.0.0")
 rlang::check_installed("CohortSurvival", version = "1.0.2")
 rlang::check_installed("shiny", version = "1.11.1")
 
@@ -30,6 +30,9 @@ library(plotly)
 library(tidyr)
 library(reactable)
 library(stringr)
+library(qs2)
+library(lubridate)
+library(reactablefmtr)
 
 source(here::here("scripts", "functions.R"))
 
@@ -55,7 +58,7 @@ if(!file.exists(here::here("data", "appData.RData"))){
 }
 
 cli::cli_inform("Loading data")
-load(here::here("data", "appData.RData"))
+qs2::qs_readm(here::here("data", "appData.qs"))
 cli::cli_inform("Data loaded")
 
 plotComparedLsc <- function(lsc, cohorts, imputeMissings, colour = NULL, facet = NULL){
@@ -177,6 +180,9 @@ plotAgeDensity <- function(summarise_table, summarise_characteristics, show_inte
     inner_join(data |>
                  select(group_level) |> distinct())
 
+  data <- data |>
+    dplyr::filter(sex %in% c("Female", "Male"))
+
   plot <- ggplot2::ggplot(data, ggplot2::aes(x = density_x, y = density_y, fill = sex)) +
     geom_polygon() +
     scale_y_continuous(labels = function(x) scales::label_percent()(abs(x)),
@@ -208,17 +214,17 @@ plotAgeDensity <- function(summarise_table, summarise_characteristics, show_inte
                    aes(x = estimate_value, y = 0, xend = estimate_value, yend = density_y),
                    linetype = 2,
                    linewidth = 0.75) +
-      labs(subtitle = "The solid line represents the median, while the dotted lines indicate the interquartile range. Notice that these may not appear if in the cohort there are less than the minimum cell count specified. Please be aware that statistics are calculated by record, not by subject.") +
+      labs(subtitle = "The solid line represents the median, while the dotted lines indicate the interquartile range. Notice that these may not appear if in the cohort there are less than the minimum cell count specified. Please be aware that statistics are calculated by record, not by subject. Records with missing sex do not appear in the figure.") +
       facet_wrap(c("cdm_name", "group_level"))
   }else{
     plot <- plot +
-      labs(subtitle = "Please be aware that statistics are calculated by record, not by subject.")
+      labs(subtitle = "Please be aware that statistics are calculated by record, not by subject. Records with missing sex do not appear in the figure.")
   }
 
   return(plot)
 }
 
-getColsForTbl <- function(tbl, sortNALast = TRUE, names = c("Standard concept ID")){
+getColsForTbl <- function(tbl, sortNALast = TRUE, names = c("Standard concept ID", "Source Concept ID")){
 
   cols <- list()
   for(i in seq_along(names(tbl))){
