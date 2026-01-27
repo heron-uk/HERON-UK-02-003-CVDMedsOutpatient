@@ -1,17 +1,15 @@
+
+omopgenerics::assertNumeric(minCellCount, length = 1)
+
 # create logger ----
-resultsFolder <- here("Results")
-loggerName <- gsub(":| |-", "_", paste0("log ", Sys.time(),".txt"))
-logger <- create.logger()
-logfile(logger) <- here(resultsFolder, loggerName)
-level(logger) <- "INFO"
-info(logger, "LOG CREATED")
+omopgenerics::createLogFile(logFile = here::here("Results", "log_{date}_{time}"))
 
 # instantiate necessary cohorts ----
-info(logger, "INSTANTIATING STUDY COHORTS")
+omopgenerics::logMessage("INSTANTIATING STUDY COHORTS")
 source(here("Cohorts", "InstantiateCohorts.R"))
-info(logger, "STUDY COHORTS INSTANTIATED")
+omopgenerics::logMessage("STUDY COHORTS INSTANTIATED")
 
 # run diagnostics ----
-info(logger, "RUN PHENOTYPER")
+omopgenerics::logMessage("RUN PHENOTYPER")
 source(here("PhenotypeR.R"))
-info(logger, "PHENOTYPER FINISHED")
+omopgenerics::logMessage("PHENOTYPER FINISHED")
