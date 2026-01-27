@@ -1,52 +1,62 @@
-ad_365 <- list()
-ad_730 <- list()
+ad_7 <- list()
 
-set <- settings(cdm$cardio_drugs)
+set_7 <- settings(cdm$cardio_drugs_7)
 
-cdm$cardio_drugs_ad <- cdm$cardio_drugs |>
+cdm$cardio_drugs_7_ad <- cdm$cardio_drugs_7 |>
   PatientProfiles::addDemographics(
     ageGroup = list(c(18, 64), c(65, 150)),
-    name = "cardio_drugs_ad"
+    name = "cardio_drugs_7_ad"
   )
 
-for(i in set$cohort_definition_id){
-ad_365[[i]] <- estimateSingleEventSurvival(
+for(i in set_7$cohort_definition_id){
+ad_7[[i]] <- estimateSingleEventSurvival(
   cdm = cdm,
   strata = list(c("age_group"), c("sex")),
-  targetCohortTable = "cardio_drugs_ad",
-  outcomeCohortTable = "cardio_drugs_ad",
-  targetCohortId = i,
-  outcomeCohortId = i,
-  outcomeDateVariable = "cohort_end_date",
-  outcomeWashout = Inf,
-  followUpDays = 365,
-  eventGap = 7
-)
-
-ad_730[[i]] <- estimateSingleEventSurvival(
-  cdm = cdm,
-  strata = list(c("age_group"), c("sex")),
-  targetCohortTable = "cardio_drugs_ad",
-  outcomeCohortTable = "cardio_drugs_ad",
+  targetCohortTable = "cardio_drugs_7_ad",
+  outcomeCohortTable = "cardio_drugs_7_ad",
   targetCohortId = i,
   outcomeCohortId = i,
   outcomeDateVariable = "cohort_end_date",
   outcomeWashout = Inf,
   followUpDays = 730,
-  eventGap = 7
+  eventGap = 30
 )
 
 }
 
-results[["adherence_365"]] <- omopgenerics::bind(ad_365)
+results[["adherence_7"]] <- omopgenerics::bind(ad_7)
 
-results[["adherence_730"]] <- omopgenerics::bind(ad_730)
+###
+# ad_14 <- list()
+# 
+# set_14 <- settings(cdm$cardio_drugs_14)
+# 
+# cdm$cardio_drugs_14_ad <- cdm$cardio_drugs_14 |>
+#   PatientProfiles::addDemographics(
+#     ageGroup = list(c(18, 64), c(65, 150)),
+#     name = "cardio_drugs_14_ad"
+#   )
+# 
+# for(i in set_14$cohort_definition_id){
+#   ad_14[[i]] <- estimateSingleEventSurvival(
+#     cdm = cdm,
+#     strata = list(c("age_group"), c("sex")),
+#     targetCohortTable = "cardio_drugs_14_ad",
+#     outcomeCohortTable = "cardio_drugs_14_ad",
+#     targetCohortId = i,
+#     outcomeCohortId = i,
+#     outcomeDateVariable = "cohort_end_date",
+#     outcomeWashout = Inf,
+#     followUpDays = 730,
+#     eventGap = 30
+#   )
+#   
+# }
+# 
+# results[["adherence_14"]] <- omopgenerics::bind(ad_14)
 
 # PPC
-results[["ppc_365"]] <- cdm$cardio_drugs_ad |>
-summariseProportionOfPatientsCovered(followUpDays = 365,
-                                     strata = list(c("age_group"), c("sex")))
 
-results[["ppc_730"]] <- cdm$cardio_drugs_ad |>
+results[["ppc_7"]] <- cdm$cardio_drugs_7_ad |>
   summariseProportionOfPatientsCovered(followUpDays = 730,
                                        strata = list(c("age_group"), c("sex")))

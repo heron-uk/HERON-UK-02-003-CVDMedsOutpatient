@@ -1,25 +1,23 @@
-# Cohort Counts
+# Cohort Counts + Attrition
 
-results[["cohort_count"]] <- cdm$cardio_drugs |>
+results[["cohort_count_7"]] <- cdm$cardio_drugs_7 |>
   summariseCohortCount()
 
-# Cohort Attrition 
-
-results[["cohort_attrition"]] <- cdm$cardio_drugs |>
+results[["cohort_attrition_7"]] <- cdm$cardio_drugs_7 |>
   summariseCohortAttrition()
 
 # Cohort Characteristics
 
-cdm$cardio_drugs_chars <- cdm$cardio_drugs |>
+cdm$cardio_drugs_7_chars <- cdm$cardio_drugs_7 |>
   PatientProfiles::addDemographics(
     sex = TRUE,
     age = TRUE,
     priorObservation = FALSE,
     futureObservation = FALSE,
-    name = "cardio_drugs_chars"
+    name = "cardio_drugs_7_chars"
   )
 
-cdm$cardio_drugs_chars <- cdm$cardio_drugs_chars |>
+cdm$cardio_drugs_7_chars <- cdm$cardio_drugs_7_chars |>
   mutate(
     age_group_broad = case_when(
       age >= 18 & age <= 64 ~ '18 to 64',
@@ -27,10 +25,9 @@ cdm$cardio_drugs_chars <- cdm$cardio_drugs_chars |>
       TRUE ~ 'None'  
     )
   )
-
 #cond_cl <- CodelistGenerator::codesFromConceptSet(here("Cohorts", "conditions_cohorts"), cdm)
 
-char <- summariseCharacteristics(cdm$cardio_drugs_chars,
+char <- summariseCharacteristics(cdm$cardio_drugs_7_chars,
                                  # conceptIntersectFlag = list(
                                  #   "Conditions" = list(
                                  #     conceptSet = cond_cl,
@@ -41,9 +38,6 @@ char <- summariseCharacteristics(cdm$cardio_drugs_chars,
                                  strata = list("age_group_broad", "sex",
                                                c("age_group_broad", "sex")))
 
-# tableCharacteristics(char,
-#                      header = "cdm_name",
-#                      groupColumn = "cohort_name")
 
 results[["summmarise_characteristics"]] <- char
 
