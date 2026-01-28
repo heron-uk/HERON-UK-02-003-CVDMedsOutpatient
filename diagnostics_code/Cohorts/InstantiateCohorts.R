@@ -1,6 +1,10 @@
 
 drug_codes <- omopgenerics::importCodelist(here::here("Cohorts", "drugs"), 
                                            type = "csv")
+# for diagnostics, only for high-level groups (not specific ingredients)
+drug_codes <- drug_codes[stringr::str_detect(names(drug_codes), 
+                                             "acei_arbs_|beta_blocker_|p2y12_inhibitors_|statin_", 
+                                             negate = TRUE)]
 cdm[["drugs"]] <- conceptCohort(cdm,
                                 conceptSet = drug_codes,
                                 table = "drug_exposure",
