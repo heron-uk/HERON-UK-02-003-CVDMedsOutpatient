@@ -2,14 +2,9 @@
 # beta blockers -------
 beta_blockers <- getDrugIngredientCodes(
   cdm = cdm_vocab_2025_08,
-  name = c("acebutolol", "alprenolol", 
-           "atenolol", "betaxolol",
-           "bisoprolol", "carteolol",
-           "carvedilol", "celiprolol", "esmolol",
-           "labetalol", "metipranolol",
-           "metoprolol", "nadolol",
-           "nebivolol", "oxprenolol", "pindolol", "propranolol",
-           "sotalol", "timolol"),
+  name = c("acebutolol", "alprenolol", "atenolol", 
+           "bisoprolol", "carvedilol", "metoprolol", "nadolol",
+           "oxprenolol", "pindolol", "propranolol", "timolol"),
   nameStyle = "{concept_name}",
   type = "codelist")
 names(beta_blockers) <- paste0("beta_blocker_", names(beta_blockers))
