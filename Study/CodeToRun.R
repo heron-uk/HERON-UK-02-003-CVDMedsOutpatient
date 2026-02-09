@@ -73,9 +73,9 @@ study_start <- "2012-01-01"
 
 min_cell_count <- 5
 
-run_drug_utilisation <- FALSE
+hospital_care <- FALSE
+
 run_characteristics <- TRUE
-run_code_use <- FALSE
 run_drug_adherence <- TRUE
 
 # Run the study
