@@ -1,57 +1,89 @@
 # Cohort Counts + Attrition
 
-results[["cohort_count_7"]] <- cdm$cardio_drugs_7 |>
+results[["cohort_count_mi"]] <- cdm$mi_drugs_final |>
   summariseCohortCount()
 
-results[["cohort_attrition_7"]] <- cdm$cardio_drugs_7 |>
+results[["cohort_count_stroke"]] <- cdm$stroke_drugs_final |>
+  summariseCohortCount()
+
+results[["cohort_attrition_mi"]] <- cdm$mi_drugs_final |>
   summariseCohortAttrition()
 
-# Cohort Characteristics
+results[["cohort_attrition_stroke"]] <- cdm$stroke_drugs_final |>
+  summariseCohortAttrition()
 
-cdm$cardio_drugs_7_chars <- cdm$cardio_drugs_7 |>
+# Cohort Characteristics - MI
+
+cdm$mi_drugs_chars <- cdm$mi_drugs_first |>
   PatientProfiles::addDemographics(
     sex = TRUE,
     age = TRUE,
     priorObservation = FALSE,
     futureObservation = FALSE,
-    name = "cardio_drugs_7_chars"
+    name = "mi_drugs_chars"
   )
 
-cdm$cardio_drugs_7_chars <- cdm$cardio_drugs_7_chars |>
+cdm$mi_drugs_chars <- cdm$mi_drugs_chars |>
   mutate(
     age_group_broad = case_when(
-      age >= 18 & age <= 64 ~ '18 to 64',
-      age >= 65 & age <= 150 ~ '65 to 150',
+      age >= 18 & age <= 49 ~ '18 to 49',
+      age >= 50 & age <= 59 ~ '50 to 59',
+      age >= 60 & age <= 69 ~ '60 to 69',
+      age >= 70 & age <= 79 ~ '70 to 79',
+      age >= 80 & age <= 89 ~ '80 to 89',
+      age >= 90 & age <= 150 ~ '90 to 150',
       TRUE ~ 'None'  
     )
   )
-#cond_cl <- CodelistGenerator::codesFromConceptSet(here("Cohorts", "conditions_cohorts"), cdm)
 
-char <- summariseCharacteristics(cdm$cardio_drugs_7_chars,
-                                 # conceptIntersectFlag = list(
-                                 #   "Conditions" = list(
-                                 #     conceptSet = cond_cl,
-                                 #     window = list(
-                                 #       c(-Inf, -1)
-                                 #   )
-                                 # )),
-                                 strata = list("age_group_broad", "sex",
-                                               c("age_group_broad", "sex")))
+char_mi <- summariseCharacteristics(cdm$mi_drugs_chars,
+                                    conceptIntersectFlag = list(
+                                      "Prior drug use (-30 to -1)" = list(
+                                        conceptSet = mi_drugs_cl,
+                                        window = list(
+                                          c(-30, -1)
+                                        )
+                                      )),
+                                    strata = list("age_group_broad", "sex",
+                                                  c("age_group_broad", "sex")))
 
 
-results[["summmarise_characteristics"]] <- char
+results[["summmarise_characteristics_mi"]] <- char_mi
 
-### Large Scale Characteristics
 
-# lsc <- summariseLargeScaleCharacteristics(
-#   cohort = cdm$cardiovascular_drugs,
-#   eventInWindow = c("condition_occurrence",
-#                     "observation",
-#                     "measurement",
-#                     "procedure_occurrence",
-#                     "drug_exposure")
-# )
-# 
-# # tableTopLargeScaleCharacteristics(lsc |> filter(group_level == "aspirin_1112807"))
-# 
-# results[["summarise_lsc"]] <- lsc
+# Cohort Characteristics - Stroke
+cdm$stroke_drugs_chars <- cdm$stroke_drugs_first |>
+  PatientProfiles::addDemographics(
+    sex = TRUE,
+    age = TRUE,
+    priorObservation = FALSE,
+    futureObservation = FALSE,
+    name = "stroke_drugs_chars"
+  )
+
+cdm$stroke_drugs_chars <- cdm$stroke_drugs_chars |>
+  mutate(
+    age_group_broad = case_when(
+      age >= 18 & age <= 49 ~ '18 to 49',
+      age >= 50 & age <= 59 ~ '50 to 59',
+      age >= 60 & age <= 69 ~ '60 to 69',
+      age >= 70 & age <= 79 ~ '70 to 79',
+      age >= 80 & age <= 89 ~ '80 to 89',
+      age >= 90 & age <= 150 ~ '90 to 150',
+      TRUE ~ 'None'  
+    )
+  )
+
+char_stroke <- summariseCharacteristics(cdm$stroke_drugs_chars,
+                                        conceptIntersectFlag = list(
+                                          "Prior drug use (-30 to -1)" = list(
+                                            conceptSet = stroke_drugs_cl,
+                                            window = list(
+                                              c(-30, -1)
+                                            )
+                                          )),
+                                        strata = list("age_group_broad", "sex",
+                                                      c("age_group_broad", "sex")))
+
+
+results[["summmarise_characteristics_stroke"]] <- char_stroke

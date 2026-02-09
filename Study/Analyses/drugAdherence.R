@@ -1,62 +1,33 @@
-ad_7 <- list()
-
-set_7 <- settings(cdm$cardio_drugs_7)
-
-cdm$cardio_drugs_7_ad <- cdm$cardio_drugs_7 |>
+cdm$mi_drugs_ad <- cdm$mi_drugs_final |>
   PatientProfiles::addDemographics(
-    ageGroup = list(c(18, 64), c(65, 150)),
-    name = "cardio_drugs_7_ad"
+    ageGroup = list(c(18, 49), 
+                    c(50, 59),
+                    c(60, 69),
+                    c(70, 79),
+                    c(80, 89),
+                    c(90, 150)),
+    name = "mi_drugs_ad"
   )
 
-for(i in set_7$cohort_definition_id){
-ad_7[[i]] <- estimateSingleEventSurvival(
-  cdm = cdm,
-  strata = list(c("age_group"), c("sex")),
-  targetCohortTable = "cardio_drugs_7_ad",
-  outcomeCohortTable = "cardio_drugs_7_ad",
-  targetCohortId = i,
-  outcomeCohortId = i,
-  outcomeDateVariable = "cohort_end_date",
-  outcomeWashout = Inf,
-  followUpDays = 730,
-  eventGap = 30
-)
-
-}
-
-results[["adherence_7"]] <- omopgenerics::bind(ad_7)
-
-###
-# ad_14 <- list()
-# 
-# set_14 <- settings(cdm$cardio_drugs_14)
-# 
-# cdm$cardio_drugs_14_ad <- cdm$cardio_drugs_14 |>
-#   PatientProfiles::addDemographics(
-#     ageGroup = list(c(18, 64), c(65, 150)),
-#     name = "cardio_drugs_14_ad"
-#   )
-# 
-# for(i in set_14$cohort_definition_id){
-#   ad_14[[i]] <- estimateSingleEventSurvival(
-#     cdm = cdm,
-#     strata = list(c("age_group"), c("sex")),
-#     targetCohortTable = "cardio_drugs_14_ad",
-#     outcomeCohortTable = "cardio_drugs_14_ad",
-#     targetCohortId = i,
-#     outcomeCohortId = i,
-#     outcomeDateVariable = "cohort_end_date",
-#     outcomeWashout = Inf,
-#     followUpDays = 730,
-#     eventGap = 30
-#   )
-#   
-# }
-# 
-# results[["adherence_14"]] <- omopgenerics::bind(ad_14)
+cdm$stroke_drugs_ad <- cdm$stroke_drugs_final |>
+  PatientProfiles::addDemographics(
+    ageGroup = list(c(18, 49), 
+                    c(50, 59),
+                    c(60, 69),
+                    c(70, 79),
+                    c(80, 89),
+                    c(90, 150)),
+    name = "stroke_drugs_ad"
+  )
 
 # PPC
 
-results[["ppc_7"]] <- cdm$cardio_drugs_7_ad |>
-  summariseProportionOfPatientsCovered(followUpDays = 730,
-                                       strata = list(c("age_group"), c("sex")))
+results[["ppc_mi"]] <- cdm$mi_drugs_ad |>
+  summariseProportionOfPatientsCovered(followUpDays = 1825,
+                                       strata = list(c("age_group"), c("sex"), c("age_group", "sex")))
+
+results[["ppc_stroke"]] <- cdm$stroke_drugs_ad |>
+  summariseProportionOfPatientsCovered(followUpDays = 1825,
+                                       strata = list(c("age_group"), c("sex"), c("age_group", "sex")))
+
+
