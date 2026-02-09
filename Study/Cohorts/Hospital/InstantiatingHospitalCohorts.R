@@ -64,7 +64,7 @@ drug_count_after <- cdm$mi_drugs_after_event |>
   group_by(cohort_definition_id) |>
   distinct(subject_id) |>
   tally() |>
-  filter(n >= 100)
+  filter(n >= min_cell_count)
 
 cdm$mi_drugs_final <- cdm$mi_drugs_after_event |>
   subsetCohorts(cohortId = drug_count_after$cohort_definition_id,
@@ -125,7 +125,7 @@ drug_count_after_stroke <- cdm$stroke_drugs_after_event |>
   group_by(cohort_definition_id) |>
   distinct(subject_id) |>
   tally() |>
-  filter(n >= 100)
+  filter(n >= min_cell_count)
 
 cdm$stroke_drugs_final <- cdm$stroke_drugs_after_event |>
   subsetCohorts(cohortId = drug_count_after_stroke$cohort_definition_id,
