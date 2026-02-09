@@ -47,6 +47,7 @@ info(logger, "OBSERVATION PERIOD SUMMARY COMPLETED")
 
 if(isTRUE(hospital_care)){
   info(logger, "INSTANTIATING HOSPITAL COHORTS")
+  source(here("Cohorts","Primary", "InstantiateOutcomeCohorts.R"))
   source(here("Cohorts", "InstantiateHospitalCohorts.R"))
   info(logger, "HOSPITAL COHORTS INSTANTIATED")
   
