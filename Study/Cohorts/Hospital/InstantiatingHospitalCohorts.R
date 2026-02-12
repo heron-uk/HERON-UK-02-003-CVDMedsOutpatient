@@ -72,7 +72,7 @@ cdm$mi_drugs_final <- cdm$mi_drugs_after_event |>
 
 info(logger, "INSTANTIATED HOSPITAL CARDIOVASCULAR DRUGS COHORT")
 
-info(logger, "INSTANTIATING STROKE DRUGS COHORT")
+info(logger, "INSTANTIATING HOSPITAL STROKE DRUGS COHORT")
 
 stroke_drugs_cl <- importCodelist(here("Cohorts", "Hospital", "stroke_treatment"), type = "csv")
 
@@ -131,4 +131,4 @@ cdm$stroke_drugs_final <- cdm$stroke_drugs_after_event |>
   subsetCohorts(cohortId = drug_count_after_stroke$cohort_definition_id,
                 name = "stroke_drugs_final")
 
-info(logger, "INSTANTIATED STROKE DRUGS COHORT")
+info(logger, "INSTANTIATED HOSPITAL STROKE DRUGS COHORT")

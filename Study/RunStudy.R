@@ -59,7 +59,7 @@ source(here("Cohorts","Primary", "InstantiateStrokeDrugCohorts.R"))
 info(logger, "PRIMARY CARE COHORTS INSTANTIATED")
 }
 
-if(isTRUE(run_drug_adherence)){
+if(isTRUE(run_drug_adherence) & isFALSE(hospital_care)){
 info(logger, "RUN DRUG ADHERENCE")
 source(here("Analyses", "drugAdherence.R"))
 info(logger, "DRUG ADHERENCE FINISHED")
