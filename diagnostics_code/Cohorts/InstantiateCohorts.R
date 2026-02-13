@@ -1,3 +1,4 @@
+# Drugs
 
 drug_codes <- omopgenerics::importCodelist(here::here("Cohorts", "drugs"), 
                                            type = "csv")
@@ -11,15 +12,34 @@ cdm[["drugs"]] <- conceptCohort(cdm,
                                 exit = "event_end_date",
                                 name = "drugs") 
 
+# Conditions
+
 condition_codes <- omopgenerics::importCodelist(here::here("Cohorts", "conditions"), 
                                            type = "csv")
 cdm[["conditions"]] <- conceptCohort(cdm,
                                 conceptSet = condition_codes,
                                 exit = "event_start_date",
                                 name = "conditions") 
+
 cdm[["conditions"]] <- cdm[["conditions"]] |> 
   exitAtObservationEnd()
 
+# Procedures
+
+procedure_codes <- omopgenerics::importCodelist(here::here("Cohorts", "procedures"), 
+                                                type = "csv")
+cdm[["procedures"]] <- conceptCohort(cdm,
+                                     conceptSet = procedure_codes,
+                                     exit = "event_start_date",
+                                     name = "procedures") 
+
+cdm[["procedures"]] <- cdm[["procedures"]] |> 
+  exitAtObservationEnd()
+
+
+###
+
 cdm <- bind(cdm[["drugs"]],
             cdm[["conditions"]],
+            cdm[["procedures"]],
             name = "study_cohorts")
