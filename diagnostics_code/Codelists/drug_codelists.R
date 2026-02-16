@@ -2,9 +2,11 @@
 # beta blockers -------
 beta_blockers <- getDrugIngredientCodes(
   cdm = cdm_vocab_2025_08,
-  name = c("acebutolol", "alprenolol", "atenolol", 
-           "bisoprolol", "carvedilol", "metoprolol", "nadolol",
-           "oxprenolol", "pindolol", "propranolol", "timolol"),
+  name = c("alprenolol", "atenolol", 
+           "bisoprolol", "carvedilol", 
+           "metoprolol", "nadolol",
+           "oxprenolol", "pindolol", 
+           "propranolol", "timolol"),
   nameStyle = "{concept_name}",
   type = "codelist")
 names(beta_blockers) <- paste0("beta_blocker_", names(beta_blockers))
@@ -18,6 +20,17 @@ beta_blockers <- c(beta_blockers_all, beta_blockers) %>%
 
 exportCodelist(beta_blockers, path = here::here("Cohorts", "drugs"),
                type = "csv")
+
+# aspirin -------
+aspirin <- getDrugIngredientCodes(
+  cdm = cdm_vocab_2025_08,
+  name = c("aspirin"),
+  nameStyle = "{concept_name}",
+  type = "codelist")
+exportCodelist(aspirin, path = here::here("Cohorts", "drugs"),
+               type = "csv")
+
+
 
 # P2Y12 inhibitors -----
 p2y12_inhibitors <- getDrugIngredientCodes(
@@ -37,16 +50,6 @@ p2y12_inhibitors <- c(p2y12_inhibitors_all, p2y12_inhibitors) %>%
   omopgenerics::newCodelist()
 
 exportCodelist(p2y12_inhibitors, path = here::here("Cohorts", "drugs"),
-               type = "csv")
-
-
-# aspirin -------
-aspirin <- getDrugIngredientCodes(
-  cdm = cdm_vocab_2025_08,
-  name = c("aspirin"),
-  nameStyle = "{concept_name}",
-  type = "codelist")
-exportCodelist(aspirin, path = here::here("Cohorts", "drugs"),
                type = "csv")
 
 
@@ -74,11 +77,13 @@ acei_arbs <- c(acei_arbs_all, acei_arbs) %>%
 exportCodelist(acei_arbs, path = here::here("Cohorts", "drugs"),
                type = "csv")
 
+
 # Diuretic (thiazide) ----
 thiazide_diuretic <- getDrugIngredientCodes(
   cdm = cdm_vocab_2025_08,
   name = c("indapamide", "chlorthalidone", "metolazone",
-           "xipamide", "bendroflumethiazide"),
+           "xipamide", "bendroflumethiazide", 
+           "hydrochlorothiazide"),
   nameStyle = "{concept_name}",
   type = "codelist")
 names(thiazide_diuretic) <- paste0("thiazide_diuretic_", names(thiazide_diuretic))
@@ -113,16 +118,6 @@ calcium_channel_blocker <- c(calcium_channel_blocker_all, calcium_channel_blocke
 exportCodelist(calcium_channel_blocker, path = here::here("Cohorts", "drugs"),
                type = "csv")
 
-# antihyperensive ----
-antihyperensives <- c(acei_arbs_all,
-                      thiazide_diuretic_all,
-                      calcium_channel_blocker_all) %>% 
-  omopgenerics::newCodelist() %>% 
-  unionCodelists()
-names(antihyperensives) <- "antihyperensives"
-exportCodelist(antihyperensives, path = here::here("Cohorts", "drugs"),
-               type = "csv")
-
 # statin -------
 statin <- getDrugIngredientCodes(
   cdm = cdm_vocab_2025_08,
@@ -141,6 +136,56 @@ statin <- c(statin_all, statin) %>%
 
 exportCodelist(statin, path = here::here("Cohorts", "drugs"),
                type = "csv")
+
+# ezetimibe  -------
+ezetimibe <- getDrugIngredientCodes(
+  cdm = cdm_vocab_2025_08,
+  name = c("ezetimibe"),
+  nameStyle = "{concept_name}",
+  type = "codelist")
+exportCodelist(ezetimibe, path = here::here("Cohorts", "drugs"),
+               type = "csv")
+
+# PCSK9 inhibitors ----
+pcsk9_inhibitors <- getDrugIngredientCodes(
+  cdm = cdm_vocab_2025_08,
+  name = c("alirocumab", "evolocumab", 
+           "inclisiran"),
+  nameStyle = "{concept_name}",
+  type = "codelist")
+names(pcsk9_inhibitors) <- paste0("pcsk9_inhibitors_", names(pcsk9_inhibitors))
+
+
+pcsk9_inhibitors_all <- pcsk9_inhibitors %>% 
+  unionCodelists()
+names(pcsk9_inhibitors_all) <- "pcsk9_inhibitors"
+
+pcsk9_inhibitors <- c(pcsk9_inhibitors_all, pcsk9_inhibitors) %>% 
+  omopgenerics::newCodelist()
+
+exportCodelist(pcsk9_inhibitors, path = here::here("Cohorts", "drugs"),
+               type = "csv")
+
+# Direct oral anticoagulants (DOACs) ----
+doacs <- getDrugIngredientCodes(
+  cdm = cdm_vocab_2025_08,
+  name = c("apixaban", "dabigatran", 
+           "edoxaban", "rivaroxaban"),
+  nameStyle = "{concept_name}",
+  type = "codelist")
+names(doacs) <- paste0("doacs_", 
+                       names(doacs))
+
+doacs_all <- doacs %>% 
+  unionCodelists()
+names(doacs_all) <- "doacs"
+
+doacs <- c(doacs_all, doacs) %>% 
+  omopgenerics::newCodelist()
+
+exportCodelist(doacs, path = here::here("Cohorts", "drugs"),
+               type = "csv")
+
 
 # GP IIb/ IIIa  -------
 gp_iib_iiia <- getDrugIngredientCodes(
@@ -179,62 +224,62 @@ thrombolytics <- c(thrombolytics_all, thrombolytics) %>%
 exportCodelist(thrombolytics, path = here::here("Cohorts", "drugs"),
                type = "csv")
 
-# Vitamin K antagonists -------
-vitamin_k_antagonists <- getDrugIngredientCodes(
+# warfarin -------
+warfarin <- getDrugIngredientCodes(
   cdm = cdm_vocab_2025_08,
   name = c("warfarin"),
   nameStyle = "{concept_name}",
   type = "codelist")
-names(vitamin_k_antagonists) <- paste0("vitamin_k_antagonists_", 
-                                       names(vitamin_k_antagonists))
-
-vitamin_k_antagonists_all <- vitamin_k_antagonists %>% 
-  unionCodelists()
-names(vitamin_k_antagonists_all) <- "vitamin_k_antagonists"
-
-vitamin_k_antagonists <- c(vitamin_k_antagonists_all, vitamin_k_antagonists) %>% 
-  omopgenerics::newCodelist()
-
-exportCodelist(thrombolytics, path = here::here("Cohorts", "drugs"),
+exportCodelist(warfarin, path = here::here("Cohorts", "drugs"),
                type = "csv")
 
-
-# Direct oral anticoagulants (DOACs) ----
-doacs <- getDrugIngredientCodes(
-  cdm = cdm_vocab_2025_08,
-  name = c("apixaban", "dabigatran", 
-           "edoxaban", "rivaroxaban"),
-  nameStyle = "{concept_name}",
-  type = "codelist")
-names(doacs) <- paste0("doacs_", 
-                       names(doacs))
-
-doacs_all <- doacs %>% 
-  unionCodelists()
-names(doacs_all) <- "doacs"
-
-doacs <- c(doacs_all, doacs) %>% 
-  omopgenerics::newCodelist()
-
-exportCodelist(doacs, path = here::here("Cohorts", "drugs"),
-               type = "csv")
-
-# Anticoagulants ----
-anticoagulants <- getDrugIngredientCodes(
+# thrombin inhibitors ----
+thrombin_inhibitors <- getDrugIngredientCodes(
   cdm = cdm_vocab_2025_08,
   name = c("heparin", "enoxaparin", 
            "bivalirudin", "fondaparinux"),
   nameStyle = "{concept_name}",
   type = "codelist")
-names(anticoagulants) <- paste0("anticoagulants_", 
-                                names(anticoagulants))
+names(thrombin_inhibitors) <- paste0("thrombin_inhibitors_", 
+                                names(thrombin_inhibitors))
 
-anticoagulants_all <- anticoagulants %>% 
+thrombin_inhibitors_all <- thrombin_inhibitors %>% 
   unionCodelists()
-names(anticoagulants_all) <- "anticoagulants"
+names(thrombin_inhibitors_all) <- "thrombin_inhibitors"
 
-anticoagulants <- c(anticoagulants_all, anticoagulants) %>% 
+thrombin_inhibitors <- c(thrombin_inhibitors_all, thrombin_inhibitors) %>% 
   omopgenerics::newCodelist()
 
-exportCodelist(anticoagulants, path = here::here("Cohorts", "drugs"),
+exportCodelist(thrombin_inhibitors, path = here::here("Cohorts", "drugs"),
                type = "csv")
+
+# nitrates ----
+nitrates <- getDrugIngredientCodes(
+  cdm = cdm_vocab_2025_08,
+  name = c("nitroglycerin", # "glyceryl trinitrate",
+           "nitric oxide", #"isosorbide mononitrate", 
+           "isosorbide dinitrate"),
+  nameStyle = "{concept_name}",
+  type = "codelist")
+names(nitrates) <- paste0("nitrates_",
+                          names(nitrates))
+
+nitrates_all <- nitrates %>% 
+  unionCodelists()
+names(nitrates_all) <- "nitrates"
+
+nitrates <- c(nitrates_all, nitrates) %>% 
+  omopgenerics::newCodelist()
+
+exportCodelist(nitrates, path = here::here("Cohorts", "drugs"),
+               type = "csv")
+
+# morphine -------
+morphine <- getDrugIngredientCodes(
+  cdm = cdm_vocab_2025_08,
+  name = c("morphine"),
+  nameStyle = "{concept_name}",
+  type = "codelist")
+exportCodelist(morphine, path = here::here("Cohorts", "drugs"),
+               type = "csv")
+
