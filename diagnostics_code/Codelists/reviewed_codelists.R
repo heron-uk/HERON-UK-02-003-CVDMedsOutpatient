@@ -12,7 +12,7 @@ arth <- readxl::read_excel("Codelists/xlsx_files/arterioscl_aorta_reviewed.xlsx"
                            col_names = FALSE) |>
   pull(`...1`)
 
-arth_cl <- newCodelist(list("atherosclerosis" = arth))
+arth_cl <- newCodelist(list("aortic_atherosclerosis" = arth))
 
 exportCodelist(arth_cl, path = "Cohorts/conditions", type = "csv")
 
@@ -128,6 +128,15 @@ isch <- readxl::read_excel("Codelists/xlsx_files/ischstroke_reviewed.xlsx") |>
 isch_cl <- newCodelist(list("ischemic_stroke" = isch))
 
 exportCodelist(isch_cl, path = "Cohorts/conditions", type = "csv")
+
+# Hemorrhagic Stroke
+
+hem <- readxl::read_excel("Codelists/xlsx_files/hem_stroke_reviewed.xlsx") |>
+  pull(concept_id)
+
+hem_cl <- newCodelist(list("hemorrhagic_stroke" = hem))
+
+exportCodelist(hem_cl, path = "Cohorts/conditions", type = "csv")
 
 # Alcohol use
 
