@@ -146,3 +146,37 @@ alc <- readxl::read_excel("Codelists/xlsx_files/OH_use.xlsx") |>
 alc_cl <- newCodelist(list("alcohol_use" = alc))
 
 exportCodelist(alc_cl, path = "Cohorts/conditions", type = "csv")
+
+# Dyslipidemia
+
+dys <- readxl::read_excel("Codelists/xlsx_files/DARWINEUcodelist_dyslipidemia).xlsx",
+                          sheet = "codes") |>
+  filter(dlp_broad == "T",
+                dlp_highlevels == "T") |>
+  pull(concept_id)
+
+dys_cl <- newCodelist(list("dyslipidemia" = dys))
+
+exportCodelist(dys_cl, path = "Cohorts/conditions", type = "csv")
+
+# Valve heart disease (broad)
+
+val <- readxl::read_excel("Codelists/xlsx_files/DARWINEUcodelist_valve_disease).xlsx",
+                          sheet = "codes") |>
+  filter(Valve_broad == "T") |>
+  pull(concept_id)
+
+val_cl <- newCodelist(list("valve_disease_broad" = val))
+
+exportCodelist(val_cl, path = "Cohorts/conditions", type = "csv")
+
+# Valve heart disease (inf endoc)
+
+val <- readxl::read_excel("Codelists/xlsx_files/DARWINEUcodelist_valve_disease).xlsx",
+                          sheet = "codes") |>
+  filter(`Inf endoc` == "T") |>
+  pull(concept_id)
+
+val_cl <- newCodelist(list("valve_disease_inf_endoc" = val))
+
+exportCodelist(val_cl, path = "Cohorts/conditions", type = "csv")
