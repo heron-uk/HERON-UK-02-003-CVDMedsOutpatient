@@ -47,6 +47,40 @@ cdm$heart_failure <- conceptCohort(
 )
 
 cdm$heart_failure <- cdm$heart_failure |>
-  requireIsFirstEntry() # first ever stroke
+  requireIsFirstEntry() # first ever HF
 
 info(logger, "INSTANTIATED HEART FAILURE COHORT")
+
+info(logger, "INSTANTIATING ATRIAL FIBRILLATION COHORT")
+af_cl <- CodelistGenerator::importCodelist(
+  path = here::here("Cohorts", "conditions", "atrial_fibrillation.csv"),
+  type = "csv"
+)
+
+cdm$atrial_fibrillation <- conceptCohort(
+  cdm = cdm,
+  conceptSet = af_cl,
+  name = "atrial_fibrillation"
+)
+
+cdm$atrial_fibrillation <- cdm$atrial_fibrillation |>
+  requireIsFirstEntry() # first ever AF
+
+info(logger, "INSTANTIATED ATRIAL FIBRILLATION COHORT")
+
+info(logger, "INSTANTIATING CAROTID DISEASE COHORT")
+cd_cl <- CodelistGenerator::importCodelist(
+  path = here::here("Cohorts", "conditions", "carotid_disease.csv"),
+  type = "csv"
+)
+
+cdm$carotid_disease <- conceptCohort(
+  cdm = cdm,
+  conceptSet = cd_cl,
+  name = "carotid_disease"
+)
+
+cdm$carotid_disease <- cdm$carotid_disease |>
+  requireIsFirstEntry() # first ever AF
+
+info(logger, "INSTANTIATED CAROTID DISEASE COHORT")
