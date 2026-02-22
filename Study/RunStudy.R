@@ -2,7 +2,8 @@ results_folder <- here("Results", cdmName(cdm))
 if (!file.exists(results_folder)) {
   dir.create(results_folder, recursive = TRUE)
 }
-results <- list()
+mi_results <- list()
+stroke_results <- list()
 logger_name <- gsub(":| |-", "_", paste0("log_01_001_", Sys.time(), ".txt"))
 logger <- create.logger()
 logfile(logger) <- here(results_folder, logger_name)
@@ -15,7 +16,7 @@ maxObsEnd <- cdm$observation_period |>
 
 study_period <- c(as.Date(study_start), as.Date(maxObsEnd))
 
-if(isTRUE(hospital_care)){
+if(isTRUE(hospital_care) & isFALSE(primary_care)){
   cdm <- OmopConstructor::buildObservationPeriod(
     cdm,
     collapseDays = 545,
@@ -36,13 +37,23 @@ cdm$person <- cdm$person |>
 # create and export snapshot
 info(logger, "RETRIEVING SNAPSHOT")
 cli::cli_text("- GETTING CDM SNAPSHOT ({Sys.time()})")
-results[["snap"]] <- summariseOmopSnapshot(cdm)
+
+snap <- summariseOmopSnapshot(cdm)
+
+mi_results[["snap"]] <- snap
+stroke_results[["snap"]] <- snap
+
 info(logger, "SNAPSHOT COMPLETED")
 
 # summarise observation periods
 info(logger, "RETRIEVING OBSERVATION PERIOD SUMMARY")
 cli::cli_text("- GETTING OBSERVATION PERIOD SUMMARY ({Sys.time()})")
-results[["obs_period"]] <- summariseObservationPeriod(cdm$observation_period)
+
+obs <- summariseObservationPeriod(cdm$observation_period)
+
+mi_results[["observation_period"]] <- obs
+stroke_results[["observation_period"]] <- obs
+
 info(logger, "OBSERVATION PERIOD SUMMARY COMPLETED")
 
 if(isTRUE(hospital_care)){
@@ -51,7 +62,9 @@ if(isTRUE(hospital_care)){
   source(here("Cohorts", "InstantiateHospitalCohorts.R"))
   info(logger, "HOSPITAL COHORTS INSTANTIATED")
   
-} else if (isFALSE(hospital_care)){
+} 
+
+if(isTRUE(primary_care)){
 info(logger, "INSTANTIATING PRIMARY CARE COHORTS")
 source(here("Cohorts","Primary", "InstantiateOutcomeCohorts.R"))
 source(here("Cohorts","Primary", "InstantiateMIDrugCohorts.R"))
@@ -59,7 +72,7 @@ source(here("Cohorts","Primary", "InstantiateStrokeDrugCohorts.R"))
 info(logger, "PRIMARY CARE COHORTS INSTANTIATED")
 }
 
-if(isTRUE(run_drug_adherence) & isFALSE(hospital_care)){
+if(isTRUE(run_drug_adherence) & isTRUE(primary_care)){
 info(logger, "RUN DRUG ADHERENCE")
 source(here("Analyses", "drugAdherence.R"))
 info(logger, "DRUG ADHERENCE FINISHED")
@@ -73,11 +86,20 @@ info(logger, "SUMMARISE CHARACTERISTICS FINISHED")
 
 # export results ----
 info(logger, "EXPORTING RESULTS")
-result <- omopgenerics::bind(results)
-omopgenerics::exportSummarisedResult(result,
+
+mi_result <- omopgenerics::bind(mi_results)
+stroke_result <- omopgenerics::bind(stroke_results)
+
+omopgenerics::exportSummarisedResult(mi_result,
                                      minCellCount = min_cell_count,
                                      path = results_folder,
                                      fileName = "results_mi_{cdm_name}_{date}.csv"
+)
+
+omopgenerics::exportSummarisedResult(stroke_result,
+                                     minCellCount = min_cell_count,
+                                     path = results_folder,
+                                     fileName = "results_stroke_{cdm_name}_{date}.csv"
 )
 
 
