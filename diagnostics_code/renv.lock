@@ -11,10 +11,10 @@
   "Packages": {
     "CDMConnector": {
       "Package": "CDMConnector",
-      "Version": "2.3.0",
+      "Version": "2.4.0",
       "Source": "Repository",
       "Title": "Connect to an OMOP Common Data Model",
-      "Authors@R": "c( person(\"Adam\", \"Black\", , \"black@ohdsi.org\", role = c(\"aut\", \"cre\"), comment = c(ORCID = \"0000-0001-5576-8701\")), person(\"Artem\", \"Gorbachev\", , \"artem.gorbachev@odysseusinc.com\", role = \"aut\"), person(\"Edward\", \"Burn\", , \"edward.burn@ndorms.ox.ac.uk\", role = \"aut\"), person(\"Marti\", \"Catala Sabate\", , \"marti.catalasabate@ndorms.ox.ac.uk\", role = \"aut\"), person(\"Ioanna\", \"Nika\", , \"i.nika@darwin-eu.org\", role = \"aut\") )",
+      "Authors@R": "c( person(\"Adam\", \"Black\", , \"ablack3@gmail.com\", role = c(\"aut\", \"cre\"), comment = c(ORCID = \"0000-0001-5576-8701\")), person(\"Artem\", \"Gorbachev\", , \"artem.gorbachev@odysseusinc.com\", role = \"aut\"), person(\"Edward\", \"Burn\", , \"edward.burn@ndorms.ox.ac.uk\", role = \"aut\"), person(\"Marti\", \"Catala Sabate\", , \"marti.catalasabate@ndorms.ox.ac.uk\", role = \"aut\"), person(\"Ioanna\", \"Nika\", , \"i.nika@darwin-eu.org\", role = \"aut\") )",
       "Description": "Provides tools for working with observational health data in the  Observational Medical Outcomes Partnership (OMOP) Common Data Model format with a pipe friendly syntax. Common data model database table references are stored in a single compound object along with metadata.",
       "License": "Apache License (>= 2)",
       "URL": "https://darwin-eu.github.io/CDMConnector/, https://github.com/darwin-eu/CDMConnector",
@@ -65,7 +65,8 @@
         "testthat (>= 3.0.0)",
         "pool",
         "snakecase",
-        "digest"
+        "digest",
+        "rstudioapi"
       ],
       "Enhances": [
         "arrow"
@@ -75,7 +76,7 @@
       "VignetteBuilder": "knitr",
       "NeedsCompilation": "no",
       "Author": "Adam Black [aut, cre] (ORCID: <https://orcid.org/0000-0001-5576-8701>), Artem Gorbachev [aut], Edward Burn [aut], Marti Catala Sabate [aut], Ioanna Nika [aut]",
-      "Maintainer": "Adam Black <black@ohdsi.org>",
+      "Maintainer": "Adam Black <ablack3@gmail.com>",
       "Repository": "CRAN"
     },
     "CodelistGenerator": {
@@ -447,16 +448,16 @@
     },
     "MeasurementDiagnostics": {
       "Package": "MeasurementDiagnostics",
-      "Version": "0.2.0",
+      "Version": "0.3.0",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Diagnostics for Lists of Codes Based on Measurements",
       "Authors@R": "c( person(\"Edward\", \"Burn\", , \"edward.burn@ndorms.ox.ac.uk\",  role = c(\"aut\"), comment = c(ORCID = \"0000-0002-9286-1128\")), person(\"Nuria\", \"Mercade-Besora\", , \"nuria.mercadebesora@ndorms.ox.ac.uk\",  role = c(\"aut\", \"cre\"), comment = c(ORCID = \"0009-0006-7948-3747\")), person(\"Marta\", \"Alcalde-Herraiz\", , \"marta.alcaldeherraiz@ndorms.ox.ac.uk\",  role = c(\"aut\"), comment = c(ORCID = \"0009-0002-4405-1814\")))",
       "Description": "Diagnostics of list of codes based on concepts from the domains measurement and observation. This package works for data mapped to the Observational Medical Outcomes Partnership Common Data Model.",
       "Imports": [
-        "CDMConnector (>= 2.0.0)",
         "cli",
         "clock",
+        "CohortCharacteristics",
         "CohortConstructor (>= 0.4.0)",
         "DBI",
         "dplyr",
@@ -465,9 +466,11 @@
         "PatientProfiles (>= 1.4.0)",
         "purrr",
         "rlang",
+        "stringr",
         "tidyr"
       ],
       "Suggests": [
+        "CDMConnector (>= 2.0.0)",
         "CodelistGenerator (>= 3.5.0)",
         "visOmopResults (>= 1.4.0)",
         "duckdb",
@@ -628,7 +631,7 @@
     "PhenotypeR": {
       "Package": "PhenotypeR",
       "Version": "0.3.2",
-      "Source": "Repository",
+      "Source": "GitHub",
       "Type": "Package",
       "Title": "Assess Study Cohorts Using a Common Data Model",
       "Authors@R": "c( person(\"Edward\", \"Burn\", , \"edward.burn@ndorms.ox.ac.uk\",  role = c(\"aut\", \"cre\"), comment = c(ORCID = \"0000-0002-9286-1128\")), person(\"Martí\", \"Català\", , \"marti.catalasabate@ndorms.ox.ac.uk\",  role = c(\"aut\"), comment = c(ORCID = \"0000-0003-3308-9905\")), person(\"Xihang\", \"Chen\", , \"xihang.chen@ndorms.ox.ac.uk\",  role = c(\"aut\"), comment = c(ORCID = \"0009-0001-8112-8959\")), person(\"Marta\", \"Alcalde-Herraiz\", , \"marta.alcaldeherraiz@ndorms.ox.ac.uk\",  role = c(\"aut\"), comment = c(ORCID = \"0009-0002-4405-1814\")), person(\"Nuria\", \"Mercade-Besora\", , \"nuria.mercadebesora@ndorms.ox.ac.uk\",  role = c(\"aut\"), comment = c(ORCID = \"0009-0006-7948-3747\")), person(\"Albert\", \"Prats-Uribe\", , \"albert.prats-uribe@ndorms.ox.ac.uk\",  role = \"aut\", comment = c(ORCID = \"0000-0003-1202-9153\")))",
@@ -690,7 +693,7 @@
         "dplyr",
         "DrugUtilisation (>= 1.1.0)",
         "IncidencePrevalence (>= 1.2.0)",
-        "MeasurementDiagnostics (>= 0.2.0)",
+        "MeasurementDiagnostics (>= 0.3.0)",
         "omopgenerics (>= 1.2.0)",
         "OmopSketch (>= 1.0.1)",
         "PatientProfiles (>= 1.4.5)",
@@ -702,10 +705,16 @@
       "URL": "https://ohdsi.github.io/PhenotypeR/",
       "BugReports": "https://github.com/OHDSI/PhenotypeR/issues",
       "VignetteBuilder": "knitr",
+      "Config/testthat/parallel": "true",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "PhenotypeR",
+      "RemoteUsername": "OHDSI",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "e2e3d0cf0bb84e2ae4d260640898318b1dfbd171",
       "NeedsCompilation": "no",
-      "Author": "Edward Burn [aut, cre] (ORCID: <https://orcid.org/0000-0002-9286-1128>), Martí Català [aut] (ORCID: <https://orcid.org/0000-0003-3308-9905>), Xihang Chen [aut] (ORCID: <https://orcid.org/0009-0001-8112-8959>), Marta Alcalde-Herraiz [aut] (ORCID: <https://orcid.org/0009-0002-4405-1814>), Nuria Mercade-Besora [aut] (ORCID: <https://orcid.org/0009-0006-7948-3747>), Albert Prats-Uribe [aut] (ORCID: <https://orcid.org/0000-0003-1202-9153>)",
-      "Maintainer": "Edward Burn <edward.burn@ndorms.ox.ac.uk>",
-      "Repository": "CRAN"
+      "Author": "Edward Burn [aut, cre] (<https://orcid.org/0000-0002-9286-1128>), Martí Català [aut] (<https://orcid.org/0000-0003-3308-9905>), Xihang Chen [aut] (<https://orcid.org/0009-0001-8112-8959>), Marta Alcalde-Herraiz [aut] (<https://orcid.org/0009-0002-4405-1814>), Nuria Mercade-Besora [aut] (<https://orcid.org/0009-0006-7948-3747>), Albert Prats-Uribe [aut] (<https://orcid.org/0000-0003-1202-9153>)",
+      "Maintainer": "Edward Burn <edward.burn@ndorms.ox.ac.uk>"
     },
     "R6": {
       "Package": "R6",
@@ -735,10 +744,10 @@
     },
     "RPostgres": {
       "Package": "RPostgres",
-      "Version": "1.4.9",
+      "Version": "1.4.10",
       "Source": "Repository",
       "Title": "C++ Interface to PostgreSQL",
-      "Date": "2026-02-05",
+      "Date": "2026-02-11",
       "Authors@R": "c( person(\"Hadley\", \"Wickham\", role = \"aut\"), person(\"Jeroen\", \"Ooms\", role = \"aut\"), person(\"Kirill\", \"Müller\", , \"kirill@cynkra.com\", role = c(\"aut\", \"cre\"), comment = c(ORCID = \"0000-0002-1416-3412\")), person(\"RStudio\", role = \"cph\"), person(\"R Consortium\", role = \"fnd\"), person(\"Tomoaki\", \"Nishiyama\", role = \"ctb\", comment = \"Code for encoding vectors into strings derived from RPostgreSQL\") )",
       "Description": "Fully DBI-compliant C++-backed interface to PostgreSQL <https://www.postgresql.org/>, an open-source relational database.",
       "License": "MIT + file LICENSE",
@@ -1216,7 +1225,7 @@
     },
     "dbplyr": {
       "Package": "dbplyr",
-      "Version": "2.5.1",
+      "Version": "2.5.2",
       "Source": "Repository",
       "Type": "Package",
       "Title": "A 'dplyr' Back End for Databases",
@@ -1961,29 +1970,31 @@
     },
     "readr": {
       "Package": "readr",
-      "Version": "2.1.6",
+      "Version": "2.2.0",
       "Source": "Repository",
       "Title": "Read Rectangular Text Data",
-      "Authors@R": "c( person(\"Hadley\", \"Wickham\", , \"hadley@posit.co\", role = \"aut\"), person(\"Jim\", \"Hester\", role = \"aut\"), person(\"Romain\", \"Francois\", role = \"ctb\"), person(\"Jennifer\", \"Bryan\", , \"jenny@posit.co\", role = c(\"aut\", \"cre\"), comment = c(ORCID = \"0000-0002-6983-2759\")), person(\"Shelby\", \"Bearrows\", role = \"ctb\"), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\")), person(\"https://github.com/mandreyel/\", role = \"cph\", comment = \"mio library\"), person(\"Jukka\", \"Jylänki\", role = c(\"ctb\", \"cph\"), comment = \"grisu3 implementation\"), person(\"Mikkel\", \"Jørgensen\", role = c(\"ctb\", \"cph\"), comment = \"grisu3 implementation\") )",
+      "Authors@R": "c( person(\"Hadley\", \"Wickham\", , \"hadley@posit.co\", role = \"aut\"), person(\"Jim\", \"Hester\", role = \"aut\"), person(\"Romain\", \"Francois\", role = \"ctb\"), person(\"Jennifer\", \"Bryan\", , \"jenny@posit.co\", role = c(\"aut\", \"cre\"), comment = c(ORCID = \"0000-0002-6983-2759\")), person(\"Shelby\", \"Bearrows\", role = \"ctb\"), person(\"Posit Software, PBC\", role = c(\"cph\", \"fnd\"), comment = c(ROR = \"03wc8by49\")), person(\"https://github.com/mandreyel/\", role = \"cph\", comment = \"mio library\"), person(\"Jukka\", \"Jylänki\", role = c(\"ctb\", \"cph\"), comment = \"grisu3 implementation\"), person(\"Mikkel\", \"Jørgensen\", role = c(\"ctb\", \"cph\"), comment = \"grisu3 implementation\") )",
       "Description": "The goal of 'readr' is to provide a fast and friendly way to read rectangular data (like 'csv', 'tsv', and 'fwf').  It is designed to flexibly parse many types of data found in the wild, while still cleanly failing when data unexpectedly changes.",
       "License": "MIT + file LICENSE",
       "URL": "https://readr.tidyverse.org, https://github.com/tidyverse/readr",
       "BugReports": "https://github.com/tidyverse/readr/issues",
       "Depends": [
-        "R (>= 3.6)"
+        "R (>= 4.1)"
       ],
       "Imports": [
-        "cli (>= 3.2.0)",
+        "cli",
         "clipr",
         "crayon",
+        "glue",
         "hms (>= 0.4.1)",
-        "lifecycle (>= 0.2.0)",
+        "lifecycle",
         "methods",
         "R6",
         "rlang",
         "tibble",
         "utils",
-        "vroom (>= 1.6.0)"
+        "vroom (>= 1.7.0)",
+        "withr"
       ],
       "Suggests": [
         "covr",
@@ -1996,7 +2007,6 @@
         "testthat (>= 3.2.0)",
         "tzdb (>= 0.1.1)",
         "waldo",
-        "withr",
         "xml2"
       ],
       "LinkingTo": [
@@ -2007,13 +2017,14 @@
       "Config/Needs/website": "tidyverse, tidyverse/tidytemplate",
       "Config/testthat/edition": "3",
       "Config/testthat/parallel": "false",
+      "Config/usethis/last-upkeep": "2025-11-14",
       "Encoding": "UTF-8",
       "Language": "en-US",
       "RoxygenNote": "7.3.3",
       "NeedsCompilation": "yes",
-      "Author": "Hadley Wickham [aut], Jim Hester [aut], Romain Francois [ctb], Jennifer Bryan [aut, cre] (ORCID: <https://orcid.org/0000-0002-6983-2759>), Shelby Bearrows [ctb], Posit Software, PBC [cph, fnd], https://github.com/mandreyel/ [cph] (mio library), Jukka Jylänki [ctb, cph] (grisu3 implementation), Mikkel Jørgensen [ctb, cph] (grisu3 implementation)",
+      "Author": "Hadley Wickham [aut], Jim Hester [aut], Romain Francois [ctb], Jennifer Bryan [aut, cre] (ORCID: <https://orcid.org/0000-0002-6983-2759>), Shelby Bearrows [ctb], Posit Software, PBC [cph, fnd] (ROR: <https://ror.org/03wc8by49>), https://github.com/mandreyel/ [cph] (mio library), Jukka Jylänki [ctb, cph] (grisu3 implementation), Mikkel Jørgensen [ctb, cph] (grisu3 implementation)",
       "Maintainer": "Jennifer Bryan <jenny@posit.co>",
-      "Repository": "RSPM"
+      "Repository": "CRAN"
     },
     "readxl": {
       "Package": "readxl",
