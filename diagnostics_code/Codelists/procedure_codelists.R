@@ -36,12 +36,25 @@ pci_opcs4 <- c(
   "K75.1", "K75.2", "K75.3", "K75.4", "K75.8", "K75.9")
 pci_from_opcs4 <- opcs4_to_standard(pci_opcs4)
 
-pci_snomed <- getDescendants(cdm_vocab_2025_08, c(4216130)) |> 
-  filter(vocabulary_id == "SNOMED") |> 
-  pull(concept_id) |> 
-  unique()
+pci_snomed <- c("3655773", "3655774", "3655775", "3655776", "4020653",  "4106556", 
+        "4150819",  "4172515", "4181025",  "4184832", "4212973",  "4216130",  
+        "4225903", "4287108",  "37153378", "37153385",  "37153597",
+        "37154069",  "37157437",  "37157438", "37158379",
+        "43531439",  "43531440",  "44511133",  "44511138",
+        "44511139",  "44511268",  "44511269",  "44511270", "44511271",
+        "44511272",  "45769224","4006788","4020074", "4050590",
+        "4051012",  "4051039", "4139362",  "4167564", "4170285",  "4171077",
+        "4178148",  "4181955", "4184298", "4197882",  "4207625",
+        "4216356",  "4217445", "4238755", "4244719", "4264285",
+        "4264286", "4265293",  "4283892",  "4286646",
+        "4303797","4328103",  "4329263",  "4330920","4336469", "4337739",
+        "4337740", "35607959",  "37017357", "37111313",  "42537597",
+        "42538258",  "42538259",  "44789455",  "44811692",
+        "45770795","46271002") |> 
+  as.integer()
+
 percutaneous_coronary_intervention <- list(
-  percutaneous_coronary_intervention = c(pci_snomed,pci_from_opcs4) |> unique()) |>
+  percutaneous_coronary_intervention = c(pci_snomed, pci_from_opcs4) |> unique()) |>
   omopgenerics::newCodelist()
 exportCodelist(percutaneous_coronary_intervention, 
                here("Cohorts", "procedures"), "csv")
@@ -116,4 +129,4 @@ cd <- c(coronary_artery_bypass_graft,
      asCodelistWithDetails(cdm_vocab_2025_08)
 
 writexl::write_xlsx(cd,
-                    "procedures.xlsx")
+                    here::here("Codelists", "procedures_with_details.xlsx"))
