@@ -63,6 +63,7 @@ cdm <- cdmFromCon(
   cdmSchema = cdmSchema, 
   writeSchema = writeSchema, 
   cdmName = dbName, 
+  writePrefix = writePrefix,
   achillesSchema = achillesSchema
 )
 

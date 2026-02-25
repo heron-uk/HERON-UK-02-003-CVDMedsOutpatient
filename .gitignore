@@ -37,6 +37,7 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+diagnostics_code/CodeToRunLocal.R
 diagnostics_code/Results/*.txt
 diagnostics_code/Results/*.csv
 
