@@ -37,7 +37,7 @@ obesity_diag <- list(obesity = c(
   4217557,  37166818,  4211019,  36714072, 36714548,  37165655
 ))
 cdm$obesity <- conceptCohort(
-  cdm = cdm, conceptSet = obesity_diag, name = "obesity"
+  cdm = cdm, conceptSet = obesity_diag, exit = "event_start_date", name = "obesity"
 )
 
 cdm$obesity_bmi <- measurementCohort(
@@ -60,7 +60,8 @@ cdm <- omopgenerics::bind(cdm$obesity,
                           cdm$obesity_body_weight, 
                           name = "obesity")
 cdm$obesity <- cdm$obesity |>
-  unionCohorts(cohortName = "obesity")
+  unionCohorts(cohortName = "obesity") |> 
+  exitAtObservationEnd()
 
 
 # CKD stages (based on measurement or diagnosis) ----
