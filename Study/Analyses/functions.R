@@ -71,7 +71,7 @@ addEthnicity <- function(cohort) {
       race_source_value == "18" ~ "OTHER: Other ethnicity",
       race_source_value == "19" ~ "UNKNOWN",
       race_source_value == "20" ~ "WHITE: Roma",
-      TRUE ~ "Missing"
+      TRUE ~ race_source_value
     )) |> 
     dplyr::select(-"race_source_value")
 }
