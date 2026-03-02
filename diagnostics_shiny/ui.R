@@ -617,6 +617,461 @@ ui <- fluidPage(
           )
         )
       ),
+      ## measurement_diagnostics_start
+      ## Measurement code use -----
+      bslib::nav_panel(
+        title = "Measurements Code Use",
+        bslib::accordion(
+          bslib::accordion_panel(
+            title = "Shared inputs",
+            tags$div(
+              style = "background-color: #750075; color: white; padding: 10px; font-weight: bold;  display: flex; flex-wrap: wrap; gap: 10px; gap: 10px; height: auto; align-items: center;",
+              tags$label("Select Database(s):"),
+              tags$div(
+                style = "width: 225px;",
+                tags$div(
+                  style = "margin-top: 15px;",
+                  shinyWidgets::pickerInput(
+                    inputId = "measurement_summary_cdm_name",
+                    label = NULL,
+                    selected = selected$shared_cdm_name,
+                    choices = choices$shared_cdm_name,
+                    multiple = TRUE,
+                    options = list(`actions-box` = TRUE, `selected-text-format` = "count > 1",
+                                   `deselect-all-text` = "None", `select-all-text` = "All"),
+                    width = "100%"
+                  )
+                )
+              ),
+              tags$label("Select Cohort(s):"),
+              tags$div(
+                style = "width: 225px;",
+                tags$div(
+                  style = "margin-top: 15px;",
+                  shinyWidgets::pickerInput(
+                    inputId = "measurement_summary_cohort_name",
+                    label = NULL,
+                    selected = selected$shared_cohort_name,
+                    choices = choices$shared_cohort_name,
+                    multiple = TRUE,
+                    options = list(`actions-box` = TRUE, `selected-text-format` = "count > 1",
+                                   `deselect-all-text` = "None", `select-all-text` = "All"),
+                    width = "100%"
+                  )
+                )
+              ),
+              tags$div(
+                style = "width: 225px;",
+                actionBttn("updateMeasurementCodeUse", "Update",
+                           style = "simple"),
+                width = "100%"
+              )
+            )
+          )),
+        icon = shiny::icon("weight-scale"),
+        bslib::navset_card_tab(
+        bslib::nav_panel(
+          title = "Table Summary",
+          bslib::card(
+            full_screen = TRUE,
+            bslib::card_header(
+              shiny::downloadButton(outputId = "measurement_summary_gt_download", label = ""),
+              class = "text-end"
+            ),
+            bslib::layout_sidebar(
+              sidebar = bslib::sidebar(width = 400, open = "closed",
+                                       uiOutput("measurement_summary_sortable"),
+                                       position = "right"
+              ),
+              gt::gt_output("measurement_summary_tbl") |> withSpinner()
+            )
+          )
+        ),
+        bslib::nav_panel(
+          title = "Plot summary",
+          bslib::card(
+            full_screen = TRUE,
+            bslib::card_header(
+              bslib::popover(
+                shiny::icon("download"),
+                shiny::numericInput(
+                  inputId = "plot_measurement_summary_download_width",
+                  label = "Width",
+                  value = 15
+                ),
+                shiny::numericInput(
+                  inputId = "plot_measurement_summary_download_height",
+                  label = "Height",
+                  value = 10
+                ),
+                shinyWidgets::pickerInput(
+                  inputId = "plot_measurement_summary_download_units",
+                  label = "Units",
+                  selected = "cm",
+                  choices = c("px", "cm", "inch"),
+                  multiple = FALSE
+                ),
+                shiny::numericInput(
+                  inputId = "plot_measurement_summary_download_dpi",
+                  label = "dpi",
+                  value = 300
+                ),
+                shiny::downloadButton(outputId = "plot_measurement_summary_download", label = "Download")
+              ),
+              class = "text-end"
+            ),
+            bslib::layout_sidebar(
+              sidebar = bslib::sidebar(width = 400, open = "closed",
+                                       shinyWidgets::pickerInput(
+                                         inputId = "measurement_summary_y",
+                                         label = "Vertical axis",
+                                         selected = c("time"),
+                                         multiple = FALSE,
+                                         choices = c("time", "measurements_per_subject"),
+                                         options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
+                                       ),
+                                       shinyWidgets::pickerInput(
+                                         inputId = "measurement_summary_time_scale",
+                                         label = "Time scale",
+                                         selected = c("days"),
+                                         multiple = FALSE,
+                                         choices = c("days", "years"),
+                                         options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
+                                       ),
+                                       shinyWidgets::pickerInput(
+                                         inputId = "measurement_summary_plottype",
+                                         label = "Plot type",
+                                         selected = "boxplot",
+                                         multiple = FALSE,
+                                         choices = c("boxplot", "densityplot"),
+                                         options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
+                                       ),
+                                       shinyWidgets::pickerInput(
+                                         inputId = "measurement_summary_colour",
+                                         label = "Colour",
+                                         selected = c("codelist_name"),
+                                         multiple = TRUE,
+                                         choices = c("cdm_name", "codelist_name", "cohort_name"),
+                                         options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
+                                       ),
+                                       shinyWidgets::pickerInput(
+                                         inputId = "measurement_summary_facet",
+                                         label = "Facet",
+                                         selected = c("cdm_name"),
+                                         multiple = TRUE,
+                                         choices = c("cdm_name", "codelist_name", "cohort_name"),
+                                         options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
+                                       ),
+                                       position = "right"
+              ),
+              shiny::plotOutput("plot_measurement_summary")
+            )
+          )
+        ),
+          bslib::nav_panel(
+            title = "Table Values (Concepts)",
+            bslib::card(
+              full_screen = TRUE,
+              bslib::card_header(
+                shiny::downloadButton(outputId = "measurement_value_as_concept_gt_download", label = ""),
+                class = "text-end"
+              ),
+              bslib::layout_sidebar(
+                sidebar = bslib::sidebar(width = 400, open = "closed",
+                                         uiOutput("measurement_value_as_concept_sortable"),
+                                         position = "right"
+                ),
+                gt::gt_output("measurement_value_as_concept_tbl") |> withSpinner()
+              )
+            )
+          ),
+          bslib::nav_panel(
+            title = "Plot Values (Concepts)",
+            bslib::card(
+              full_screen = TRUE,
+              bslib::card_header(
+                bslib::popover(
+                  shiny::icon("download"),
+                  shiny::numericInput(
+                    inputId = "plot_measurement_value_as_concept_download_width",
+                    label = "Width",
+                    value = 15
+                  ),
+                  shiny::numericInput(
+                    inputId = "plot_measurement_value_as_concept_download_height",
+                    label = "Height",
+                    value = 10
+                  ),
+                  shinyWidgets::pickerInput(
+                    inputId = "plot_measurement_value_as_concept_download_units",
+                    label = "Units",
+                    selected = "cm",
+                    choices = c("px", "cm", "inch"),
+                    multiple = FALSE
+                  ),
+                  shiny::numericInput(
+                    inputId = "plot_measurement_value_as_concept_download_dpi",
+                    label = "dpi",
+                    value = 300
+                  ),
+                  shiny::downloadButton(outputId = "plot_measurement_value_as_concept_download", label = "Download")
+                ),
+                class = "text-end"
+              ),
+              bslib::layout_sidebar(
+                sidebar = bslib::sidebar(width = 400, open = "closed",
+                                         shinyWidgets::pickerInput(
+                                           inputId = "measurement_value_as_concept_x",
+                                           label = "Horizontal axis",
+                                           selected = c("count"),
+                                           multiple = FALSE,
+                                           choices = c("count", "percentage"),
+                                           options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
+                                         ),
+                                         shinyWidgets::pickerInput(
+                                           inputId = "measurement_value_as_concept_y",
+                                           label = "Vertical axis",
+                                           selected = c("codelist_name"),
+                                           multiple = FALSE,
+                                           choices = c("count", "variable_level", "codelist_name", "concept_name", "cdm_name"),
+                                           options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
+                                         ),
+                                         shinyWidgets::pickerInput(
+                                           inputId = "measurement_value_as_concept_colour",
+                                           label = "Colour",
+                                           selected = c("concept_name", "variable_level"),
+                                           multiple = TRUE,
+                                           choices = c("count", "variable_level", "codelist_name", "concept_name", "cdm_name"),
+                                           options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
+                                         ),
+                                         shinyWidgets::pickerInput(
+                                           inputId = "measurement_value_as_concept_facet",
+                                           label = "Facet",
+                                           selected = c("cdm_name"),
+                                           multiple = TRUE,
+                                           choices = c("count", "variable_level", "codelist_name", "concept_name", "cdm_name"),
+                                           options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
+                                         ),
+                                         position = "right"
+                ),
+                shiny::plotOutput("plot_measurement_value_as_concept")
+              )
+            )
+          ),
+          bslib::nav_panel(
+            title = "Table Values (Numeric)",
+            bslib::card(
+              full_screen = TRUE,
+              bslib::card_header(
+                shiny::downloadButton(outputId = "measurement_value_as_number_gt_download", label = ""),
+                class = "text-end"
+              ),
+              bslib::layout_sidebar(
+                sidebar = bslib::sidebar(width = 400, open = "closed",
+                                         uiOutput("measurement_value_as_number_sortable"),
+                                         position = "right"
+                ),
+                gt::gt_output("measurement_value_as_number_tbl") |> withSpinner()
+              )
+            )
+          ),
+          bslib::nav_panel(
+            title = "Plot Values (Numeric)",
+            bslib::card(
+              full_screen = TRUE,
+              bslib::card_header(
+                bslib::popover(
+                  shiny::icon("download"),
+                  shiny::numericInput(
+                    inputId = "plot_measurement_value_as_number_download_width",
+                    label = "Width",
+                    value = 15
+                  ),
+                  shiny::numericInput(
+                    inputId = "plot_measurement_value_as_number_download_height",
+                    label = "Height",
+                    value = 10
+                  ),
+                  shinyWidgets::pickerInput(
+                    inputId = "plot_measurement_value_as_number_download_units",
+                    label = "Units",
+                    selected = "cm",
+                    choices = c("px", "cm", "inch"),
+                    multiple = FALSE
+                  ),
+                  shiny::numericInput(
+                    inputId = "plot_measurement_value_as_number_download_dpi",
+                    label = "dpi",
+                    value = 300
+                  ),
+                  shiny::downloadButton(outputId = "plot_measurement_value_as_number_download", label = "Download")
+                ),
+                class = "text-end"
+              ),
+              bslib::layout_sidebar(
+                sidebar = bslib::sidebar(width = 400, open = "closed",
+                                         shinyWidgets::pickerInput(
+                                           inputId = "measurement_value_as_number_x",
+                                           label = "Horizontal axis",
+                                           selected = c("unit_concept_name"),
+                                           multiple = FALSE,
+                                           choices = c("unit_concept_name", "codelist_name", "concept_name", "cdm_name"),
+                                           options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
+                                         ),
+                                         shinyWidgets::pickerInput(
+                                           inputId = "measurement_value_as_number_plottype",
+                                           label = "Plot type",
+                                           selected = "boxplot",
+                                           multiple = FALSE,
+                                           choices = c("boxplot", "densityplot"),
+                                           options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
+                                         ),
+                                         shinyWidgets::pickerInput(
+                                           inputId = "measurement_value_as_number_colour",
+                                           label = "Colour",
+                                           selected = c("cdm_name"),
+                                           multiple = TRUE,
+                                           choices = c("unit_concept_name", "codelist_name", "concept_name", "cdm_name"),
+                                           options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
+                                         ),
+                                         shinyWidgets::pickerInput(
+                                           inputId = "measurement_value_as_number_facet",
+                                           label = "Facet",
+                                           selected = c("codelist_name", "concept_name"),
+                                           multiple = TRUE,
+                                           choices = c("unit_concept_name", "codelist_name", "concept_name", "cdm_name"),
+                                           options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
+                                         ),
+                                         position = "right"
+                ),
+                shiny::plotOutput("plot_measurement_value_as_number")
+              )
+            )
+          )
+        )
+      ), ## measurement_diagnostics_end
+      ## drug_diagnostics_start
+      ## Drug diagnostics -----
+      bslib::nav_panel(
+        title = "Drug diagnostics",
+        bslib::accordion(
+          bslib::accordion_panel(
+            title = "Shared inputs",
+            tags$div(
+              style = "background-color: #750075; color: white; padding: 10px; font-weight: bold;  display: flex; flex-wrap: wrap; gap: 10px; gap: 10px; height: auto; align-items: center;",
+              tags$label("Select Database(s):"),
+              tags$div(
+                style = "width: 225px;",
+                tags$div(
+                  style = "margin-top: 15px;",
+                  shinyWidgets::pickerInput(
+                    inputId = "drug_diagnostics_cdm_name",
+                    label = NULL,
+                    selected = selected$shared_cdm_name,
+                    choices = choices$shared_cdm_name,
+                    multiple = TRUE,
+                    options = list(`actions-box` = TRUE, `selected-text-format` = "count > 1",
+                                   `deselect-all-text` = "None", `select-all-text` = "All"),
+                    width = "100%"
+                  )
+                )
+              ),
+              tags$label("Select Cohort(s):"),
+              tags$div(
+                style = "width: 225px;",
+                tags$div(
+                  style = "margin-top: 15px;",
+                  shinyWidgets::pickerInput(
+                    inputId = "drug_diagnostics_cohort_name",
+                    label = NULL,
+                    selected = selected$shared_cohort_name,
+                    choices = choices$shared_cohort_name,
+                    multiple = TRUE,
+                    options = list(`actions-box` = TRUE, `selected-text-format` = "count > 1",
+                                   `deselect-all-text` = "None", `select-all-text` = "All"),
+                    width = "100%"
+                  )
+                )
+              ),
+              tags$div(
+                style = "width: 225px;",
+                actionBttn("updateDrugDiagnostics", "Update",
+                           style = "simple"),
+                width = "100%"
+              )
+            )
+          )),
+        icon = shiny::icon("pills"),
+        bslib::layout_sidebar(
+          sidebar = bslib::sidebar(width = 400, open = "closed",
+                                   bslib::accordion(
+                                     bslib::accordion_panel(
+                                       title = "Settings",
+                                       shinyWidgets::pickerInput(
+                                         inputId = "summarise_drug_use_codelist_name",
+                                         label = "Codelist",
+                                         choices = NULL,
+                                         selected = NULL,
+                                         multiple = TRUE,
+                                         options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
+                                       ),
+                                       div(style="display: flex; justify-content: space-between;",
+                                           div(style="flex: 1;", prettyCheckbox(inputId = "drug_use_overall",
+                                                                                label = "Overall",
+                                                                                value = TRUE,
+                                                                                status = "primary",
+                                                                                shape = "curve",
+                                                                                outline = TRUE)),
+                                           div(style="flex: 1;", prettyCheckbox(inputId = "drug_use_by_concept",
+                                                                                label = "By concept",
+                                                                                value = TRUE,
+                                                                                status = "primary",
+                                                                                shape = "curve",
+                                                                                outline = TRUE))
+                                       ),
+                                       shinyWidgets::pickerInput(
+                                         inputId = "summarise_drug_use_drug_type",
+                                         label = "Drug type",
+                                         choices = NULL,
+                                         selected = NULL,
+                                         multiple = TRUE,
+                                         options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
+                                       ),
+                                       shinyWidgets::pickerInput(
+                                         inputId = "summarise_drug_use_route",
+                                         label = "Route",
+                                         choices = NULL,
+                                         selected = NULL,
+                                         multiple = TRUE,
+                                         options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
+                                       )
+                                     ),
+                                     bslib::accordion_panel(
+                                       title = "Table formatting",
+                                       materialSwitch(inputId = "drug_diagnostics_interactive",
+                                                      value = FALSE,
+                                                      label = "Interactive",
+                                                      status = "primary"),
+                                       uiOutput("drug_diagnostics_sortable")
+                                     )
+                                   )
+          ),
+        bslib::navset_card_tab(
+          bslib::nav_panel(
+            title = "Drug diagnostics",
+            bslib::card(
+              full_screen = TRUE,
+              bslib::card_header(
+                shiny::downloadButton(outputId = "drug_diagnostics_gt_download", label = ""),
+                class = "text-end"
+              ),
+                gt::gt_output("drug_diagnostics_tbl") |> withSpinner()
+            )
+          )
+        )
+      )
+      )
+      ## drug_diagnostics_end
     ),
     # codelistDiagnostics_end ----
     # cohortDiagnostics_start -----
