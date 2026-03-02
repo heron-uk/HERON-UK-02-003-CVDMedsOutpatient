@@ -200,6 +200,36 @@ server <- function(input, output, session) {
   })
   outputOptions(output, "measurement_summary_sortable", suspendWhenHidden = FALSE)
 
+  output$drug_diagnostics_sortable <- renderUI({
+    sortable::bucket_list(
+      header = "Table formatting",
+      sortable::add_rank_list(
+        text = "none",
+        labels = c("ingredient_name","variable_name", "estimate_name"),
+        input_id = "drug_diagnostics_gt_none"
+      ),
+      sortable::add_rank_list(
+        text = "header",
+        labels = c("cdm_name"),
+        input_id = "drug_diagnostics_gt_header"
+      ),
+      sortable::add_rank_list(
+        text = "groupColumn",
+        labels =  c("cohort_name", "codelist_name"),
+        input_id = "drug_diagnostics_gt_groupColumn"
+      ),
+      sortable::add_rank_list(
+        text = "hide",
+        labels =  c("route", "drug_type",
+                    "variable_level",
+                    "ingredient_concept_id"),
+        input_id = "drug_diagnostics_gt_hide"
+      )
+    )
+  })
+  outputOptions(output, "drug_diagnostics_sortable", suspendWhenHidden = FALSE)
+  
+  
   output$summarise_characteristics_sortable <- renderUI({
     sortable::bucket_list(
       header = "Table formatting",
@@ -398,11 +428,11 @@ server <- function(input, output, session) {
   ## Table summarise_omop_snapshot ----
   createTableOmopSnapshot <- shiny::reactive({
     filterOmopSnapshot() |>
-      OmopSketch::tableOmopSnapshot() %>%
+      OmopSketch::tableOmopSnapshot() |>
       tab_header(
         title = "Database metadata",
         subtitle = "Overview of data source"
-      ) %>%
+      ) |>
       tab_options(
         heading.align = "left"
       )
@@ -435,11 +465,11 @@ server <- function(input, output, session) {
   ## Table summarise_person -----
   createTablePerson <- shiny::reactive({
     filterPerson() |>
-      OmopSketch::tablePerson() %>%
+      OmopSketch::tablePerson() |>
       tab_header(
         title = "Summary of person table",
         subtitle = "The person table contains core information on patients captured in the OMOP CDM dataset."
-      ) %>%
+      ) |>
       tab_options(
         heading.align = "left"
       )
@@ -504,11 +534,11 @@ server <- function(input, output, session) {
   ## Table summarise_observation_period -----
   createTableObservationPeriod <- shiny::reactive({
     filterObservationPeriod() |>
-      OmopSketch::tableObservationPeriod() %>%
+      OmopSketch::tableObservationPeriod() |>
       tab_header(
         title = "Summary of observation periods",
         subtitle = "Observation periods are used to define time under observation for individuals in the data source."
-      ) %>%
+      ) |>
       tab_options(
         heading.align = "left"
       )
@@ -584,11 +614,11 @@ server <- function(input, output, session) {
   ## Table summarise_clinical_records -----
   createClinicalRecordsTable <- shiny::reactive({
     filterClinicalRecords() |>
-      OmopSketch::tableClinicalRecords() %>%
+      OmopSketch::tableClinicalRecords() |>
       tab_header(
         title = "Summary of Clinical Records",
         subtitle = "Summary of the clinical tables that contain the codes from the cohort codelist."
-      ) %>%
+      ) |>
       tab_options(
         heading.align = "left"
       )
@@ -792,11 +822,11 @@ server <- function(input, output, session) {
       groupColumn = input$orphan_codes_gt_groupColumn,
       hide = input$orphan_codes_gt_hide
     )
-    tbl %>%
+    tbl |>
       tab_header(
         title = "Summary of orphan codes",
         subtitle = "Orphan codes refer to concepts present in the database that are not in a codelist but are related to included codes."
-      ) %>%
+      ) |>
       tab_options(
         heading.align = "left"
       )
@@ -918,11 +948,11 @@ server <- function(input, output, session) {
       header = input$cohort_code_use_gt_header,
       groupColumn = input$cohort_code_use_gt_groupColumn,
       hide = input$cohort_code_use_gt_hide
-    ) %>%
+    ) |>
       tab_header(
         title = "Summary of cohort code use",
         subtitle = "Codes from codelist observed on day of cohort entry. Note more than one code could be seen for a person on this day (both of which would have led to inclusion)."
-      ) %>%
+      ) |>
       tab_options(
         heading.align = "left"
       )
@@ -1039,11 +1069,11 @@ server <- function(input, output, session) {
       header = input$measurement_summary_gt_header,
       groupColumn = input$measurement_summary_gt_groupColumn,
       hide = input$measurement_summary_gt_hide
-    ) %>%
+    ) |>
       tab_header(
         title = "Summary of measurements",
         subtitle = "Only codes from measurements/observations are shown. Time between measurements and number of measurements per subject."
-      ) %>%
+      ) |>
       tab_options(
         heading.align = "left"
       )
@@ -1116,11 +1146,11 @@ server <- function(input, output, session) {
       header = input$measurement_value_as_concept_gt_header,
       groupColumn = input$measurement_value_as_concept_gt_groupColumn,
       hide = input$measurement_value_as_concept_gt_hide
-    ) %>%
+    ) |>
       tab_header(
         title = "Summary of measurement values (concepts)",
         subtitle = "Only codes from measurements that are concepts are shown."
-      ) %>%
+      ) |>
       tab_options(
         heading.align = "left"
       )
@@ -1194,11 +1224,11 @@ server <- function(input, output, session) {
       header = input$measurement_value_as_number_gt_header,
       groupColumn = input$measurement_value_as_number_gt_groupColumn,
       hide = input$measurement_value_as_number_gt_hide
-    ) %>%
+    ) |>
       tab_header(
         title = "Summary of measurement values (numeric)",
         subtitle = "Only codes from measurements which results are numeric are shown."
-      ) %>%
+      ) |>
       tab_options(
         heading.align = "left"
       )
@@ -1249,6 +1279,131 @@ server <- function(input, output, session) {
   )
 
 
+  # summarise drug diagnostics -----
+  filterDrugDiagnostics<- eventReactive(input$updateDrugDiagnostics, ({
+    req(shared_cdm_names())
+    req(shared_cohort_names())
+    if (is.null(dataFiltered$summarise_drug_use)) {
+      validate("No drug diagnostics in results")
+    }
+
+    result <- dataFiltered$summarise_drug_use |>
+      dplyr::filter(.data$cdm_name %in% shared_cdm_names()) |> 
+      visOmopResults::filterGroup(.data$cohort_name %in%
+                                    shared_cohort_names()) |>
+      omopgenerics::filterGroup(.data$codelist_name %in% 
+                                  input$summarise_drug_use_codelist_name) |>
+      omopgenerics::filterGroup(.data$route %in% 
+                                  input$summarise_drug_use_route) |>
+      omopgenerics::filterGroup(.data$drug_type %in% 
+                                  input$summarise_drug_use_drug_type)
+
+    if(isFALSE(input$drug_use_overall)){
+      result <- result |> 
+        dplyr::filter(str_detect(group_name, "concept_name"))
+    }
+    
+    if(isFALSE(input$drug_use_by_concept)){
+      result <- result |> 
+        dplyr::filter(str_detect(group_name, "concept_name", negate = TRUE))
+    }
+
+    validateFilteredResult(result)
+
+    return(result)
+  }))
+
+  ## Table drug diagnostics -----
+  createDrugDiagnosticsGT <- shiny::reactive({
+
+    res <- filterDrugDiagnostics()
+    tbl <- res |>
+      dplyr::arrange(group_name, group_level) |>
+      visOmopResults::visOmopTable(header = input$drug_diagnostics_gt_header,
+                                   groupColumn = input$drug_diagnostics_gt_groupColumn,
+                                   estimateName = c(N = "<count>",
+                                                    `Median [Q01, Q05, Q25 to Q75, Q95, Q99]` = "<median> [<q01>, <q05>, <q25> to <q75>, <q95>, <q99>]",
+                                                    Range = "<min> to <max>",
+                                                    `Percentage missing` = "<percentage_missing> %"),
+                                   hide = input$drug_diagnostics_gt_hide ) |>
+      tab_header(
+        title = "Drug exposure diagnostics"
+      ) |>
+      tab_options(
+        heading.align = "left"
+      )
+
+    return(tbl)
+  })
+  
+  createDrugDiagnosticsInteractive <- shiny::reactive({
+    
+    res <- filterDrugDiagnostics()
+    tbl <- res |>
+      dplyr::arrange(group_name, group_level) |>
+      visOmopResults::visOmopTable(header = input$drug_diagnostics_gt_header,
+                                   groupColumn = input$drug_diagnostics_gt_groupColumn,
+                                   estimateName = c(N = "<count>",
+                                                    `Median [Q01, Q05, Q25 to Q75, Q95, Q99]` = "<median> [<q01>, <q05>, <q25> to <q75>, <q95>, <q99>]",
+                                                    Range = "<min> to <max>",
+                                                    `Percentage missing` = "<percentage_missing> %"),
+                                   hide = input$drug_diagnostics_gt_hide,
+                                   type = "tibble") 
+    names(tbl) <-stringr::str_remove_all(names(tbl),
+                                         "\\[header_name\\]CDM name\\n\\[header_level\\]")
+    names(tbl) <- stringr::str_remove_all(names(tbl),
+                                          "Estimate name\n\\[header_level\\]")
+    names(tbl) <- stringr::str_replace_all(names(tbl),
+                                           "\n\\[header_name\\]",
+                                           ": ")
+    
+    return(tbl)
+  })
+
+  output$drug_diagnostics_tbl <- shiny::renderUI({
+    if(isFALSE(input$drug_diagnostics_interactive)){
+      tbl <- createDrugDiagnosticsGT()
+      return(tbl)
+    } else {
+      tbl <- createDrugDiagnosticsInteractive() 
+      
+      tbl <- tbl |>
+        dplyr::mutate("Cohort name - Codelist name" =
+                        paste0(.data[["Cohort name"]], " - ", .data[["Codelist name"]])) |>
+        dplyr::select(-c("Cohort name", "Codelist name")) |>
+        dplyr::relocate("Cohort name - Codelist name")
+      
+      
+      # column ordering by codelist and first column with a count
+      order <- list("Cohort name - Codelist name"  = "asc")
+      
+      tbl <- reactable(tbl,
+                       groupBy = c("Cohort name - Codelist name"),
+                       columns = getColsForTbl(tbl,
+                                               sortNALast = FALSE,
+                                               names = c("Standard concept ID", "Source concept ID")),
+                       defaultSorted = order,
+                       filterable = TRUE,
+                       searchable = TRUE,
+                       defaultPageSize = 25,
+                       highlight = TRUE,
+                       striped = TRUE,
+                       compact = TRUE,
+                       showSortable = TRUE) |>
+        reactablefmtr::add_title("Drug diagnostics",
+                                 font_size = 25,
+                                 font_weight = "normal") 
+    }
+    tbl
+  })
+
+  output$drug_diagnostics_gt_download <- shiny::downloadHandler(
+    filename = "summarise_drug_diagnostics_gt.docx",
+    content = function(file){
+      gt::gtsave(data = createDrugDiagnosticsGT(), filename = file)
+    }
+  )
+
   # summarise_cohort_count -----
   filterCohortCount <- eventReactive(input$updateCohortCount, ({
     req(shared_cdm_names())
@@ -1282,11 +1437,11 @@ server <- function(input, output, session) {
     CohortCharacteristics::tableCohortCount(res,
                                             hide = c("variable_level",
                                                      "estimate_name",
-                                                     settingsColumns(res))) %>%
+                                                     settingsColumns(res))) |>
       tab_header(
         title = "Cohort count",
         subtitle = "Number of records and subjects in the study cohorts."
-      ) %>%
+      ) |>
       tab_options(
         heading.align = "left"
       )
@@ -1415,11 +1570,11 @@ server <- function(input, output, session) {
         hide = c(input$summarise_characteristics_gt_hide,
                  "table_name", "value", "window", "table",
                  "diagnostic", "cohort_sample", "matched_sample", "phenotyper_version")
-      ) %>%
+      ) |>
       tab_header(
         title = "Patient characteristics",
         subtitle = "Summary of patient characteristics relative to cohort entry. Please be aware that statistics are calculated by record, not by subject."
-      ) %>%
+      ) |>
       tab_options(
         heading.align = "left"
       )
@@ -1874,11 +2029,11 @@ server <- function(input, output, session) {
       hide = c(input$summarise_cohort_overlap_gt_hide,
                "overlap_by",
                "diagnostic", "matchedSample", "phenotyper_version")
-    ) %>%
+    ) |>
       tab_header(
         title = "Cohort overlap",
         subtitle = "Overlap is where the same individual is in both cohorts. Note their cohort entries do not necessarily overlap."
-      ) %>%
+      ) |>
       tab_options(
         heading.align = "left"
       )
@@ -1953,11 +2108,11 @@ server <- function(input, output, session) {
       result,
       timeScale = input$summarise_cohort_timing_gt_time_scale,
       uniqueCombinations = input$summarise_cohort_timing_gt_uniqueCombinations,
-    ) %>%
+    ) |>
       tab_header(
         title = "Cohort timing",
         subtitle = "Cohort timing refers to the time between an individual entering one cohort and another cohort."
-      ) %>%
+      ) |>
       tab_options(
         heading.align = "left"
       )
@@ -2136,11 +2291,11 @@ server <- function(input, output, session) {
                          "denominator_sex",
                          "denominator_days_prior_observation",
                          "outcome_cohort_name")
-    ) %>%
+    ) |>
       tab_header(
         title = "Incidence estimates",
         subtitle = "Incidence rates estimated for outcomes of interest"
-      ) %>%
+      ) |>
       tab_options(
         heading.align = "left"
       )
@@ -2270,11 +2425,11 @@ server <- function(input, output, session) {
                          "denominator_sex",
                          "denominator_days_prior_observation",
                          "outcome_cohort_name")
-    ) %>%
+    ) |>
       tab_header(
         title = "Prevalence estimates",
         subtitle = "Prevalence rates estimated for outcomes of interest"
-      ) %>%
+      ) |>
       tab_options(
         heading.align = "left"
       )
