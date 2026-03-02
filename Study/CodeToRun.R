@@ -74,6 +74,7 @@ study_start <- "2012-01-01"
 min_cell_count <- 5
 
 hospital_care <- FALSE
+primary_care <- TRUE
 
 run_characteristics <- TRUE
 run_drug_adherence <- TRUE
