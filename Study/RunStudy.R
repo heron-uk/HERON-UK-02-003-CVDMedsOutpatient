@@ -34,6 +34,9 @@ cdm$person <- cdm$person |>
     gender_concept_id %in% c(8507,8532)
   )
 
+# Load functions
+source(here("Analyses","functions.R"))
+
 # create and export snapshot
 info(logger, "RETRIEVING SNAPSHOT")
 cli::cli_text("- GETTING CDM SNAPSHOT ({Sys.time()})")
