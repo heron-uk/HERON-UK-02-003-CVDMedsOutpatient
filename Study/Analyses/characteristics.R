@@ -21,7 +21,8 @@ cdm$mi_drugs_chars <- cdm$mi_drugs_first |>
     priorObservation = FALSE,
     futureObservation = FALSE,
     name = "mi_drugs_chars"
-  )
+  ) |>
+  addSES()
 
 cdm$mi_drugs_chars <- cdm$mi_drugs_chars |>
   mutate(
@@ -37,6 +38,13 @@ cdm$mi_drugs_chars <- cdm$mi_drugs_chars |>
   )
 
 char_mi <- summariseCharacteristics(cdm$mi_drugs_chars,
+                                    ageGroup = list(
+                                      "18 to 49" = c(18, 49),
+                                      "50 to 59" = c(50, 59),
+                                      "60 to 69" = c(60, 69),
+                                      "70 to 79" = c(70, 79),
+                                      "80 to 89" = c(80, 89),
+                                      "90+" = c(90, 150)),
                                     conceptIntersectFlag = list(
                                       "Prior drug use (-30 to -1)" = list(
                                         conceptSet = mi_drugs_cl,
@@ -44,8 +52,13 @@ char_mi <- summariseCharacteristics(cdm$mi_drugs_chars,
                                           c(-30, -1)
                                         )
                                       )),
-                                    strata = list("age_group_broad", "sex",
-                                                  c("age_group_broad", "sex")))
+                                    strata = list("age_group_broad", "sex", "ses",
+                                                  c("age_group_broad", "sex"),
+                                                  c("age_group_broad", "ses"),
+                                                  c("ses", "sex"),
+                                                  c("age_group_broad", "sex", "ses")
+                                                  ),
+                                    otherVariables = "ses")
 
 
 mi_results[["summmarise_characteristics_mi"]] <- char_mi
