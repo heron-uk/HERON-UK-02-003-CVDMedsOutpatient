@@ -37,7 +37,7 @@ cdm$mi_drugs_after_event <- cdm$mi_drugs |>
 info(logger, "INSTANTIATED CARDIOVASCULAR DRUGS COHORT")
 
 ########
-info(logger, "INSTANTIATE BETA BLOCKERS AND HF COHORTS")
+info(logger, "INSTANTIATE BETA BLOCKERS AND HF COHORTS - MI")
 ### beta blockers
 
 cdm$beta_blockers_after_event <- cdm$mi_drugs_after_event |>
@@ -69,10 +69,10 @@ cdm$beta_blockers_no_hf <- cdm$beta_blockers_after_event |>
     newCohortName = "beta_blockers_no_hf"
   )
 
-info(logger, "INSTANTIATED BETA BLOCKERS AND HF COHORTS")
+info(logger, "INSTANTIATED BETA BLOCKERS AND HF COHORTS - MI")
 
 ########
-info(logger, "INSTANTIATE DUAL ANTIPLATELETS COHORT")
+info(logger, "INSTANTIATE DUAL ANTIPLATELETS COHORT - MI")
 ### antiplatelets
 
 cdm$dual_antiplatelet_mi <- cdm$mi_drugs_after_event |>
@@ -85,10 +85,10 @@ cdm$dual_antiplatelet_mi <- cdm$mi_drugs_after_event |>
     newCohortName = "dual_antiplatelet_mi"
   )
 
-info(logger, "INSTANTIATED DUAL ANTIPLATELETS COHORTS")
+info(logger, "INSTANTIATED DUAL ANTIPLATELETS COHORTS - MI")
 
 ########
-info(logger, "INSTANTIATE DUAL ANTIPLATELETS COHORT FOR CAROTID STENOSIS")
+info(logger, "INSTANTIATE DUAL ANTIPLATELETS COHORT FOR CAROTID STENOSIS - MI")
 ### antiplatelets
 
 cdm$dual_antiplatelet_mi_cs <- cdm$dual_antiplatelet_mi|>
@@ -102,9 +102,9 @@ cdm$dual_antiplatelet_mi_cs <- cdm$dual_antiplatelet_mi|>
     newCohortName = "dual_antiplatelet_mi_cs"
   )
 
-info(logger, "INSTANTIATED DUAL ANTIPLATELETS COHORTS FOR CAROTID STENOSIS")
+info(logger, "INSTANTIATED DUAL ANTIPLATELETS COHORTS FOR CAROTID STENOSIS - MI")
 
-info(logger, "INSTANTIATE ANTICOAGULANT COHORT")
+info(logger, "INSTANTIATE ANTICOAGULANT COHORT - MI")
 ### anticoagulents
 
 cdm$anticoagulants_mi <- unionCohorts(
@@ -118,10 +118,9 @@ cdm$anticoagulants_mi <- unionCohorts(
     newCohortName = "anticoagulants_mi"
   )
 
-info(logger, "INSTANTIATED ANTICOAGULANT COHORT")
+info(logger, "INSTANTIATED ANTICOAGULANT COHORT - MI")
 
-info(logger, "INSTANTIATE ANTICOAGULANT WITH AF COHORT")
-### anticoagulents
+info(logger, "INSTANTIATE ANTICOAGULANT WITH AF COHORT - MI")
 
 cdm$anticoagulants_mi_af <- cdm$anticoagulants_mi |>
   requireCohortIntersect(
@@ -134,9 +133,9 @@ cdm$anticoagulants_mi_af <- cdm$anticoagulants_mi |>
     newCohortName = "anticoagulants_mi_af"
   )
 
-info(logger, "INSTANTIATED ANTICOAGULANT WITH AF COHORT")
+info(logger, "INSTANTIATED ANTICOAGULANT WITH AF COHORT - MI")
 
-info(logger, "INSTANTIATE LIPID-LOWERING COHORT")
+info(logger, "INSTANTIATE LIPID-LOWERING COHORT - MI")
 ### antiplatelets
   
   cdm$lipid_lowering_mi <- unionCohorts(
@@ -150,7 +149,23 @@ info(logger, "INSTANTIATE LIPID-LOWERING COHORT")
     newCohortName = "lipid_lowering_mi"
   )
 
-info(logger, "INSTANTIATED LIPID-LOWERING COHORT")
+info(logger, "INSTANTIATED LIPID-LOWERING COHORT - MI")
+
+info(logger, "INSTANTIATE ANTIHYPERTENSIVE COHORT - MI")
+### antiplatelets
+
+cdm$antihypertensive_mi <- unionCohorts(
+  cohort = cdm$mi_drugs_after_event,
+  cohortId = c("acei_arbs_mi", "calcium_channel_blockers_mi", "thiazide_diuretics_mi"),
+  gap = 14,
+  keepOriginalCohorts = FALSE,
+  name = "antihypertensive_mi"
+) |>
+  renameCohort(
+    newCohortName = "antihypertensive_mi"
+  )
+
+info(logger, "INSTANTIATED ANTIHYPERTENSIVE COHORT - MI")
 
 
 ### combine into one table
@@ -160,21 +175,12 @@ cdm <- omopgenerics::bind(
   cdm$beta_blockers_hf,
   cdm$beta_blockers_no_hf,
   cdm$dual_antiplatelet_mi,
-  cdm$p2y12_and_aspirin_mi_cs,
+  cdm$dual_antiplatelet_mi_cs,
   cdm$anticoagulants_mi,
+  cdm$anticoagulants_mi_af,
   cdm$lipid_lowering_mi,
+  cdm$antihypertensive_mi,
   name = "mi_drugs_final"
 )
-
-drug_count_after <- cdm$mi_drugs_final |>
-  collect() |>
-  group_by(cohort_definition_id) |>
-  distinct(subject_id) |>
-  tally() |>
-  filter(n >= 100)
-
-cdm$mi_drugs_final <- cdm$mi_drugs_final |>
-  subsetCohorts(cohortId = drug_count_after$cohort_definition_id,
-                name = "mi_drugs_final")
 
 info(logger, "INSTANTIATED CARDIOVASCULAR DRUGS COHORT")

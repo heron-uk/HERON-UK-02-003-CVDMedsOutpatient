@@ -1,6 +1,4 @@
-### cardio drugs (excl. bb)
-
-info(logger, "INSTANTIATING STROKE DRUGS COHORT")
+info(logger, "INSTANTIATING CARDIOVASCULAR DRUGS COHORT - STROKE")
 
 stroke_drugs_cl <- importCodelist(here("Cohorts", "Primary", "drugs"), type = "csv")
 
@@ -34,24 +32,113 @@ cdm$stroke_drugs_after_event <- cdm$stroke_drugs |>
   select(-c(start_date)) |>
   compute(name = "stroke_drugs_after_event", temporary = FALSE)
 
-drug_count_after_stroke <- cdm$stroke_drugs_after_event |>
-  collect() |>
-  group_by(cohort_definition_id) |>
-  distinct(subject_id) |>
-  tally() |>
-  filter(n >= 100)
+info(logger, "INSTANTIATE DUAL ANTIPLATELETS COHORT - STROKE")
+### antiplatelets
 
-cdm$stroke_drugs_final <- cdm$stroke_drugs_after_event |>
-  subsetCohorts(cohortId = drug_count_after_stroke$cohort_definition_id,
-                name = "stroke_drugs_final")
+cdm$dual_antiplatelet_stroke <- cdm$stroke_drugs_after_event |>
+  intersectCohorts(
+    cohortId = c("aspirin_stroke", "p2y12_inhibitors_stroke"),
+    gap = 14,
+    name = "dual_antiplatelet_stroke"
+  ) |>
+  renameCohort(
+    newCohortName = "dual_antiplatelet_stroke"
+  )
 
-info(logger, "INSTANTIATED STROKE DRUGS COHORT")
+info(logger, "INSTANTIATED DUAL ANTIPLATELETS COHORTS - STROKE")
 
-## prior afib and no afib (bb users)
+########
+info(logger, "INSTANTIATE DUAL ANTIPLATELETS COHORT FOR CAROTID STENOSIS - STROKE")
+### antiplatelets
 
+cdm$dual_antiplatelet_stroke_cs <- cdm$dual_antiplatelet_stroke|>
+  requireCohortIntersect(
+    targetCohortTable = "carotid_disease",
+    window = c(-Inf, -1),
+    atFirst = TRUE,
+    name = "dual_antiplatelet_stroke_cs"
+  ) |>
+  renameCohort(
+    newCohortName = "dual_antiplatelet_stroke_cs"
+  )
+
+info(logger, "INSTANTIATED DUAL ANTIPLATELETS COHORTS FOR CAROTID STENOSIS - STROKE")
+
+info(logger, "INSTANTIATE ANTICOAGULANT COHORT - STROKE")
+### anticoagulents
+
+cdm$anticoagulants_stroke <- unionCohorts(
+  cohort = cdm$stroke_drugs_after_event,
+  cohortId = c("warfarin_stroke", "doacs_stroke"),
+  gap = 14,
+  keepOriginalCohorts = FALSE,
+  name = "anticoagulants_stroke"
+) |>
+  renameCohort(
+    newCohortName = "anticoagulants_stroke"
+  )
+
+info(logger, "INSTANTIATED ANTICOAGULANT COHORT - STROKE")
+
+info(logger, "INSTANTIATE ANTICOAGULANT WITH AF COHORT - STROKE")
+
+cdm$anticoagulants_stroke_af <- cdm$anticoagulants_stroke |>
+  requireCohortIntersect(
+    targetCohortTable = "atrial_fibrillation",
+    window = c(-Inf, -1),
+    atFirst = TRUE,
+    name = "anticoagulants_stroke_af"
+  ) |>
+  renameCohort(
+    newCohortName = "anticoagulants_stroke_af"
+  )
+
+info(logger, "INSTANTIATED ANTICOAGULANT WITH AF COHORT - STROKE")
+
+info(logger, "INSTANTIATE LIPID-LOWERING COHORT - STROKE")
+### antiplatelets
+
+cdm$lipid_lowering_stroke <- unionCohorts(
+  cohort = cdm$stroke_drugs_after_event,
+  cohortId = c("statin_stroke", "pcsk9_inhibitors_stroke", "ezetimibe_stroke"),
+  gap = 14,
+  keepOriginalCohorts = FALSE,
+  name = "lipid_lowering_stroke"
+) |>
+  renameCohort(
+    newCohortName = "lipid_lowering_stroke"
+  )
+
+info(logger, "INSTANTIATED LIPID-LOWERING COHORT - STROKE")
+
+info(logger, "INSTANTIATE ANTIHYPERTENSIVE COHORT - STROKE")
+### antiplatelets
+
+cdm$antihypertensive_stroke <- unionCohorts(
+  cohort = cdm$stroke_drugs_after_event,
+  cohortId = c("acei_arbs_stroke", "calcium_channel_blockers_stroke", "thiazide_diuretics_stroke"),
+  gap = 14,
+  keepOriginalCohorts = FALSE,
+  name = "antihypertensive_stroke"
+) |>
+  renameCohort(
+    newCohortName = "antihypertensive_stroke"
+  )
+
+info(logger, "INSTANTIATED ANTIHYPERTENSIVE COHORT - STROKE")
 
 
 ### combine into one table
-  
 
-info(logger, "INSTANTIATED CARDIOVASCULAR DRUGS COHORT")
+cdm <- omopgenerics::bind(
+  cdm$stroke_drugs_after_event,
+  cdm$dual_antiplatelet_stroke,
+  cdm$dual_antiplatelet_stroke_cs,
+  cdm$anticoagulants_stroke,
+  cdm$anticoagulants_stroke_af,
+  cdm$lipid_lowering_stroke,
+  cdm$antihypertensive_stroke,
+  name = "stroke_drugs_final"
+)
+
+info(logger, "INSTANTIATED CARDIOVASCULAR DRUGS COHORT - STROKE")
