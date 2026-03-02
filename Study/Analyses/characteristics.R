@@ -86,7 +86,9 @@ cdm$stroke_drugs_chars <- cdm$stroke_drugs_first |>
     priorObservation = FALSE,
     futureObservation = FALSE,
     name = "stroke_drugs_chars"
-  )
+  ) |>
+  addSES() |>
+  addEthnicity()
 
 cdm$stroke_drugs_chars <- cdm$stroke_drugs_chars |>
   mutate(
@@ -102,22 +104,32 @@ cdm$stroke_drugs_chars <- cdm$stroke_drugs_chars |>
   )
 
 char_stroke <- summariseCharacteristics(cdm$stroke_drugs_chars,
+                                        ageGroup = list(
+                                          "18 to 49" = c(18, 49),
+                                          "50 to 59" = c(50, 59),
+                                          "60 to 69" = c(60, 69),
+                                          "70 to 79" = c(70, 79),
+                                          "80 to 89" = c(80, 89),
+                                          "90+" = c(90, 150)),
                                         conceptIntersectFlag = list(
                                           "Prior drug use (-30 to -1)" = list(
-                                            conceptSet = stroke_drugs_cl,
+                                            conceptSet = mi_drugs_cl,
                                             window = list(
                                               c(-30, -1)
                                             )
-                                            ),
-                                            "Prior comorbidities (-Inf, -1)" = list(
-                                              conceptSet = comorbidities_cl,
-                                              window = list(
-                                                c(-Inf, -1)
-                                              )
-                                            )
                                           ),
-                                        strata = list("age_group_broad", "sex",
-                                                      c("age_group_broad", "sex")))
-
+                                          "Prior comorbidities (-Inf, -1)" = list(
+                                            conceptSet = comorbidities_cl,
+                                            window = list(
+                                              c(-Inf, -1)
+                                            )
+                                          )),
+                                        strata = list("age_group_broad", "sex", "ses",
+                                                      c("age_group_broad", "sex"),
+                                                      c("age_group_broad", "ses"),
+                                                      c("ses", "sex"),
+                                                      c("age_group_broad", "sex", "ses")
+                                        ),
+                                        otherVariables = c("ses", "ethnicity"))
 
 stroke_results[["summmarise_characteristics_stroke"]] <- char_stroke
