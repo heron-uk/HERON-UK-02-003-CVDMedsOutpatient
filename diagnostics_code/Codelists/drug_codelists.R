@@ -198,3 +198,11 @@ antihypertensive <- c(acei_arbs_all, beta_blockers_all,
 names(antihypertensive) <- "antihypertensive"
 exportCodelist(antihypertensive, path = here::here("Cohorts", "drugs"),
                type = "csv")
+
+# antiplatelet -----
+antiplatelet <- c(aspirin, dipyridamole,
+                  dipyridamole) |> 
+  unionCodelists()
+names(antihypertensive) <- "antihypertensive"
+exportCodelist(antihypertensive, path = here::here("Cohorts", "drugs"),
+               type = "csv")
