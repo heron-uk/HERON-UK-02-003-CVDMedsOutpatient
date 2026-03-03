@@ -70,6 +70,12 @@ cdm$beta_blockers_no_hf <- cdm$beta_blockers_after_event |>
     newCohortName = "beta_blockers_no_hf"
   )
 
+cdm$beta_blockers_hf_first <- cdm$beta_blockers_hf |>
+  requireIsFirstEntry(name = "beta_blockers_hf_first")
+
+cdm$beta_blockers_no_hf_first <- cdm$beta_blockers_no_hf |>
+  requireIsFirstEntry(name = "beta_blockers_no_hf_first")
+
 info(logger, "INSTANTIATED BETA BLOCKERS AND HF COHORTS - MI")
 
 ########
@@ -86,6 +92,9 @@ cdm$antiplatelets_mi <- unionCohorts(
   renameCohort(
     newCohortName = "antiplatelets_mi"
   )
+
+cdm$antiplatelets_mi_first <- cdm$antiplatelets_mi |>
+  requireIsFirstEntry(name = "antiplatelets_mi_first")
 
 info(logger, "INSTANTIATED ANTIPLATELETS COHORTS - MI")
 
@@ -125,8 +134,10 @@ cdm$dual_antiplatelet_mi <- unionCohorts(
   name = "dual_antiplatelet_mi"
 )
 
-info(logger, "INSTANTIATED DUAL ANTIPLATELETS COHORTS - MI")
+cdm$dual_antiplatelet_mi_first <- cdm$dual_antiplatelet_mi |>
+  requireIsFirstEntry(name = "dual_antiplatelet_mi_first")
 
+info(logger, "INSTANTIATED DUAL ANTIPLATELETS COHORTS - MI")
 
 info(logger, "INSTANTIATE ANTICOAGULANT COHORT - MI")
 ### anticoagulents
@@ -141,6 +152,9 @@ cdm$anticoagulants_mi <- unionCohorts(
   renameCohort(
     newCohortName = "anticoagulants_mi"
   )
+
+cdm$anticoagulants_mi_first <- cdm$anticoagulants_mi |>
+  requireIsFirstEntry(name = "anticoagulants_mi_first")
 
 info(logger, "INSTANTIATED ANTICOAGULANT COHORT - MI")
 
@@ -157,6 +171,9 @@ cdm$anticoagulants_mi_af <- cdm$anticoagulants_mi |>
     newCohortName = "anticoagulants_mi_af"
   )
 
+cdm$anticoagulants_mi_af_first <- cdm$anticoagulants_mi_af |>
+  requireIsFirstEntry(name = "anticoagulants_mi_af_first")
+
 info(logger, "INSTANTIATED ANTICOAGULANT WITH AF COHORT - MI")
 
 info(logger, "INSTANTIATE LIPID-LOWERING COHORT - MI")
@@ -172,6 +189,9 @@ info(logger, "INSTANTIATE LIPID-LOWERING COHORT - MI")
   renameCohort(
     newCohortName = "lipid_lowering_mi"
   )
+  
+cdm$lipid_lowering_mi_first <- cdm$lipid_lowering_mi |>
+  requireIsFirstEntry(name = "lipid_lowering_mi_first")
 
 info(logger, "INSTANTIATED LIPID-LOWERING COHORT - MI")
 
@@ -189,6 +209,9 @@ cdm$antihypertensive_mi <- unionCohorts(
     newCohortName = "antihypertensive_mi"
   )
 
+cdm$antihypertensive_mi_first <- cdm$antihypertensive_mi |>
+  requireIsFirstEntry(name = "antihypertensive_mi_first")
+
 info(logger, "INSTANTIATED ANTIHYPERTENSIVE COHORT - MI")
 
 
@@ -205,6 +228,19 @@ cdm <- omopgenerics::bind(
   cdm$lipid_lowering_mi,
   cdm$antihypertensive_mi,
   name = "mi_drugs_final"
+)
+
+cdm <- omopgenerics::bind(
+  cdm$mi_drugs_first,
+  cdm$beta_blockers_hf_first,
+  cdm$beta_blockers_no_hf_first,
+  cdm$antiplatelets_mi_first,
+  cdm$dual_antiplatelet_mi_first,
+  cdm$anticoagulants_mi_first,
+  cdm$anticoagulants_mi_af_first,
+  cdm$lipid_lowering_mi_first,
+  cdm$antihypertensive_mi_first,
+  name = "mi_drugs_first"
 )
 
 info(logger, "INSTANTIATED CARDIOVASCULAR DRUGS COHORT")

@@ -48,6 +48,9 @@ cdm$antiplatelets_stroke <- unionCohorts(
     newCohortName = "antiplatelets_stroke"
   )
 
+cdm$antiplatelets_stroke_first <- cdm$antiplatelets_stroke |>
+  requireIsFirstEntry(name = "antiplatelets_stroke_first")
+
 info(logger, "INSTANTIATED ANTIPLATELETS COHORTS - STROKE")
 
 ########
@@ -86,6 +89,9 @@ cdm$dual_antiplatelet_stroke <- unionCohorts(
   name = "dual_antiplatelet_stroke"
 )
 
+cdm$dual_antiplatelet_stroke_first <- cdm$dual_antiplatelet_stroke |>
+  requireIsFirstEntry(name = "dual_antiplatelet_stroke_first")
+
 info(logger, "INSTANTIATED DUAL ANTIPLATELETS COHORTS - STROKE")
 
 
@@ -103,6 +109,9 @@ cdm$anticoagulants_stroke <- unionCohorts(
     newCohortName = "anticoagulants_stroke"
   )
 
+cdm$anticoagulants_stroke_first <- cdm$anticoagulants_stroke |>
+  requireIsFirstEntry(name = "anticoagulants_stroke_first")
+
 info(logger, "INSTANTIATED ANTICOAGULANT COHORT - STROKE")
 
 info(logger, "INSTANTIATE ANTICOAGULANT WITH AF COHORT - STROKE")
@@ -117,6 +126,9 @@ cdm$anticoagulants_stroke_af <- cdm$anticoagulants_stroke |>
   renameCohort(
     newCohortName = "anticoagulants_stroke_af"
   )
+
+cdm$anticoagulants_stroke_af_first <- cdm$anticoagulants_stroke_af |>
+  requireIsFirstEntry(name = "anticoagulants_stroke_af_first")
 
 info(logger, "INSTANTIATED ANTICOAGULANT WITH AF COHORT - STROKE")
 
@@ -134,6 +146,9 @@ cdm$lipid_lowering_stroke <- unionCohorts(
     newCohortName = "lipid_lowering_stroke"
   )
 
+cdm$lipid_lowering_stroke_first <- cdm$lipid_lowering_stroke |>
+  requireIsFirstEntry(name = "lipid_lowering_stroke_first")
+
 info(logger, "INSTANTIATED LIPID-LOWERING COHORT - STROKE")
 
 info(logger, "INSTANTIATE ANTIHYPERTENSIVE COHORT - STROKE")
@@ -150,6 +165,9 @@ cdm$antihypertensive_stroke <- unionCohorts(
     newCohortName = "antihypertensive_stroke"
   )
 
+cdm$antihypertensive_stroke_first <- cdm$antihypertensive_stroke |>
+  requireIsFirstEntry(name = "antihypertensive_stroke_first")
+
 info(logger, "INSTANTIATED ANTIHYPERTENSIVE COHORT - STROKE")
 
 
@@ -164,6 +182,17 @@ cdm <- omopgenerics::bind(
   cdm$lipid_lowering_stroke,
   cdm$antihypertensive_stroke,
   name = "stroke_drugs_final"
+)
+
+cdm <- omopgenerics::bind(
+  cdm$stroke_drugs_first,
+  cdm$antiplatelets_stroke_first,
+  cdm$dual_antiplatelet_stroke_first,
+  cdm$anticoagulants_stroke_first,
+  cdm$anticoagulants_stroke_af_first,
+  cdm$lipid_lowering_stroke_first,
+  cdm$antihypertensive_stroke_first,
+  name = "stroke_drugs_first"
 )
 
 info(logger, "INSTANTIATED CARDIOVASCULAR DRUGS COHORT - STROKE")
