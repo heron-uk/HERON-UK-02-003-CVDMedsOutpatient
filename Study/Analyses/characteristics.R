@@ -19,15 +19,10 @@ comorbidities_cl <- CodelistGenerator::importCodelist(
   type = "csv"
 )
 
-cdm$ckd_latest <- cdm$ckd_stage |>
-  requireIsLastEntry(
-    name = "ckd_latest"
-  )
-
-cdm$ckd_char <- cdm$ckd_latest|>
+cdm$ckd_char <- cdm$ckd_stage |>
   group_by(subject_id) |>
-  filter(cohort_start_date == max(cohort_start_date),
-         cohort_end_date == max(cohort_end_date)) |>
+  filter(cohort_start_date == max(cohort_start_date,  na.rm = TRUE),
+         cohort_end_date == max(cohort_end_date,  na.rm = TRUE)) |>
   ungroup() |>
   compute(name = "ckd_char", temporary = FALSE)
   
