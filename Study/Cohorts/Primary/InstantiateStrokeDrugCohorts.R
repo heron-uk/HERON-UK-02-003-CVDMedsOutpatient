@@ -6,6 +6,7 @@ names(stroke_drugs_cl) <- paste0(names(stroke_drugs_cl), "_stroke")
 
 cdm$stroke_drugs <- conceptCohort(
   cdm = cdm,
+  table = "drug_exposure",
   conceptSet = stroke_drugs_cl,
   name = "stroke_drugs"
 )
@@ -32,37 +33,61 @@ cdm$stroke_drugs_after_event <- cdm$stroke_drugs |>
   select(-c(start_date)) |>
   compute(name = "stroke_drugs_after_event", temporary = FALSE)
 
+########
+info(logger, "INSTANTIATE ANTIPLATELETS COHORT - STROKE")
+### antiplatelets
+
+cdm$antiplatelets_stroke <- unionCohorts(
+  cohort = cdm$stroke_drugs_after_event,
+  cohortId = c("aspirin_stroke", "p2y12_inhibitors_stroke", "dipyridamole_stroke"),
+  gap = 14,
+  keepOriginalCohorts = FALSE,
+  name = "antiplatelets_stroke"
+) |>
+  renameCohort(
+    newCohortName = "antiplatelets_stroke"
+  )
+
+info(logger, "INSTANTIATED ANTIPLATELETS COHORTS - STROKE")
+
+########
 info(logger, "INSTANTIATE DUAL ANTIPLATELETS COHORT - STROKE")
 ### antiplatelets
 
-cdm$dual_antiplatelet_stroke <- cdm$stroke_drugs_after_event |>
+cdm$dual_antiplatelet_stroke_1 <- cdm$stroke_drugs_after_event |>
   intersectCohorts(
     cohortId = c("aspirin_stroke", "p2y12_inhibitors_stroke"),
     gap = 14,
-    name = "dual_antiplatelet_stroke"
+    name = "dual_antiplatelet_stroke_1"
   ) |>
   renameCohort(
-    newCohortName = "dual_antiplatelet_stroke"
+    newCohortName = "dual_antiplatelet_stroke_1"
   )
+
+cdm$dual_antiplatelet_stroke_2 <- cdm$stroke_drugs_after_event |>
+  intersectCohorts(
+    cohortId = c("aspirin_stroke", "dipyridamole_stroke"),
+    gap = 14,
+    name = "dual_antiplatelet_stroke_2"
+  ) |>
+  renameCohort(
+    newCohortName = "dual_antiplatelet_stroke_2"
+  )
+
+cdm <- omopgenerics::bind(
+  cdm$dual_antiplatelet_stroke_1,
+  cdm$dual_antiplatelet_stroke_2,
+  name = "dual_antiplatelet_stroke"
+)
+cdm$dual_antiplatelet_stroke <- unionCohorts(
+  cohort = cdm$dual_antiplatelet_stroke,
+  gap = 14,
+  cohortName = "dual_antiplatelet_stroke",
+  name = "dual_antiplatelet_stroke"
+)
 
 info(logger, "INSTANTIATED DUAL ANTIPLATELETS COHORTS - STROKE")
 
-########
-info(logger, "INSTANTIATE DUAL ANTIPLATELETS COHORT FOR CAROTID STENOSIS - STROKE")
-### antiplatelets
-
-cdm$dual_antiplatelet_stroke_cs <- cdm$dual_antiplatelet_stroke|>
-  requireCohortIntersect(
-    targetCohortTable = "carotid_disease",
-    window = c(-Inf, -1),
-    atFirst = TRUE,
-    name = "dual_antiplatelet_stroke_cs"
-  ) |>
-  renameCohort(
-    newCohortName = "dual_antiplatelet_stroke_cs"
-  )
-
-info(logger, "INSTANTIATED DUAL ANTIPLATELETS COHORTS FOR CAROTID STENOSIS - STROKE")
 
 info(logger, "INSTANTIATE ANTICOAGULANT COHORT - STROKE")
 ### anticoagulents
@@ -132,8 +157,8 @@ info(logger, "INSTANTIATED ANTIHYPERTENSIVE COHORT - STROKE")
 
 cdm <- omopgenerics::bind(
   cdm$stroke_drugs_after_event,
+  cdm$antiplatelets_stroke,
   cdm$dual_antiplatelet_stroke,
-  cdm$dual_antiplatelet_stroke_cs,
   cdm$anticoagulants_stroke,
   cdm$anticoagulants_stroke_af,
   cdm$lipid_lowering_stroke,

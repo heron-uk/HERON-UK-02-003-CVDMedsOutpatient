@@ -8,6 +8,7 @@ names(mi_drugs_cl) <- paste0(names(mi_drugs_cl), "_mi")
 cdm$mi_drugs <- conceptCohort(
   cdm = cdm,
   conceptSet = mi_drugs_cl,
+  table = "drug_exposure",
   name = "mi_drugs"
 )
 
@@ -72,37 +73,60 @@ cdm$beta_blockers_no_hf <- cdm$beta_blockers_after_event |>
 info(logger, "INSTANTIATED BETA BLOCKERS AND HF COHORTS - MI")
 
 ########
+info(logger, "INSTANTIATE ANTIPLATELETS COHORT - MI")
+### antiplatelets
+
+cdm$antiplatelets_mi <- unionCohorts(
+  cohort = cdm$mi_drugs_after_event,
+  cohortId = c("aspirin_mi", "p2y12_inhibitors_mi", "dipyridamole_mi"),
+  gap = 14,
+  keepOriginalCohorts = FALSE,
+  name = "antiplatelets_mi"
+  ) |>
+  renameCohort(
+    newCohortName = "antiplatelets_mi"
+  )
+
+info(logger, "INSTANTIATED ANTIPLATELETS COHORTS - MI")
+
+########
 info(logger, "INSTANTIATE DUAL ANTIPLATELETS COHORT - MI")
 ### antiplatelets
 
-cdm$dual_antiplatelet_mi <- cdm$mi_drugs_after_event |>
+cdm$dual_antiplatelet_mi_1 <- cdm$mi_drugs_after_event |>
   intersectCohorts(
     cohortId = c("aspirin_mi", "p2y12_inhibitors_mi"),
     gap = 14,
-    name = "dual_antiplatelet_mi"
+    name = "dual_antiplatelet_mi_1"
   ) |>
   renameCohort(
-    newCohortName = "dual_antiplatelet_mi"
+    newCohortName = "dual_antiplatelet_mi_1"
   )
+
+cdm$dual_antiplatelet_mi_2 <- cdm$mi_drugs_after_event |>
+  intersectCohorts(
+    cohortId = c("aspirin_mi", "dipyridamole_mi"),
+    gap = 14,
+    name = "dual_antiplatelet_mi_2"
+  ) |>
+  renameCohort(
+    newCohortName = "dual_antiplatelet_mi_2"
+  )
+
+cdm <- omopgenerics::bind(
+  cdm$dual_antiplatelet_mi_1,
+  cdm$dual_antiplatelet_mi_2,
+  name = "dual_antiplatelet_mi"
+)
+cdm$dual_antiplatelet_mi <- unionCohorts(
+  cohort = cdm$dual_antiplatelet_mi,
+  gap = 14,
+  cohortName = "dual_antiplatelet_mi",
+  name = "dual_antiplatelet_mi"
+)
 
 info(logger, "INSTANTIATED DUAL ANTIPLATELETS COHORTS - MI")
 
-########
-info(logger, "INSTANTIATE DUAL ANTIPLATELETS COHORT FOR CAROTID STENOSIS - MI")
-### antiplatelets
-
-cdm$dual_antiplatelet_mi_cs <- cdm$dual_antiplatelet_mi|>
-  requireCohortIntersect(
-    targetCohortTable = "carotid_disease",
-    window = c(-Inf, -1),
-    atFirst = TRUE,
-    name = "dual_antiplatelet_mi_cs"
-  ) |>
-  renameCohort(
-    newCohortName = "dual_antiplatelet_mi_cs"
-  )
-
-info(logger, "INSTANTIATED DUAL ANTIPLATELETS COHORTS FOR CAROTID STENOSIS - MI")
 
 info(logger, "INSTANTIATE ANTICOAGULANT COHORT - MI")
 ### anticoagulents
@@ -174,8 +198,8 @@ cdm <- omopgenerics::bind(
   cdm$mi_drugs_after_event,
   cdm$beta_blockers_hf,
   cdm$beta_blockers_no_hf,
+  cdm$antiplatelets_mi,
   cdm$dual_antiplatelet_mi,
-  cdm$dual_antiplatelet_mi_cs,
   cdm$anticoagulants_mi,
   cdm$anticoagulants_mi_af,
   cdm$lipid_lowering_mi,

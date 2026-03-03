@@ -13,7 +13,8 @@ cdm$mi_drugs_ad <- cdm$mi_drugs_final |>
     name = "mi_drugs_ad"
   ) |>
   PatientProfiles::addDemographics(
-    ageGroup = list(c(18, 49), 
+    ageGroup = list(c(18, 39), 
+                    c(40, 49),
                     c(50, 59),
                     c(60, 69),
                     c(70, 79),
@@ -26,11 +27,7 @@ cdm$mi_drugs_ad <- cdm$mi_drugs_final |>
 
 mi_results[["ppc_mi"]] <- cdm$mi_drugs_ad |>
   summariseProportionOfPatientsCovered(followUpDays = 1825,
-                                       strata = list(c("age_group"), c("sex"), c("ses"),
-                                                     c("age_group", "sex"),
-                                                     c("age_group", "ses"),
-                                                     c("sex", "ses"),
-                                                     c("age_group", "sex", "ses")
+                                       strata = list(c("age_group"), c("sex"), c("ses")
                                                      ))
 } else {
   cli::cli_alert_info("Insufficient sample size to perform PPC for MI. No drug cohorts with 100 or more patients were found.")
@@ -45,14 +42,15 @@ stroke_drugs_count <- cdm$stroke_drugs_final |>
   pull(cohort_definition_id)
 
 
-if(length(mi_drugs_count) > 0) {
+if(length(stroke_drugs_count) > 0) {
 cdm$stroke_drugs_ad <- cdm$stroke_drugs_final |>
   subsetCohorts(
     cohortId = stroke_drugs_count,
     name = "stroke_drugs_ad"
   ) |>
   PatientProfiles::addDemographics(
-    ageGroup = list(c(18, 49), 
+    ageGroup = list(c(18, 39), 
+                    c(40, 49),
                     c(50, 59),
                     c(60, 69),
                     c(70, 79),
@@ -65,11 +63,7 @@ cdm$stroke_drugs_ad <- cdm$stroke_drugs_final |>
 
 stroke_results[["ppc_stroke"]] <- cdm$stroke_drugs_ad |>
   summariseProportionOfPatientsCovered(followUpDays = 1825,
-                                       strata = list(c("age_group"), c("sex"), c("ses"),
-                                                     c("age_group", "sex"),
-                                                     c("age_group", "ses"),
-                                                     c("sex", "ses"),
-                                                     c("age_group", "sex", "ses")
+                                       strata = list(c("age_group"), c("sex"), c("ses")
                                        ))
 } else {
   cli::cli_alert_info("Insufficient sample size to perform PPC for stroke. No drug cohorts with 100 or more patients were found.")
