@@ -37,6 +37,20 @@ cdm$person <- cdm$person |>
 # Load functions
 source(here("Analyses","functions.R"))
 
+if(db_name == "DataLoch" & isTRUE(primary_care) & isFALSE(hospital_care)){
+  cdm$drug_exposure <- cdm$drug_exposure |>
+    filter(drug_type_concept_id == 32839) |>
+    compute(name = "drug_exposure", temporary = FALSE)
+} else if(db_name == "DataLoch" & isTRUE(hospital_care) & isFALSE(primary_care)){
+  cdm$drug_exposure <- cdm$drug_exposure |>
+    filter(drug_type_concept_id == 32829) |>
+    compute(name = "drug_exposure", temporary = FALSE)
+} else if(isTRUE(primary_care) & isTRUE(hospital_care)){
+  cli::cli_abort("Can't have both primary_care and hospital_care set to TRUE. Can only do one at a time.")
+} else if(isFALSE(primary_care) & isFALSE(hospital_care)){
+  cli::cli_abort("Can't have both primary_care and hospital_care set to FALSE. Must have one set to TRUE.")
+}
+
 # create and export snapshot
 info(logger, "RETRIEVING SNAPSHOT")
 cli::cli_text("- GETTING CDM SNAPSHOT ({Sys.time()})")
@@ -61,7 +75,7 @@ info(logger, "OBSERVATION PERIOD SUMMARY COMPLETED")
 
 if(isTRUE(hospital_care)){
   info(logger, "INSTANTIATING HOSPITAL COHORTS")
-  source(here("Cohorts","Primary", "InstantiateOutcomeCohorts.R"))
+  source(here("Cohorts","InstantiateOutcomeCohorts.R"))
   source(here("Cohorts", "InstantiateHospitalCohorts.R"))
   info(logger, "HOSPITAL COHORTS INSTANTIATED")
   
@@ -69,7 +83,7 @@ if(isTRUE(hospital_care)){
 
 if(isTRUE(primary_care)){
 info(logger, "INSTANTIATING PRIMARY CARE COHORTS")
-source(here("Cohorts","Primary", "InstantiateOutcomeCohorts.R"))
+source(here("Cohorts", "InstantiateOutcomeCohorts.R"))
 source(here("Cohorts","Primary", "InstantiateMIDrugCohorts.R"))
 source(here("Cohorts","Primary", "InstantiateStrokeDrugCohorts.R"))
 info(logger, "PRIMARY CARE COHORTS INSTANTIATED")
@@ -81,7 +95,7 @@ source(here("Analyses", "drugAdherence.R"))
 info(logger, "DRUG ADHERENCE FINISHED")
 }
 
-if(isTRUE(run_characteristics)){
+if(isTRUE(run_characteristics) & isTRUE(primary_care)){
 info(logger, "RUN SUMMARISE CHARACTERISTICS")
 source(here("Analyses", "characteristics.R"))
 info(logger, "SUMMARISE CHARACTERISTICS FINISHED")
