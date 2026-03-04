@@ -18,7 +18,7 @@ cdm$stroke_drugs <- cdm$stroke_drugs |>
 
 cdm$stroke_drugs_first <- cdm$stroke_drugs |>
   requireCohortIntersect(
-    targetCohortTable = "stroke",
+    targetCohortTable = "stroke_first",
     window = c(-30,0),
     name = "stroke_drugs_first"
   ) |>

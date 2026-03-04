@@ -10,16 +10,24 @@ cdm$acute_mi <- conceptCohort(
   cdm = cdm,
   conceptSet = acute_mi_cl,
   name = "acute_mi"
-)
+) 
 
-cdm$acute_mi <- cdm$acute_mi |>
-  requireIsFirstEntry() # first ever MI
-  
+cdm$acute_mi_first <- cdm$acute_mi |>
+  requireIsFirstEntry(
+    name = "acute_mi_first"
+  ) # first ever MI
+
+cdm$acute_mi_second <- cdm$acute_mi |>
+  requireIsEntry(
+    entryRange = c(2,2),
+    name = "acute_mi_second"
+  )
+
 info(logger, "INSTANTIATED MI COHORT")
 
 info(logger, "INSTANTIATING STROKE COHORT")
 stroke_cl <- CodelistGenerator::importCodelist(
-  path = here::here("Cohorts", "conditions", "ischaemic_stroke_narrow_v3.csv"),
+  path = here::here("Cohorts", "conditions", "ischemic_stroke.csv"),
   type = "csv"
 )
 
@@ -29,8 +37,16 @@ cdm$stroke <- conceptCohort(
   name = "stroke"
 )
 
-cdm$stroke <- cdm$stroke |>
-  requireIsFirstEntry() # first ever stroke
+cdm$stroke_first <- cdm$stroke |>
+  requireIsFirstEntry(
+    name = "stroke_first"
+  ) # first ever stroke
+
+cdm$stroke_second<- cdm$stroke |>
+  requireIsEntry(
+    entryRange = c(2,2),
+    name = "stroke_second"
+  )
 
 info(logger, "INSTANTIATED STROKE COHORT")
 

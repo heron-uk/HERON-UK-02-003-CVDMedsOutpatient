@@ -1,10 +1,34 @@
-library(PatientProfiles)
-library(dplyr)
-library(clock)
+# prepare data drug episodes - MI
+mi_drugs_count <- cdm$mi_drugs_final |>
+  collect() |>
+  group_by(cohort_definition_id) |>
+  distinct(subject_id) |>
+  tally() |>
+  filter(n >= 100) |>
+  pull(cohort_definition_id)
 
-# prepare data drug episodes
-nm <- omopgenerics::uniqueTableName()
-xd <- cdm$stroke_drugs_after_event |>
+cdm$mi_drugs_msm <- cdm$mi_drugs_final |>
+  subsetCohorts(
+    cohortId = mi_drugs_count,
+    name = "mi_drugs_msm"
+  )
+
+stroke_drugs_count <- cdm$stroke_drugs_final |>
+  collect() |>
+  group_by(cohort_definition_id) |>
+  distinct(subject_id) |>
+  tally() |>
+  filter(n >= 100) |>
+  pull(cohort_definition_id)
+
+cdm$stroke_drugs_msm <- cdm$stroke_drugs_final |>
+  subsetCohorts(
+    cohortId = stroke_drugs_count,
+    name = "stroke_drugs_msm"
+  )
+
+nm_1 <- omopgenerics::uniqueTableName()
+xd_1 <- cdm$mi_drugs_msm |>
   addCohortName() |>
   group_by(cohort_name, subject_id) |>
   mutate(t0 = min(cohort_start_date, na.rm = TRUE)) |>
@@ -13,18 +37,52 @@ xd <- cdm$stroke_drugs_after_event |>
     start_discontinuation = date_count_between(t0, cohort_end_date),
     start_drug = date_count_between(t0, cohort_start_date)
   ) |>
-  compute(name = nm) |>
-  addDeathDays(indexDate = "t0", name = nm) |>
-  addFutureObservation(indexDate = "t0", futureObservationType = "days", name = nm) |>
-  select("cohort_name", "subject_id", "start_drug", "start_discontinuation", "days_to_death", "future_observation") |>
+  compute(name = nm_1) |>
+  addDeathDays(indexDate = "t0", name = nm_1) |>
+  addFutureObservation(indexDate = "t0", futureObservationType = "days", name = nm_1) |>
+  addCohortIntersectDays(indexDate = "t0", targetCohortTable = "acute_mi_second", window = c(-Inf,Inf)) |>
+  rename(second_event = acute_mi_minf_to_inf) |>
+  select("cohort_name", "subject_id", "start_drug", "start_discontinuation", "days_to_death", "future_observation", "second_event") |>
   collect() |>
   mutate(
     days_to_death = coalesce(days_to_death, 9999L),
-    future_observation = pmin(days_to_death, future_observation),
+    second_event = coalesce(second_event, 9999L),
+    future_observation = pmin(days_to_death, future_observation, second_event),
     start_discontinuation = start_discontinuation + 1
   ) |>
-  arrange(cohort_name, subject_id, start_drug)
-omopgenerics::dropSourceTable(cdm = cdm, name = nm)
+  arrange(cohort_name, subject_id, start_drug) |>
+  filter(second_event > 0)
+
+nm_2 <- omopgenerics::uniqueTableName()
+xd_2 <- cdm$stroke_drugs_msm |>
+  addCohortName() |>
+  group_by(cohort_name, subject_id) |>
+  mutate(t0 = min(cohort_start_date, na.rm = TRUE)) |>
+  ungroup() |>
+  mutate(
+    start_discontinuation = date_count_between(t0, cohort_end_date),
+    start_drug = date_count_between(t0, cohort_start_date)
+  ) |>
+  compute(name = nm_2) |>
+  addDeathDays(indexDate = "t0", name = nm_2) |>
+  addFutureObservation(indexDate = "t0", futureObservationType = "days", name = nm_2) |>
+  addCohortIntersectDays(indexDate = "t0", targetCohortTable = "stroke_second", window = c(-Inf,Inf)) |>
+  rename(second_event = ischemic_stroke_minf_to_inf) |>
+  select("cohort_name", "subject_id", "start_drug", "start_discontinuation", "days_to_death", "future_observation", "second_event") |>
+  collect() |>
+  mutate(
+    days_to_death = coalesce(days_to_death, 9999L),
+    second_event = coalesce(second_event, 9999L),
+    future_observation = pmin(days_to_death, future_observation, second_event),
+    start_discontinuation = start_discontinuation + 1
+  ) |>
+  arrange(cohort_name, subject_id, start_drug) |>
+  filter(second_event > 0)
+
+xd <- bind_rows(xd_1,xd_2)
+
+omopgenerics::dropSourceTable(cdm = cdm, name = nm_1)
+omopgenerics::dropSourceTable(cdm = cdm, name = nm_2)
 
 # transitions
 tmat <- matrix(NA, 3, 3)
@@ -117,55 +175,55 @@ x <- transitionsTreated |>
       select("cohort_name", "subject_id", "from", "to", "trans", "Tstart", "Tstop", "status")
   )
 
-library(survival)
-library(mstate)
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-
 cohorts <- unique(x$cohort_name)
+
+msm_results <- list()
 
 for (coh in cohorts) {
   msdata <- x |>
     filter(cohort_name == coh)
-  n <- length(unique(msdata$subject_id))
   
-  if (n > 10) {
-    cox_mod <- coxph(
-      Surv(Tstart, Tstop, status) ~ strata(trans) + cluster(subject_id),
-      data = msdata
-    )
-    
-    msf <- msfit(cox_mod, trans = tmat) 
-    
-    pt_list <- probtrans(msf, predt = 0)
-    
-    xp <- pt_list[[1]] |>
-      as_tibble() |>
-      select(time, pstate1, pstate2, pstate3) |>
-      pivot_longer(starts_with("pstate"), names_to = "state", values_to = "prob") |>
-      mutate(state = recode(state, pstate1 = "Treated", pstate2 = "Discontinued", pstate3 = "Death"))
-    
-    xp <- xp |>
-      mutate(step = 1) |>
-      union_all(
-        xp |>
-          group_by(state) |>
-          mutate(time = lead(time), step = -1) |>
-          ungroup()
-      ) |>
-      arrange(time, state, step)
-    
-    p <- ggplot(xp, aes(x = time, y = prob, fill = state)) +
-      geom_area(colour = "black") +
-      xlim(c(0, 5*365)) +
-      labs(x = "Time", y = "Probability", fill = "State") +
-      theme_minimal() +
-      scale_fill_manual(values = c(Treated = "#3B5B92",
-                                   Discontinued = "#8AA1B1",
-                                   Death = "#BC3C29")) +
-      ggtitle(label = coh)
-    
-    ggsave(filename = here::here("Results", paste0(coh, "_", n , ".png")), plot = p)
-  }
+  cox_mod <- coxph(
+    Surv(Tstart, Tstop, status) ~ strata(trans) + cluster(subject_id),
+    data = msdata
+  )
+  
+  msf <- msfit(cox_mod, trans = tmat) 
+  
+  pt_list <- probtrans(msf, predt = 0)
+  
+  xp <- pt_list[[1]] |>
+    as_tibble() |>
+    select(time, pstate1, pstate2, pstate3) |>
+    pivot_longer(starts_with("pstate"), names_to = "state", values_to = "probability") |>
+    mutate(state = recode(state, pstate1 = "Treated", pstate2 = "Discontinued", pstate3 = "Death"))
+  
+  xp <- xp |>
+    mutate(step = 1) |>
+    union_all(
+      xp |>
+        group_by(state) |>
+        mutate(time = lead(time), step = -1) |>
+        ungroup()
+    ) |>
+    arrange(time, state, step) |>
+    mutate(cohort_name = coh) |>
+    filter(time <= 1830)
+
+  sum_xp <- omopgenerics::transformToSummarisedResult(
+    x = xp,
+    group = c("cohort_name"),
+    estimates = c("probability"),
+    additional = c("time", "state", "step")
+  ) |>
+    mutate(cdm_name = db_name)
+  
+  
+  msm_results[[paste0("msm_",coh)]] <- sum_xp
+  
 }
+
+all_msm_results <- omopgenerics::bind(msm_results) |>
+  omopgenerics::newSummarisedResult()
+
+results[["msm"]] <- all_msm_results

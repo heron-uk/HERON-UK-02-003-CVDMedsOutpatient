@@ -2,8 +2,7 @@ results_folder <- here("Results", cdmName(cdm))
 if (!file.exists(results_folder)) {
   dir.create(results_folder, recursive = TRUE)
 }
-mi_results <- list()
-stroke_results <- list()
+results <- list()
 logger_name <- gsub(":| |-", "_", paste0("log_01_001_", Sys.time(), ".txt"))
 logger <- create.logger()
 logfile(logger) <- here(results_folder, logger_name)
@@ -57,8 +56,7 @@ cli::cli_text("- GETTING CDM SNAPSHOT ({Sys.time()})")
 
 snap <- summariseOmopSnapshot(cdm)
 
-mi_results[["snap"]] <- snap
-stroke_results[["snap"]] <- snap
+results[["snap"]] <- snap
 
 info(logger, "SNAPSHOT COMPLETED")
 
@@ -68,8 +66,7 @@ cli::cli_text("- GETTING OBSERVATION PERIOD SUMMARY ({Sys.time()})")
 
 obs <- summariseObservationPeriod(cdm$observation_period)
 
-mi_results[["observation_period"]] <- obs
-stroke_results[["observation_period"]] <- obs
+results[["observation_period"]] <- obs
 
 info(logger, "OBSERVATION PERIOD SUMMARY COMPLETED")
 
@@ -104,19 +101,12 @@ info(logger, "SUMMARISE CHARACTERISTICS FINISHED")
 # export results ----
 info(logger, "EXPORTING RESULTS")
 
-mi_result <- omopgenerics::bind(mi_results)
-stroke_result <- omopgenerics::bind(stroke_results)
+result <- omopgenerics::bind(results)
 
-omopgenerics::exportSummarisedResult(mi_result,
+omopgenerics::exportSummarisedResult(result,
                                      minCellCount = min_cell_count,
                                      path = results_folder,
-                                     fileName = "results_mi_{cdm_name}_{date}.csv"
-)
-
-omopgenerics::exportSummarisedResult(stroke_result,
-                                     minCellCount = min_cell_count,
-                                     path = results_folder,
-                                     fileName = "results_stroke_{cdm_name}_{date}.csv"
+                                     fileName = "results_{cdm_name}_{date}.csv"
 )
 
 
