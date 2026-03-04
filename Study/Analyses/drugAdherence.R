@@ -12,7 +12,7 @@ cdm$mi_drugs_ad <- cdm$mi_drugs_final |>
     cohortId = mi_drugs_count,
     name = "mi_drugs_ad"
   ) |>
-  PatientProfiles::addDemographics(
+  addDemographics(
     ageGroup = list(c(18, 39), 
                     c(40, 49),
                     c(50, 59),
@@ -25,7 +25,7 @@ cdm$mi_drugs_ad <- cdm$mi_drugs_final |>
   ) |>
   addSES()
 
-mi_results[["ppc_mi"]] <- cdm$mi_drugs_ad |>
+results[["ppc_mi"]] <- cdm$mi_drugs_ad |>
   summariseProportionOfPatientsCovered(followUpDays = 1825,
                                        strata = list(c("age_group"), c("sex"), c("ses")
                                                      ))
@@ -48,7 +48,7 @@ cdm$stroke_drugs_ad <- cdm$stroke_drugs_final |>
     cohortId = stroke_drugs_count,
     name = "stroke_drugs_ad"
   ) |>
-  PatientProfiles::addDemographics(
+  addDemographics(
     ageGroup = list(c(18, 39), 
                     c(40, 49),
                     c(50, 59),
@@ -61,7 +61,7 @@ cdm$stroke_drugs_ad <- cdm$stroke_drugs_final |>
   ) |>
   addSES()
 
-stroke_results[["ppc_stroke"]] <- cdm$stroke_drugs_ad |>
+results[["ppc_stroke"]] <- cdm$stroke_drugs_ad |>
   summariseProportionOfPatientsCovered(followUpDays = 1825,
                                        strata = list(c("age_group"), c("sex"), c("ses")
                                        ))

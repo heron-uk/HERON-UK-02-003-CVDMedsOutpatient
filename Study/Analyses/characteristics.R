@@ -1,15 +1,15 @@
 # Cohort Counts + Attrition
 
-mi_results[["cohort_count_mi"]] <- cdm$mi_drugs_final |>
+results[["cohort_count_mi"]] <- cdm$mi_drugs_final |>
   summariseCohortCount()
 
-stroke_results[["cohort_count_stroke"]] <- cdm$stroke_drugs_final |>
+results[["cohort_count_stroke"]] <- cdm$stroke_drugs_final |>
   summariseCohortCount()
 
-mi_results[["cohort_attrition_mi"]] <- cdm$mi_drugs_final |>
+results[["cohort_attrition_mi"]] <- cdm$mi_drugs_final |>
   summariseCohortAttrition()
 
-stroke_results[["cohort_attrition_stroke"]] <- cdm$stroke_drugs_final |>
+results[["cohort_attrition_stroke"]] <- cdm$stroke_drugs_final |>
   summariseCohortAttrition()
 
 ## Comorbidity Codelists
@@ -29,7 +29,7 @@ cdm$ckd_char <- cdm$ckd_stage |>
 # Cohort Characteristics - MI
 
 cdm$mi_drugs_chars <- cdm$mi_drugs_first |>
-  PatientProfiles::addDemographics(
+  addDemographics(
     sex = TRUE,
     age = TRUE,
     priorObservation = FALSE,
@@ -101,12 +101,12 @@ char_mi <- summariseCharacteristics(cdm$mi_drugs_chars,
                                     otherVariables = c("ses", "ethnicity"))
 
 
-mi_results[["summmarise_characteristics_mi"]] <- char_mi
+results[["summmarise_characteristics_mi"]] <- char_mi
 
 
 # Cohort Characteristics - Stroke
 cdm$stroke_drugs_chars <- cdm$stroke_drugs_first |>
-  PatientProfiles::addDemographics(
+  addDemographics(
     sex = TRUE,
     age = TRUE,
     priorObservation = FALSE,
@@ -177,4 +177,4 @@ char_stroke <- summariseCharacteristics(cdm$stroke_drugs_chars,
                                         ),
                                         otherVariables = c("ses", "ethnicity"))
 
-stroke_results[["summmarise_characteristics_stroke"]] <- char_stroke
+results[["summmarise_characteristics_stroke"]] <- char_stroke
