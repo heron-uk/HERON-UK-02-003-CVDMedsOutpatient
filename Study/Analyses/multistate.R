@@ -4,7 +4,7 @@ mi_drugs_count <- cdm$mi_drugs_final |>
   group_by(cohort_definition_id) |>
   distinct(subject_id) |>
   tally() |>
-  filter(n >= 1) |>
+  filter(n >= 100) |>
   pull(cohort_definition_id)
 
 cdm$mi_drugs_msm <- cdm$mi_drugs_final |>
@@ -34,7 +34,7 @@ stroke_drugs_count <- cdm$stroke_drugs_final |>
   group_by(cohort_definition_id) |>
   distinct(subject_id) |>
   tally() |>
-  filter(n >= 1) |>
+  filter(n >= 100) |>
   pull(cohort_definition_id)
 
 cdm$stroke_drugs_msm <- cdm$stroke_drugs_final |>
@@ -59,6 +59,7 @@ cdm$stroke_drugs_msm <- cdm$stroke_drugs_final |>
   ) |>
   addSES()
 
+if(length(mi_drugs_count) > 0){
 nm_1 <- omopgenerics::uniqueTableName()
 xd_1 <- cdm$mi_drugs_msm |>
   addCohortName() |>
@@ -85,6 +86,12 @@ xd_1 <- cdm$mi_drugs_msm |>
   arrange(cohort_name, subject_id, start_drug) |>
   filter(second_event > 0)
 
+  omopgenerics::dropSourceTable(cdm = cdm, name = nm_1)
+} else {
+  cli::cli_alert_info("Insufficient cohort counts for MI treatment - skipping multistate model")
+}
+
+if(length(stroke_drugs_count) > 0){
 nm_2 <- omopgenerics::uniqueTableName()
 xd_2 <- cdm$stroke_drugs_msm |>
   addCohortName() |>
@@ -111,10 +118,18 @@ xd_2 <- cdm$stroke_drugs_msm |>
   arrange(cohort_name, subject_id, start_drug) |>
   filter(second_event > 0)
 
-xd <- bind_rows(xd_1,xd_2)
+  omopgenerics::dropSourceTable(cdm = cdm, name = nm_2)
+} else {
+  cli::cli_alert_info("Insufficient cohort counts for stroke treatment - skipping multistate model")
+}
 
-omopgenerics::dropSourceTable(cdm = cdm, name = nm_1)
-omopgenerics::dropSourceTable(cdm = cdm, name = nm_2)
+if(length(mi_drugs_count) > 0 & length(stroke_drugs_count) > 0) {
+  xd <- bind_rows(xd_1,xd_2)
+} else if(length(mi_drugs_count) > 0 & length(stroke_drugs_count) == 0) {
+  xd <- xd_1
+} else if(length(mi_drugs_count) == 0 & length(stroke_drugs_count) > 0) {
+  xd <- xd_2
+}
 
 # transitions
 tmat <- matrix(NA, 3, 3)
@@ -215,6 +230,14 @@ for (coh in cohorts) {
   msdata <- x |>
     filter(cohort_name == coh)
   
+  sex_count <- length(unique(msdata$sex))
+  ses_count <- length(unique(msdata$ses))
+  age_group_count <- length(unique(msdata$age_group))
+  
+  if(sex_count < 2 | ses_count < 2 | age_group_count < 2){
+    cli::cli_alert_info("Insufficient levels in strata for cohort ", paste0(coh)," . Skipping multistate model.")
+  } else if(sex_count >= 2 | ses_count >= 2 | age_group_count >= 2) {
+  
   cox_mod <- coxph(
     Surv(Tstart, Tstop, status) ~ strata(trans) + cluster(subject_id),
     data = msdata
@@ -246,6 +269,7 @@ for (coh in cohorts) {
   
   msm_results[[paste0("msm_",coh)]] <- sum_xp
   
+  }
 }
 
 all_msm_results <- omopgenerics::bind(msm_results) |>
