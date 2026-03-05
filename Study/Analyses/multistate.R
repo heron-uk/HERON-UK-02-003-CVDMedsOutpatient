@@ -230,21 +230,15 @@ for (coh in cohorts) {
   msdata <- x |>
     filter(cohort_name == coh)
   
-  sex_count <- length(unique(msdata$sex))
-  ses_count <- length(unique(msdata$ses))
-  age_group_count <- length(unique(msdata$age_group))
+  cli::cli_inform(c(i = "Fitting MS model for {.pkg {coh}}"))
   
-  if(sex_count < 2 | ses_count < 2 | age_group_count < 2){
-    cli::cli_alert_info("Insufficient levels in strata for cohort ", paste0(coh)," . Skipping multistate model.")
-  } else if(sex_count >= 2 | ses_count >= 2 | age_group_count >= 2) {
-  
+  # fit probabilities over time (unadjusted model)
   cox_mod <- coxph(
     Surv(Tstart, Tstop, status) ~ strata(trans) + cluster(subject_id),
     data = msdata
   )
   
   msf <- msfit(cox_mod, trans = tmat) 
-  
   pt_list <- probtrans(msf, predt = 0)
   
   xp <- pt_list[[1]] |>
@@ -256,7 +250,7 @@ for (coh in cohorts) {
     mutate(cohort_name = coh,
            result_type = "mms_probabilities") |>
     filter(time <= 1830)
-
+  
   sum_xp <- omopgenerics::transformToSummarisedResult(
     x = xp,
     group = c("cohort_name"),
@@ -264,15 +258,65 @@ for (coh in cohorts) {
     additional = c("time", "state"),
     settings = c("result_type")
   ) |>
-    mutate(cdm_name = db_name)
+    mutate(cdm_name = omopgenerics::cdmName(cdm))
   
   
-  msm_results[[paste0("msm_",coh)]] <- sum_xp
+  msm_results[[paste0("msm_prob_",coh)]] <- sum_xp
   
+  # fit adjusted model
+  
+  sex_count <- length(unique(msdata$sex))
+  ses_count <- length(unique(msdata$ses))
+  age_group_count <- length(unique(msdata$age_group))
+  
+  if (sex_count < 2 & ses_count < 2 & age_group_count < 2) {
+    cli::cli_alert_info("Insufficient levels in strata for cohort {.pkg {coh}}. Skipping multistate model.")
+  } else {
+    
+    form <- "Surv(Tstart, Tstop, status) ~ "
+    if (sex_count > 1) {
+      form <- paste0(form, "sex:strata(trans) + ")
+    }
+    if (ses_count > 1) {
+      form <- paste0(form, "ses:strata(trans) + ")
+    }
+    if (age_group_count > 1) {
+      form <- paste0(form, "age_group:strata(trans) + ")
+    }
+    form <- paste0(form, "strata(trans) + cluster(subject_id)") |>
+      as.formula()
+    
+    # fit adjusted model
+    res_coef <- tryCatch({
+      cox_mod <- coxph(formula = form, data = msdata)
+      
+      # extract coefficients
+      tidy(cox_mod) |>
+        select("variable_level" = "term", "coef" = "estimate", "se" = "std.error", "se_robust" = "robust.se") |>
+        mutate(
+          cohort_name = coh,
+          cdm_name = omopgenerics::cdmName(cdm),
+          variable_name = "Cox regression coefficients",
+          result_type = "cox_coefficients"
+        ) |>
+        omopgenerics::transformToSummarisedResult(
+          group = c("cohort_name"),
+          estimates = c("coef", "se", "se_robust"),
+          settings = c("result_type")
+        )
+    }, error = function(e) {
+      cli::cli_inform(c("x" = "Model failed to fit: {.var {e}}"))
+      NULL
+    })
+    
+    msm_results[[paste0("msm_coef_",coh)]] <- res_coef
+    
   }
 }
 
-all_msm_results <- omopgenerics::bind(msm_results) |>
+all_msm_results <- msm_results |>
+  purrr::compact() |>
+  omopgenerics::bind() |>
   omopgenerics::newSummarisedResult()
 
 results[["msm"]] <- all_msm_results

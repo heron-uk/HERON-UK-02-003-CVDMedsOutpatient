@@ -27,6 +27,7 @@ library(PatientProfiles)
 library(clock)
 library(survival)
 library(mstate)
+library(broom)
 
 #database metadata and connection details
 #The name/ acronym for the database
