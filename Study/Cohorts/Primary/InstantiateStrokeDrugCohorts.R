@@ -13,7 +13,7 @@ cdm$stroke_drugs <- conceptCohort(
 
 # collapse records that are within 14 days of each other
 cdm$stroke_drugs <- cdm$stroke_drugs |>
-  collapseCohorts(gap = 14,
+  collapseCohorts(gap = 28,
                   name = "stroke_drugs") 
 
 cdm$stroke_drugs_first <- cdm$stroke_drugs |>
@@ -40,7 +40,7 @@ info(logger, "INSTANTIATE ANTIPLATELETS COHORT - STROKE")
 cdm$antiplatelets_stroke <- unionCohorts(
   cohort = cdm$stroke_drugs_after_event,
   cohortId = c("aspirin_stroke", "p2y12_inhibitors_stroke", "dipyridamole_stroke"),
-  gap = 14,
+  gap = 28,
   keepOriginalCohorts = FALSE,
   name = "antiplatelets_stroke"
 ) |>
@@ -60,7 +60,7 @@ info(logger, "INSTANTIATE DUAL ANTIPLATELETS COHORT - STROKE")
 cdm$dual_antiplatelet_stroke_1 <- cdm$stroke_drugs_after_event |>
   intersectCohorts(
     cohortId = c("aspirin_stroke", "p2y12_inhibitors_stroke"),
-    gap = 14,
+    gap = 28,
     name = "dual_antiplatelet_stroke_1"
   ) |>
   renameCohort(
@@ -70,7 +70,7 @@ cdm$dual_antiplatelet_stroke_1 <- cdm$stroke_drugs_after_event |>
 cdm$dual_antiplatelet_stroke_2 <- cdm$stroke_drugs_after_event |>
   intersectCohorts(
     cohortId = c("aspirin_stroke", "dipyridamole_stroke"),
-    gap = 14,
+    gap = 28,
     name = "dual_antiplatelet_stroke_2"
   ) |>
   renameCohort(
@@ -84,7 +84,7 @@ cdm <- omopgenerics::bind(
 )
 cdm$dual_antiplatelet_stroke <- unionCohorts(
   cohort = cdm$dual_antiplatelet_stroke,
-  gap = 14,
+  gap = 28,
   cohortName = "dual_antiplatelet_stroke",
   name = "dual_antiplatelet_stroke"
 )
@@ -101,7 +101,7 @@ info(logger, "INSTANTIATE ANTICOAGULANT COHORT - STROKE")
 cdm$anticoagulants_stroke <- unionCohorts(
   cohort = cdm$stroke_drugs_after_event,
   cohortId = c("warfarin_stroke", "doacs_stroke"),
-  gap = 14,
+  gap = 28,
   keepOriginalCohorts = FALSE,
   name = "anticoagulants_stroke"
 ) |>
@@ -138,7 +138,7 @@ info(logger, "INSTANTIATE LIPID-LOWERING COHORT - STROKE")
 cdm$lipid_lowering_stroke <- unionCohorts(
   cohort = cdm$stroke_drugs_after_event,
   cohortId = c("statin_stroke", "pcsk9_inhibitors_stroke", "ezetimibe_stroke"),
-  gap = 14,
+  gap = 28,
   keepOriginalCohorts = FALSE,
   name = "lipid_lowering_stroke"
 ) |>
@@ -157,7 +157,7 @@ info(logger, "INSTANTIATE ANTIHYPERTENSIVE COHORT - STROKE")
 cdm$antihypertensive_stroke <- unionCohorts(
   cohort = cdm$stroke_drugs_after_event,
   cohortId = c("acei_arbs_stroke", "calcium_channel_blockers_stroke", "thiazide_diuretics_stroke"),
-  gap = 14,
+  gap = 28,
   keepOriginalCohorts = FALSE,
   name = "antihypertensive_stroke"
 ) |>

@@ -90,16 +90,35 @@ source(here("Analyses", "characteristics.R"))
 info(logger, "SUMMARISE CHARACTERISTICS FINISHED")
 }
 
+if(isTRUE(run_characteristics) & isTRUE(hospital_care)){
+  info(logger, "RUN SUMMARISE CHARACTERISTICS")
+  source(here("Analyses", "hospitalCharacteristics.R"))
+  info(logger, "SUMMARISE CHARACTERISTICS FINISHED")
+}
+
 # export results ----
 info(logger, "EXPORTING RESULTS")
 
 result <- omopgenerics::bind(results)
 
+if(isTRUE(primary_care)){
+
 omopgenerics::exportSummarisedResult(result,
                                      minCellCount = min_cell_count,
                                      path = results_folder,
-                                     fileName = "results_{cdm_name}_{date}.csv"
+                                     fileName = "primary_results_{cdm_name}_{date}.csv"
 )
+}
+
+if(isTRUE(hospital_care)){
+  
+  omopgenerics::exportSummarisedResult(result,
+                                       minCellCount = min_cell_count,
+                                       path = results_folder,
+                                       fileName = "hospital_results_{cdm_name}_{date}.csv"
+  )
+}
+
 
 
 info(logger, "RESULTS EXPORTED")

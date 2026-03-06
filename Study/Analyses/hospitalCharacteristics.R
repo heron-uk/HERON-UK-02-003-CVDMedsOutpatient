@@ -1,54 +1,44 @@
 # Cohort Counts + Attrition
 
-results[["cohort_count_mi"]] <- cdm$mi_drugs_final |>
+results[["cohort_count_mi"]] <- cdm$mi_inpatient_first |>
   summariseCohortCount()
 
-results[["cohort_count_stroke"]] <- cdm$stroke_drugs_final |>
+results[["cohort_count_stroke"]] <- cdm$stroke_inpatient_first|>
   summariseCohortCount()
 
 results[["cohort_code_use_mi"]] <- summariseCohortCodeUse(
-  cohortTable = "mi_drugs_final",
+  cohortTable = "mi_inpatient_first",
     cdm = cdm,
     timing = "entry"
   )
 
 results[["cohort_code_use_stroke"]] <-summariseCohortCodeUse(
-  cohortTable = "stroke_drugs_final",
+  cohortTable = "stroke_inpatient_first",
   cdm = cdm,
   timing = "entry"
 )
 
-results[["cohort_attrition_mi"]] <- cdm$mi_drugs_final |>
+results[["cohort_attrition_mi"]] <- cdm$mi_inpatient_first |>
   summariseCohortAttrition()
 
-results[["cohort_attrition_stroke"]] <- cdm$stroke_drugs_final |>
+results[["cohort_attrition_stroke"]] <- cdm$stroke_inpatient_first |>
   summariseCohortAttrition()
-
-## Comorbidity Codelists
-
-comorbidities_cl <- CodelistGenerator::importCodelist(
-  path = here::here("Cohorts", "comorbidities"),
-  type = "csv"
-)
   
 # Cohort Characteristics - MI
 
-cdm$mi_drugs_chars <- cdm$mi_drugs_first |>
+cdm$mi_inpatient_chars <- cdm$mi_inpatient_first |>
   addDemographics(
     sex = TRUE,
     age = TRUE,
     priorObservation = FALSE,
     futureObservation = FALSE,
-    name = "mi_drugs_chars"
-  )
-
-cdm$mi_drugs_chars <- cdm$mi_drugs_chars |>
-  addCKDStage() |>
+    name = "mi_inpatient_chars"
+  ) |>
   addEthnicity() |>
   addSES()
   
 
-cdm$mi_drugs_chars <- cdm$mi_drugs_chars |>
+cdm$mi_inpatient_chars <- cdm$mi_inpatient_chars |>
   mutate(
     age_group = case_when(
       age >= 18 & age <= 39 ~ '18 to 39',
@@ -62,7 +52,19 @@ cdm$mi_drugs_chars <- cdm$mi_drugs_chars |>
     )
   )
 
-char_mi <- summariseCharacteristics(cdm$mi_drugs_chars,
+# MI Drug Treatment
+
+drugs_cl <- importCodelist(
+  here("Cohorts", "Hospital", "drugs"),
+       type = "csv")
+
+# MI Procedures
+
+mi_proc <- importCodelist(
+  here("Cohorts", "Hospital", "miProcedures"),
+  type = "csv")
+
+char_mi <- summariseCharacteristics(cdm$mi_inpatient_chars,
                                     ageGroup = list(
                                       "18 to 39" = c(18, 39),
                                       "40 to 49" = c(40, 49),
@@ -72,10 +74,16 @@ char_mi <- summariseCharacteristics(cdm$mi_drugs_chars,
                                       "80 to 89" = c(80, 89),
                                       "90+" = c(90, 150)),
                                     conceptIntersectFlag = list(
-                                      "Prevalent drug use (-30 to -1)" = list(
-                                        conceptSet = mi_drugs_cl,
+                                      "Drug Treatment (0, 14)" = list(
+                                        conceptSet = drugs_cl,
                                         window = list(
-                                          c(-30, -1)
+                                          c(0,14)
+                                        )
+                                      ),
+                                      "Procedures (0, 14)" = list(
+                                        conceptSet = mi_proc,
+                                        window = list(
+                                          c(0,14)
                                         )
                                       ),
                                       "Prior ischemic stroke (-30 to -1)" = list(
@@ -83,46 +91,29 @@ char_mi <- summariseCharacteristics(cdm$mi_drugs_chars,
                                         window = list(
                                           c(-30, -1)
                                         )
-                                      ),
-                                      "Prior comorbidities (-Inf, -1)" = list(
-                                        conceptSet = comorbidities_cl,
-                                        window = list(
-                                          c(-Inf, -1)
-                                        )
                                       )
                                       ),
-                                    cohortIntersectFlag = list(
-                                      "Prior comorbidities (-Inf, -1)" = list(
-                                        targetCohortTable = "obesity",
-                                        window = list(
-                                          c(-Inf, -1)
-                                        )
-                                      ) 
-                                    ),
                                     strata = list(c("age_group"), c("sex"), c("ses")
                                     ),
-                                    otherVariables = c("ses", "ethnicity", "ckd_stage"))
+                                    otherVariables = c("ses", "ethnicity"))
 
 
 results[["summmarise_characteristics_mi"]] <- char_mi
 
 
 # Cohort Characteristics - Stroke
-cdm$stroke_drugs_chars <- cdm$stroke_drugs_first |>
+cdm$stroke_inpatient_chars <- cdm$stroke_inpatient_first |>
   addDemographics(
     sex = TRUE,
     age = TRUE,
     priorObservation = FALSE,
     futureObservation = FALSE,
-    name = "stroke_drugs_chars"
-  )
-
-cdm$stroke_drugs_chars <- cdm$stroke_drugs_chars |>
-  addCKDStage() |>
+    name = "stroke_inpatient_chars"
+  ) |>
   addEthnicity() |>
   addSES()
 
-cdm$stroke_drugs_chars <- cdm$stroke_drugs_chars |>
+cdm$stroke_inpatient_chars <- cdm$stroke_inpatient_chars |>
   mutate(
     age_group = case_when(
       age >= 18 & age <= 39 ~ '18 to 39',
@@ -136,7 +127,13 @@ cdm$stroke_drugs_chars <- cdm$stroke_drugs_chars |>
     )
   )
 
-char_stroke <- summariseCharacteristics(cdm$stroke_drugs_chars,
+# Stroke Procedures
+
+stroke_proc <- importCodelist(
+  here("Cohorts", "Hospital", "strokeProcedures"),
+  type = "csv")
+
+char_stroke <- summariseCharacteristics(cdm$stroke_inpatient_chars,
                                         ageGroup = list(
                                           "18 to 39" = c(18, 39),
                                           "40 to 49" = c(40, 49),
@@ -146,10 +143,16 @@ char_stroke <- summariseCharacteristics(cdm$stroke_drugs_chars,
                                           "80 to 89" = c(80, 89),
                                           "90+" = c(90, 150)),
                                         conceptIntersectFlag = list(
-                                          "Prevalent drug use (-30 to -1)" = list(
-                                            conceptSet = stroke_drugs_cl,
+                                          "Drug Treatment (0, 14)" = list(
+                                            conceptSet = drugs_cl,
                                             window = list(
-                                              c(-30, -1)
+                                              c(0,14)
+                                            )
+                                          ),
+                                          "Procedures (0, 14)" = list(
+                                            conceptSet = stroke_proc,
+                                            window = list(
+                                              c(0,14)
                                             )
                                           ),
                                           "Prior MI (-30 to -1)" = list(
@@ -157,24 +160,11 @@ char_stroke <- summariseCharacteristics(cdm$stroke_drugs_chars,
                                             window = list(
                                               c(-30, -1)
                                             )
-                                          ),
-                                          "Prior comorbidities (-Inf, -1)" = list(
-                                            conceptSet = comorbidities_cl,
-                                            window = list(
-                                              c(-Inf, -1)
-                                            )
                                           )
                                         ),
-                                        cohortIntersectFlag = list(
-                                          "Prior comorbidities (-Inf, -1)" = list(
-                                            targetCohortTable = "obesity",
-                                            window = list(
-                                              c(-Inf, -1)
-                                            )
-                                          ) 
-                                        ),
+
                                         strata = list(c("age_group"), c("sex"), c("ses")
                                         ),
-                                        otherVariables = c("ses", "ethnicity", "ckd_stage"))
+                                        otherVariables = c("ses", "ethnicity"))
 
 results[["summmarise_characteristics_stroke"]] <- char_stroke

@@ -14,7 +14,7 @@ cdm$mi_drugs <- conceptCohort(
 
 # collapse records that are within 14 days of each other
 cdm$mi_drugs <- cdm$mi_drugs |>
-  collapseCohorts(gap = 14,
+  collapseCohorts(gap = 28,
                   name = "mi_drugs") 
 
 cdm$mi_drugs_first <- cdm$mi_drugs |>
@@ -85,7 +85,7 @@ info(logger, "INSTANTIATE ANTIPLATELETS COHORT - MI")
 cdm$antiplatelets_mi <- unionCohorts(
   cohort = cdm$mi_drugs_after_event,
   cohortId = c("aspirin_mi", "p2y12_inhibitors_mi", "dipyridamole_mi"),
-  gap = 14,
+  gap = 28,
   keepOriginalCohorts = FALSE,
   name = "antiplatelets_mi"
   ) |>
@@ -105,7 +105,7 @@ info(logger, "INSTANTIATE DUAL ANTIPLATELETS COHORT - MI")
 cdm$dual_antiplatelet_mi_1 <- cdm$mi_drugs_after_event |>
   intersectCohorts(
     cohortId = c("aspirin_mi", "p2y12_inhibitors_mi"),
-    gap = 14,
+    gap = 28,
     name = "dual_antiplatelet_mi_1"
   ) |>
   renameCohort(
@@ -115,7 +115,7 @@ cdm$dual_antiplatelet_mi_1 <- cdm$mi_drugs_after_event |>
 cdm$dual_antiplatelet_mi_2 <- cdm$mi_drugs_after_event |>
   intersectCohorts(
     cohortId = c("aspirin_mi", "dipyridamole_mi"),
-    gap = 14,
+    gap = 28,
     name = "dual_antiplatelet_mi_2"
   ) |>
   renameCohort(
@@ -129,7 +129,7 @@ cdm <- omopgenerics::bind(
 )
 cdm$dual_antiplatelet_mi <- unionCohorts(
   cohort = cdm$dual_antiplatelet_mi,
-  gap = 14,
+  gap = 28,
   cohortName = "dual_antiplatelet_mi",
   name = "dual_antiplatelet_mi"
 )
@@ -145,7 +145,7 @@ info(logger, "INSTANTIATE ANTICOAGULANT COHORT - MI")
 cdm$anticoagulants_mi <- unionCohorts(
     cohort = cdm$mi_drugs_after_event,
     cohortId = c("warfarin_mi", "doacs_mi"),
-    gap = 14,
+    gap = 28,
     keepOriginalCohorts = FALSE,
     name = "anticoagulants_mi"
   ) |>
@@ -182,7 +182,7 @@ info(logger, "INSTANTIATE LIPID-LOWERING COHORT - MI")
   cdm$lipid_lowering_mi <- unionCohorts(
     cohort = cdm$mi_drugs_after_event,
     cohortId = c("statin_mi", "pcsk9_inhibitors_mi", "ezetimibe_mi"),
-    gap = 14,
+    gap = 28,
     keepOriginalCohorts = FALSE,
     name = "lipid_lowering_mi"
   ) |>
@@ -201,7 +201,7 @@ info(logger, "INSTANTIATE ANTIHYPERTENSIVE COHORT - MI")
 cdm$antihypertensive_mi <- unionCohorts(
   cohort = cdm$mi_drugs_after_event,
   cohortId = c("acei_arbs_mi", "calcium_channel_blockers_mi", "thiazide_diuretics_mi"),
-  gap = 14,
+  gap = 28,
   keepOriginalCohorts = FALSE,
   name = "antihypertensive_mi"
 ) |>
