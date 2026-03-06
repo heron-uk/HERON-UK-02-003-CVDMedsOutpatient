@@ -6,11 +6,17 @@ results[["cohort_count_mi"]] <- cdm$mi_drugs_final |>
 results[["cohort_count_stroke"]] <- cdm$stroke_drugs_final |>
   summariseCohortCount()
 
-results[["cohort_code_use_mi"]] <- cdm$mi_drugs_final |>
-  summariseCohortCodeUse()
+results[["cohort_code_use_mi"]] <- summariseCohortCodeUse(
+  cohortTable = "mi_drugs_final",
+    cdm = cdm,
+    timing = "entry"
+  )
 
-results[["cohort_code_use_stroke"]] <- cdm$stroke_drugs_final |>
-  summariseCohortCodeUse()
+results[["cohort_code_use_stroke"]] <-summariseCohortCodeUse(
+  cohortTable = "stroke_drugs_final",
+  cdm = cdm,
+  timing = "entry"
+)
 
 results[["cohort_attrition_mi"]] <- cdm$mi_drugs_final |>
   summariseCohortAttrition()
