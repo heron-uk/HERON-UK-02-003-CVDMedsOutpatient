@@ -641,6 +641,7 @@
       "Description": "Phenotype study cohorts in data mapped to the  Observational Medical Outcomes Partnership Common Data Model. Diagnostics  are run at the database, code list, cohort, and population level to assess  whether study cohorts are ready for research.",
       "License": "Apache License (>= 2)",
       "Encoding": "UTF-8",
+      "LazyData": "true",
       "Depends": [
         "R (>= 4.1.0)"
       ],
@@ -708,15 +709,14 @@
       "BugReports": "https://github.com/OHDSI/PhenotypeR/issues",
       "VignetteBuilder": "knitr",
       "Config/testthat/parallel": "true",
-      "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteRepo": "PhenotypeR",
-      "RemoteUsername": "OHDSI",
-      "RemoteRef": "HEAD",
-      "RemoteSha": "f38904a4c083223a7f3e63fc49ea520e24cb25be",
-      "NeedsCompilation": "no",
       "Author": "Edward Burn [aut, cre] (<https://orcid.org/0000-0002-9286-1128>), Martí Català [aut] (<https://orcid.org/0000-0003-3308-9905>), Xihang Chen [aut] (<https://orcid.org/0009-0001-8112-8959>), Marta Alcalde-Herraiz [aut] (<https://orcid.org/0009-0002-4405-1814>), Nuria Mercade-Besora [aut] (<https://orcid.org/0009-0006-7948-3747>), Albert Prats-Uribe [aut] (<https://orcid.org/0000-0003-1202-9153>)",
-      "Maintainer": "Edward Burn <edward.burn@ndorms.ox.ac.uk>"
+      "Maintainer": "Edward Burn <edward.burn@ndorms.ox.ac.uk>",
+      "RemoteType": "github",
+      "RemoteUsername": "OHDSI",
+      "RemoteRepo": "PhenotypeR",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "e9adf182877e1c1e59aab4f1c9ec2f5762627ffe",
+      "RemoteHost": "api.github.com"
     },
     "R6": {
       "Package": "R6",
@@ -2090,7 +2090,7 @@
     },
     "renv": {
       "Package": "renv",
-      "Version": "1.1.7",
+      "Version": "1.1.8",
       "Source": "Repository",
       "Type": "Package",
       "Title": "Project Environments",
@@ -2134,14 +2134,14 @@
       "Encoding": "UTF-8",
       "RoxygenNote": "7.3.3",
       "VignetteBuilder": "knitr",
+      "NeedsCompilation": "yes",
       "Config/Needs/website": "tidyverse/tidytemplate",
       "Config/testthat/edition": "3",
       "Config/testthat/parallel": "true",
       "Config/testthat/start-first": "bioconductor,python,install,restore,snapshot,retrieve,remotes",
-      "NeedsCompilation": "no",
       "Author": "Kevin Ushey [aut, cre] (ORCID: <https://orcid.org/0000-0003-2880-7407>), Hadley Wickham [aut] (ORCID: <https://orcid.org/0000-0003-4757-117X>), Posit Software, PBC [cph, fnd]",
       "Maintainer": "Kevin Ushey <kevin@rstudio.com>",
-      "Repository": "RSPM"
+      "Repository": "CRAN"
     },
     "rlang": {
       "Package": "rlang",

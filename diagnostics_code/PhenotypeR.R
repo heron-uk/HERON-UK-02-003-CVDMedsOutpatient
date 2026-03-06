@@ -1,5 +1,8 @@
 
 result <- phenotypeDiagnostics(cdm[["study_cohorts"]], 
+                               clinicalTableSample = 0,
+                               measurementSample = 0,
+                               drugExposureSample = 0,
                                populationDateRange = as.Date(c("2012-01-01", 
                                                                NA)))
 
