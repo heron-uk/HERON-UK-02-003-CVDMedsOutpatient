@@ -65,9 +65,8 @@ info(logger, "INSTANTIATED OUTCOME COHORTS")
 
 if(isTRUE(hospital_care)){
   info(logger, "INSTANTIATING HOSPITAL COHORTS")
-  source(here("Cohorts", "InstantiateHospitalCohorts.R"))
+  source(here("Cohorts", "Hospital", "InstantiatingHospitalCohorts.R"))
   info(logger, "HOSPITAL COHORTS INSTANTIATED")
-  
 } 
 
 if(isTRUE(primary_care)){
