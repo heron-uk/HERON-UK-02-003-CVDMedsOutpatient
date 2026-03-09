@@ -223,6 +223,8 @@ ui <- bslib::page_navbar(
         )
       )
     ),
+
+    ### cohort code use ----
     bslib::nav_panel(
       title = "Cohort code use",
       icon = shiny::icon("chart-column"),
@@ -334,9 +336,13 @@ ui <- bslib::page_navbar(
       )
     )
   ),
+
+  ## characterisation ----
   bslib::nav_menu(
     title = "Characteristics",
     icon = shiny::icon("list"),
+
+    ### counts ----
     bslib::nav_panel(
       title = "Cohort Count",
       icon = shiny::icon("users"),
@@ -495,6 +501,8 @@ ui <- bslib::page_navbar(
         )
       )
     ),
+
+    ## attrition ----
     bslib::nav_panel(
       title = "Cohort Attrition",
       icon = shiny::icon("layer-group"),
@@ -614,6 +622,8 @@ ui <- bslib::page_navbar(
         )
       )
     ),
+
+    ### demographics ----
     bslib::nav_panel(
       title = "Summarise demographics",
       icon = shiny::icon("users-gear"),
@@ -804,6 +814,8 @@ ui <- bslib::page_navbar(
         )
       )
     ),
+
+    ### treatments ----
     bslib::nav_panel(
       title = "Summarise treatments",
       icon = shiny::icon("users-gear"),
@@ -994,6 +1006,8 @@ ui <- bslib::page_navbar(
         )
       )
     ),
+
+    ### procedures ----
     bslib::nav_panel(
       title = "Summarise procedures",
       icon = shiny::icon("users-gear"),
@@ -1185,6 +1199,8 @@ ui <- bslib::page_navbar(
       )
     )
   ),
+
+  ## download ----
   bslib::nav_spacer(),
   bslib::nav_item(
     bslib::popover(
@@ -1217,4 +1233,5 @@ ui <- bslib::page_navbar(
     )
   ),
   bslib::nav_item(bslib::input_dark_mode(id = "dark_mode", mode = "light"))
+  ## end ----
 )
