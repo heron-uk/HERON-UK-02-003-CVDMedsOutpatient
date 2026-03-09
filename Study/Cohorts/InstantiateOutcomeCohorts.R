@@ -10,7 +10,9 @@ cdm$acute_mi <- conceptCohort(
   cdm = cdm,
   conceptSet = acute_mi_cl,
   name = "acute_mi"
-) 
+) |> 
+  collapseCohorts(gap = 28,
+                  name = "acute_mi") 
 
 cdm$acute_mi_first <- cdm$acute_mi |>
   requireIsFirstEntry(
@@ -35,7 +37,9 @@ cdm$stroke <- conceptCohort(
   cdm = cdm,
   conceptSet = stroke_cl,
   name = "stroke"
-)
+) |> 
+  collapseCohorts(gap = 28,
+                  name = "stroke") 
 
 cdm$stroke_first <- cdm$stroke |>
   requireIsFirstEntry(

@@ -78,10 +78,10 @@ char_mi <- summariseCharacteristics(cdm$mi_drugs_chars,
                                           c(-30, -1)
                                         )
                                       ),
-                                      "Prior ischemic stroke (-30 to -1)" = list(
+                                      "Prior ischemic stroke (-Inf to -1)" = list(
                                         conceptSet = stroke_cl,
                                         window = list(
-                                          c(-30, -1)
+                                          c(-Inf, -1)
                                         )
                                       ),
                                       "Prior comorbidities (-Inf, -1)" = list(
@@ -152,10 +152,10 @@ char_stroke <- summariseCharacteristics(cdm$stroke_drugs_chars,
                                               c(-30, -1)
                                             )
                                           ),
-                                          "Prior MI (-30 to -1)" = list(
+                                          "Prior MI (-Inf to -1)" = list(
                                             conceptSet = acute_mi_cl,
                                             window = list(
-                                              c(-30, -1)
+                                              c(-Inf, -1)
                                             )
                                           ),
                                           "Prior comorbidities (-Inf, -1)" = list(
