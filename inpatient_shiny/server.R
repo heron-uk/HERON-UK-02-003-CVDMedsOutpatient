@@ -19,17 +19,12 @@ server <- function(input, output, session) {
   getSummariseOmopSnapshotData <- shiny::reactive({
     data[["summarise_omop_snapshot"]] |>
       dplyr::filter(
-        .data$cdm_name %in% input$summarise_omop_snapshot_cdm_name,
-        .data$variable_name %in% input$summarise_omop_snapshot_variable_name
+        .data$cdm_name %in% input$summarise_omop_snapshot_cdm_name
       )
   })
   getSummariseOmopSnapshotTable <- shiny::reactive({
     getSummariseOmopSnapshotData() |>
-      OmopSketch::tableOmopSnapshot(
-        header = input$summarise_omop_snapshot_table_header,
-        groupColumn = input$summarise_omop_snapshot_table_group_column,
-        hide = input$summarise_omop_snapshot_table_hide
-      )
+      OmopSketch::tableOmopSnapshot()
   })
   output$summarise_omop_snapshot_table <- gt::render_gt({
     getSummariseOmopSnapshotTable()
@@ -46,9 +41,7 @@ server <- function(input, output, session) {
   getSummariseObservationPeriodData <- shiny::reactive({
     data[["summarise_observation_period"]] |>
       dplyr::filter(
-        .data$cdm_name %in% input$summarise_observation_period_cdm_name,
-        .data$variable_name %in% input$summarise_observation_period_variable_name,
-        .data$estimate_name %in% input$summarise_observation_period_estimate_name
+        .data$cdm_name %in% input$summarise_observation_period_cdm_name
       ) |>
       omopgenerics::filterGroup(.data$observation_period_ordinal %in% input$summarise_observation_period_observation_period_ordinal)
   })

@@ -2,6 +2,7 @@
 # Be careful editing this file
 
 ui <- bslib::page_navbar(
+  # intro duction ----
   title = shiny::tags$span(
     shiny::tags$img(
       src = "ohdsi_logo.svg",
@@ -18,9 +19,13 @@ ui <- bslib::page_navbar(
     icon = shiny::icon("book-atlas"),
     backgroundCard("background.md")
   ),
+
+  ## diagnostics ----
   bslib::nav_menu(
     title = "Diagnostics",
     icon = shiny::icon("list"),
+
+    ### snapshot ----
     bslib::nav_panel(
       title = "Snapshot",
       icon = shiny::icon("camera"),
@@ -34,71 +39,32 @@ ui <- bslib::page_navbar(
             multiple = TRUE,
             options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
           ),
-          shinyWidgets::pickerInput(
-            inputId = "summarise_omop_snapshot_variable_name",
-            label = "Variable name",
-            choices = choices$summarise_omop_snapshot_variable_name,
-            selected = selected$summarise_omop_snapshot_variable_name,
-            multiple = TRUE,
-            options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
-          ),
           position = "left"
         ),
-        bslib::navset_card_tab(
-          bslib::nav_panel(
-            title = "Table Snapshot",
-            bslib::card(
-              full_screen = TRUE,
-              bslib::card_header(
-                bslib::popover(
-                  shiny::icon("download"),
-                  shinyWidgets::pickerInput(
-                    inputId = "summarise_omop_snapshot_table_format",
-                    label = "Format",
-                    choices = c("docx", "png", "pdf", "html"),
-                    selected = "docx",
-                    multiple = FALSE,
-                    options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
-                  ),
-                  shiny::downloadButton(outputId = "summarise_omop_snapshot_table_download", label = "Download table")
-                ),
-                class = "text-end"
+        bslib::card(
+          full_screen = TRUE,
+          bslib::card_header(
+            bslib::popover(
+              shiny::icon("download"),
+              shinyWidgets::pickerInput(
+                inputId = "summarise_omop_snapshot_table_format",
+                label = "Format",
+                choices = c("docx", "png", "pdf", "html"),
+                selected = "docx",
+                multiple = FALSE,
+                options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
               ),
-              bslib::layout_sidebar(
-                sidebar = bslib::sidebar(
-                  sortable::bucket_list(
-                    header = NULL,
-                    sortable::add_rank_list(
-                      text = "None",
-                      labels = "estimate_name",
-                      input_id = "summarise_omop_snapshot_table_none"
-                    ),
-                    sortable::add_rank_list(
-                      text = "Header",
-                      labels = "cdm_name",
-                      input_id = "summarise_omop_snapshot_table_header"
-                    ),
-                    sortable::add_rank_list(
-                      text = "Group columns",
-                      labels = "variable_name",
-                      input_id = "summarise_omop_snapshot_table_group_column"
-                    ),
-                    sortable::add_rank_list(
-                      text = "Hide",
-                      labels = "variable_level",
-                      input_id = "summarise_omop_snapshot_table_hide"
-                    )
-                  ),
-                  position = "right"
-                ),
-                gt::gt_output("summarise_omop_snapshot_table") |>
-                  shinycssloaders::withSpinner()
-              )
-            )
-          )
+              shiny::downloadButton(outputId = "summarise_omop_snapshot_table_download", label = "Download table")
+            ),
+            class = "text-end"
+          ),
+          gt::gt_output("summarise_omop_snapshot_table") |>
+            shinycssloaders::withSpinner()
         )
       )
     ),
+
+    ### observation period ----
     bslib::nav_panel(
       title = "Observation period Summary",
       icon = shiny::icon("eye"),
@@ -117,22 +83,6 @@ ui <- bslib::page_navbar(
             label = "Observation period ordinal",
             choices = choices$summarise_observation_period_observation_period_ordinal,
             selected = selected$summarise_observation_period_observation_period_ordinal,
-            multiple = TRUE,
-            options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
-          ),
-          shinyWidgets::pickerInput(
-            inputId = "summarise_observation_period_variable_name",
-            label = "Variable name",
-            choices = choices$summarise_observation_period_variable_name,
-            selected = selected$summarise_observation_period_variable_name,
-            multiple = TRUE,
-            options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
-          ),
-          shinyWidgets::pickerInput(
-            inputId = "summarise_observation_period_estimate_name",
-            label = "Estimate name",
-            choices = choices$summarise_observation_period_estimate_name,
-            selected = selected$summarise_observation_period_estimate_name,
             multiple = TRUE,
             options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
           ),
