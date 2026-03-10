@@ -7,7 +7,7 @@ addSES <- function(cohort){
                                  dplyr::filter(.data$observation_source_concept_id == 35812882L) |> 
                                  dplyr::select("person_id", "ses" = "value_as_number"),
                                by = c("subject_id" = "person_id")) |>
-      dplyr::mutate(ses = sprintf("%i", .data$ses),
+      dplyr::mutate(ses = as.character(.data$ses),
                     ses = coalesce(.data$ses, "Missing"))
     
   }else if (n_townsend>0) {
