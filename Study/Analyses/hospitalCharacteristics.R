@@ -92,7 +92,15 @@ char_mi <- summariseCharacteristics(cdm$mi_inpatient_chars,
                                           c(-30, -1)
                                         )
                                       )
-                                      ),
+                                    ),
+                                    
+                                    tableIntersectFlag = list(
+                                      "30-day mortality" = list(
+                                        tableName = "death",
+                                        window = c(0, 30)
+                                      )
+                                    ),
+                                    
                                     strata = list(c("age_group"), c("sex"), c("ses")
                                     ),
                                     otherVariables = c("ses", "ethnicity"))
@@ -160,6 +168,13 @@ char_stroke <- summariseCharacteristics(cdm$stroke_inpatient_chars,
                                             window = list(
                                               c(-30, -1)
                                             )
+                                          )
+                                        ),
+                                        
+                                        tableIntersectFlag = list(
+                                          "30-day mortality" = list(
+                                            tableName = "death",
+                                            window = c(0, 30)
                                           )
                                         ),
 
