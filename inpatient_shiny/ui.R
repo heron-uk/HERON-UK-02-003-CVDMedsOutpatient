@@ -78,14 +78,6 @@ ui <- bslib::page_navbar(
             multiple = TRUE,
             options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
           ),
-          shinyWidgets::pickerInput(
-            inputId = "summarise_observation_period_observation_period_ordinal",
-            label = "Observation period ordinal",
-            choices = choices$summarise_observation_period_observation_period_ordinal,
-            selected = selected$summarise_observation_period_observation_period_ordinal,
-            multiple = TRUE,
-            options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
-          ),
           position = "left"
         ),
         bslib::navset_card_tab(
@@ -108,36 +100,8 @@ ui <- bslib::page_navbar(
                 ),
                 class = "text-end"
               ),
-              bslib::layout_sidebar(
-                sidebar = bslib::sidebar(
-                  sortable::bucket_list(
-                    header = NULL,
-                    sortable::add_rank_list(
-                      text = "None",
-                      labels = c("observation_period_ordinal", "variable_name", "variable_level", "estimate_name"),
-                      input_id = "summarise_observation_period_table_none"
-                    ),
-                    sortable::add_rank_list(
-                      text = "Header",
-                      labels = "cdm_name",
-                      input_id = "summarise_observation_period_table_header"
-                    ),
-                    sortable::add_rank_list(
-                      text = "Group columns",
-                      labels = character(),
-                      input_id = "summarise_observation_period_table_group_column"
-                    ),
-                    sortable::add_rank_list(
-                      text = "Hide",
-                      labels = character(),
-                      input_id = "summarise_observation_period_table_hide"
-                    )
-                  ),
-                  position = "right"
-                ),
-                gt::gt_output("summarise_observation_period_table") |>
-                  shinycssloaders::withSpinner()
-              )
+              gt::gt_output("summarise_observation_period_table") |>
+                shinycssloaders::withSpinner()
             )
           ),
           bslib::nav_panel(
@@ -200,16 +164,16 @@ ui <- bslib::page_navbar(
                   shinyWidgets::pickerInput(
                     inputId = "summarise_observation_period_plot_facet",
                     label = "Facet",
-                    choices = c("cdm_name", "observation_period_ordinal"),
-                    selected = "cdm_name",
+                    choices = c("cdm_name"),
+                    selected = nullfile(),
                     multiple = TRUE,
                     options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
                   ),
                   shinyWidgets::pickerInput(
                     inputId = "summarise_observation_period_plot_colour",
                     label = "Colour",
-                    choices = c("cdm_name", "observation_period_ordinal"),
-                    selected = "observation_period_ordinal",
+                    choices = c("cdm_name"),
+                    selected = "cdm_name",
                     multiple = TRUE,
                     options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
                   ),
@@ -239,26 +203,10 @@ ui <- bslib::page_navbar(
             options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
           ),
           shinyWidgets::pickerInput(
-            inputId = "cohort_code_use_cohort_name",
-            label = "Cohort name",
-            choices = choices$cohort_code_use_cohort_name,
-            selected = selected$cohort_code_use_cohort_name,
-            multiple = TRUE,
-            options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
-          ),
-          shinyWidgets::pickerInput(
             inputId = "cohort_code_use_codelist_name",
             label = "Codelist name",
             choices = choices$cohort_code_use_codelist_name,
             selected = selected$cohort_code_use_codelist_name,
-            multiple = TRUE,
-            options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
-          ),
-          shinyWidgets::pickerInput(
-            inputId = "cohort_code_use_variable_name",
-            label = "Variable name",
-            choices = choices$cohort_code_use_variable_name,
-            selected = selected$cohort_code_use_variable_name,
             multiple = TRUE,
             options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
           ),
@@ -364,22 +312,6 @@ ui <- bslib::page_navbar(
             multiple = TRUE,
             options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
           ),
-          shinyWidgets::pickerInput(
-            inputId = "summarise_cohort_count_variable_name",
-            label = "Variable name",
-            choices = choices$summarise_cohort_count_variable_name,
-            selected = selected$summarise_cohort_count_variable_name,
-            multiple = TRUE,
-            options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
-          ),
-          shinyWidgets::pickerInput(
-            inputId = "summarise_cohort_count_table_name",
-            label = "Table name",
-            choices = choices$summarise_cohort_count_table_name,
-            selected = selected$summarise_cohort_count_table_name,
-            multiple = TRUE,
-            options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
-          ),
           position = "left"
         ),
         bslib::navset_card_tab(
@@ -402,36 +334,8 @@ ui <- bslib::page_navbar(
                 ),
                 class = "text-end"
               ),
-              bslib::layout_sidebar(
-                sidebar = bslib::sidebar(
-                  sortable::bucket_list(
-                    header = NULL,
-                    sortable::add_rank_list(
-                      text = "None",
-                      labels = c("variable_name", "estimate_name"),
-                      input_id = "summarise_cohort_count_table_none"
-                    ),
-                    sortable::add_rank_list(
-                      text = "Header",
-                      labels = "cohort_name",
-                      input_id = "summarise_cohort_count_table_header"
-                    ),
-                    sortable::add_rank_list(
-                      text = "Group columns",
-                      labels = "cdm_name",
-                      input_id = "summarise_cohort_count_table_group_column"
-                    ),
-                    sortable::add_rank_list(
-                      text = "Hide",
-                      labels = c("variable_level", "table_name"),
-                      input_id = "summarise_cohort_count_table_hide"
-                    )
-                  ),
-                  position = "right"
-                ),
-                gt::gt_output("summarise_cohort_count_table") |>
-                  shinycssloaders::withSpinner()
-              )
+              gt::gt_output("summarise_cohort_count_table") |>
+                shinycssloaders::withSpinner()
             )
           ),
           bslib::nav_panel(
@@ -502,7 +406,7 @@ ui <- bslib::page_navbar(
       )
     ),
 
-    ## attrition ----
+    ### attrition ----
     bslib::nav_panel(
       title = "Cohort Attrition",
       icon = shiny::icon("layer-group"),
@@ -838,26 +742,10 @@ ui <- bslib::page_navbar(
             options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
           ),
           shinyWidgets::pickerInput(
-            inputId = "summarise_treatments_age_group",
-            label = "Age group",
-            choices = choices$summarise_treatments_age_group,
-            selected = selected$summarise_treatments_age_group,
-            multiple = TRUE,
-            options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
-          ),
-          shinyWidgets::pickerInput(
-            inputId = "summarise_treatments_sex",
-            label = "Sex",
-            choices = choices$summarise_treatments_sex,
-            selected = selected$summarise_treatments_sex,
-            multiple = TRUE,
-            options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
-          ),
-          shinyWidgets::pickerInput(
-            inputId = "summarise_treatments_ses",
-            label = "Ses",
-            choices = choices$summarise_treatments_ses,
-            selected = selected$summarise_treatments_ses,
+            inputId = "summarise_treatments_strata",
+            label = "Strata",
+            choices = c("overall", "age_group", "ses", "sex"),
+            selected = "overall",
             multiple = TRUE,
             options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
           ),
@@ -870,10 +758,10 @@ ui <- bslib::page_navbar(
             options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
           ),
           shinyWidgets::pickerInput(
-            inputId = "summarise_treatments_estimate_name",
-            label = "Estimate name",
-            choices = choices$summarise_treatments_estimate_name,
-            selected = selected$summarise_treatments_estimate_name,
+            inputId = "summarise_treatments_variable_level",
+            label = "Treatments",
+            choices = choices$summarise_treatments_variable_level,
+            selected = selected$summarise_treatments_variable_level,
             multiple = TRUE,
             options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
           ),
@@ -905,7 +793,7 @@ ui <- bslib::page_navbar(
                     header = NULL,
                     sortable::add_rank_list(
                       text = "None",
-                      labels = c("age_group", "sex", "ses", "variable_name", "variable_level", "estimate_name"),
+                      labels = c("strata", "variable_name", "variable_level", "estimate_name"),
                       input_id = "summarise_treatments_table_none"
                     ),
                     sortable::add_rank_list(
@@ -932,7 +820,7 @@ ui <- bslib::page_navbar(
             )
           ),
           bslib::nav_panel(
-            title = "Plot Characteristics",
+            title = "Plot Treatments",
             bslib::card(
               full_screen = TRUE,
               bslib::card_header(
@@ -973,17 +861,9 @@ ui <- bslib::page_navbar(
                     value = TRUE
                   ),
                   shinyWidgets::pickerInput(
-                    inputId = "summarise_treatments_plot_plot_type",
-                    label = "Plot type",
-                    choices = c("boxplot", "barplot", "scatterplot"),
-                    selected = "boxplot",
-                    multiple = FALSE,
-                    options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
-                  ),
-                  shinyWidgets::pickerInput(
                     inputId = "summarise_treatments_plot_facet",
                     label = "Facet",
-                    choices = c("cdm_name", "cohort_name", "age_group", "sex", "ses"),
+                    choices = c("cdm_name", "cohort_name", "strata"),
                     selected = "cdm_name",
                     multiple = TRUE,
                     options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
@@ -991,7 +871,7 @@ ui <- bslib::page_navbar(
                   shinyWidgets::pickerInput(
                     inputId = "summarise_treatments_plot_colour",
                     label = "Colour",
-                    choices = c("cdm_name", "cohort_name", "age_group", "sex", "ses"),
+                    choices = c("cdm_name", "cohort_name", "strata"),
                     selected = "cohort_name",
                     multiple = TRUE,
                     options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")

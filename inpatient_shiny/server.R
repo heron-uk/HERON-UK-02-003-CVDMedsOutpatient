@@ -42,15 +42,13 @@ server <- function(input, output, session) {
     data[["summarise_observation_period"]] |>
       dplyr::filter(
         .data$cdm_name %in% input$summarise_observation_period_cdm_name
-      ) |>
-      omopgenerics::filterGroup(.data$observation_period_ordinal %in% input$summarise_observation_period_observation_period_ordinal)
+      )
   })
   getSummariseObservationPeriodTable <- shiny::reactive({
-    getSummariseObservationPeriodData() |>
+    res <- getSummariseObservationPeriodData()
+    res |>
       OmopSketch::tableObservationPeriod(
-        header = input$summarise_observation_period_table_header,
-        groupColumn = input$summarise_observation_period_table_group_column,
-        hide = input$summarise_observation_period_table_hide
+        hide = c(omopgenerics::settingsColumns(res), "observation_period_ordinal"),
       )
   })
   output$summarise_observation_period_table <- gt::render_gt({
@@ -95,11 +93,9 @@ server <- function(input, output, session) {
     data[["cohort_code_use"]] |>
       dplyr::filter(
         .data$cdm_name %in% input$cohort_code_use_cdm_name,
-        .data$variable_name %in% input$cohort_code_use_variable_name,
         .data$estimate_name %in% input$cohort_code_use_estimate_name
       ) |>
       omopgenerics::filterGroup(
-        .data$cohort_name %in% input$cohort_code_use_cohort_name,
         .data$codelist_name %in% input$cohort_code_use_codelist_name
       )
   })
@@ -116,10 +112,7 @@ server <- function(input, output, session) {
   getCohortCodeUseTableGt <- shiny::reactive({
     getCohortCodeUseData() |>
       CodelistGenerator::tableCohortCodeUse(
-        timing = TRUE,
-        header = input$cohort_code_use_table_gt_header,
-        groupColumn = input$cohort_code_use_table_gt_group_column,
-        hide = input$cohort_code_use_table_gt_hide
+        hide = "timing"
       )
   })
   output$cohort_code_use_table_gt <- gt::render_gt({
@@ -137,11 +130,9 @@ server <- function(input, output, session) {
   getSummariseCohortCountData <- shiny::reactive({
     data[["summarise_cohort_count"]] |>
       dplyr::filter(
-        .data$cdm_name %in% input$summarise_cohort_count_cdm_name,
-        .data$variable_name %in% input$summarise_cohort_count_variable_name
+        .data$cdm_name %in% input$summarise_cohort_count_cdm_name
       ) |>
-      omopgenerics::filterGroup(.data$cohort_name %in% input$summarise_cohort_count_cohort_name) |>
-      omopgenerics::filterSettings(.data$table_name %in% input$summarise_cohort_count_table_name)
+      omopgenerics::filterGroup(.data$cohort_name %in% input$summarise_cohort_count_cohort_name)
   })
   getSummariseCohortCountTable <- shiny::reactive({
     getSummariseCohortCountData() |>
@@ -291,18 +282,31 @@ server <- function(input, output, session) {
   # summarise_treatments -----
   ## get summarise_treatments data
   getSummariseTreatmentsData <- shiny::reactive({
-    data[["summarise_treatments"]] |>
+    x <- data[["summarise_treatments"]] |>
       dplyr::filter(
         .data$cdm_name %in% input$summarise_treatments_cdm_name,
         .data$variable_name %in% input$summarise_treatments_variable_name,
-        .data$estimate_name %in% input$summarise_treatments_estimate_name
+        .data$variable_level %in% input$summarise_treatments_variable_level
       ) |>
-      omopgenerics::filterGroup(.data$cohort_name %in% input$summarise_treatments_cohort_name) |>
-      omopgenerics::filterStrata(
-        .data$age_group %in% input$summarise_treatments_age_group,
-        .data$sex %in% input$summarise_treatments_sex,
-        .data$ses %in% input$summarise_treatments_ses
-      )
+      omopgenerics::filterGroup(.data$cohort_name %in% input$summarise_treatments_cohort_name)
+    inx <- input$summarise_treatments_strata
+    if (!"overall" %in% inx) {
+      x <- x |>
+        omopgenerics::filterStrata(strata != "overall")
+    }
+    if (!"age_group" %in% inx) {
+      x <- x |>
+        omopgenerics::filterStrata(!grepl("Age", strata))
+    }
+    if (!"sex" %in% inx) {
+      x <- x |>
+        omopgenerics::filterStrata(!grepl("SES", strata))
+    }
+    if (!"ses" %in% inx) {
+      x <- x |>
+        omopgenerics::filterStrata(!grepl("Sex", strata))
+    }
+    x
   })
   getSummariseTreatmentsTable <- shiny::reactive({
     getSummariseTreatmentsData() |>
@@ -322,12 +326,16 @@ server <- function(input, output, session) {
     }
   )
   getSummariseTreatmentsPlot <- shiny::reactive({
-    getSummariseTreatmentsData() |>
-      CohortCharacteristics::plotCharacteristics(
-        plotType = input$summarise_treatments_plot_plot_type,
-        facet = input$summarise_treatments_plot_facet,
-        colour = input$summarise_treatments_plot_colour
-      )
+    x <- getSummariseTreatmentsData() |>
+      omopgenerics::tidy()
+    visOmopResults::barPlot(
+      result = x,
+      x = "variable_level",
+      y = "percentage",
+      facet = input$summarise_treatments_plot_facet,
+      colour = input$summarise_treatments_plot_colour
+    ) +
+      ggplot2::coord_flip()
   })
   output$summarise_treatments_plot <- shiny::renderUI({
     x <- getSummariseTreatmentsPlot()
