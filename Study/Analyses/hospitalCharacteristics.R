@@ -64,6 +64,10 @@ mi_proc <- importCodelist(
   here("Cohorts", "Hospital", "miProcedures"),
   type = "csv")
 
+comorb <- importCodelist(
+  here("Cohorts", "comorbidities"),
+  type = "csv")
+
 char_mi <- summariseCharacteristics(cdm$mi_inpatient_chars,
                                     ageGroup = list(
                                       "18 to 39" = c(18, 39),
@@ -86,10 +90,16 @@ char_mi <- summariseCharacteristics(cdm$mi_inpatient_chars,
                                           c(0,14)
                                         )
                                       ),
-                                      "Prior ischemic stroke (-30 to -1)" = list(
+                                      "Prior Comorbidities (-Inf to 0)" = list(
                                         conceptSet = stroke_cl,
                                         window = list(
-                                          c(-30, -1)
+                                          c(-Inf, 0)
+                                        )
+                                      ),
+                                      "Prior Comorbidities (-Inf to 0)" = list(
+                                        conceptSet = comorb,
+                                        window = list(
+                                          c(-Inf, 0)
                                         )
                                       )
                                     ),
@@ -163,14 +173,19 @@ char_stroke <- summariseCharacteristics(cdm$stroke_inpatient_chars,
                                               c(0,14)
                                             )
                                           ),
-                                          "Prior MI (-30 to -1)" = list(
+                                          "Prior Comorbidities (-Inf to 0)" = list(
                                             conceptSet = acute_mi_cl,
                                             window = list(
-                                              c(-30, -1)
+                                              c(-Inf, 0)
+                                            )
+                                          ),
+                                          "Prior Comorbidities (-Inf to 0)" = list(
+                                            conceptSet = comorb,
+                                            window = list(
+                                              c(-Inf, 0)
                                             )
                                           )
                                         ),
-                                        
                                         tableIntersectFlag = list(
                                           "30-day mortality" = list(
                                             tableName = "death",
