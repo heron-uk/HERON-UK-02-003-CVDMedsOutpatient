@@ -1,13 +1,25 @@
+databaseResult <- databaseDiagnostics(cdm[["study_cohorts"]])
 
-result <- phenotypeDiagnostics(cdm[["study_cohorts"]], 
-                               clinicalTableSample = 0,
-                               measurementSample = 0,
-                               drugExposureSample = 0,
-                               populationDateRange = as.Date(c("2012-01-01", 
-                                                               NA)))
+exportSummarisedResult(databaseResult, 
+                       fileName = "results_database_{cdm_name}_{date}.csv",
+                       path = here::here("Results"), 
+                       minCellCount = minCellCount)
 
+
+
+codelistResult <- codelistDiagnostics(cdm[["study_cohorts"]], 
+                               measurementSample = 0)
+
+
+exportSummarisedResult(codelistResult, 
+                       fileName = "results_codelists_{cdm_name}_{date}.csv",
+                       path = here::here("Results"), 
+                       minCellCount = minCellCount)
+
+cohortResult <- cohortDiagnostics(cdm[["study_cohorts"]],
+                                   matchedSample = 0)
 # export the results
-exportSummarisedResult(result, 
-                      fileName = "results_drugs_{cdm_name}_{date}.csv",
+exportSummarisedResult(cohortResult, 
+                      fileName = "results_cohorts_{cdm_name}_{date}.csv",
                       path = here::here("Results"), 
                       minCellCount = minCellCount)
