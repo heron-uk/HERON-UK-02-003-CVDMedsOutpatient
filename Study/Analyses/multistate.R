@@ -47,7 +47,7 @@ cdm$stroke_drugs_msm <- cdm$stroke_drugs_final |>
     age = FALSE,
     priorObservation = FALSE,
     futureObservation = FALSE,
-    name = "mi_drugs_msm",
+    name = "stroke_drugs_msm",
     ageGroup = list(
       "18 to 39" = c(18, 39),
       "40 to 49" = c(40, 49),
