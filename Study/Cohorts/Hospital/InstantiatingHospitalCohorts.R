@@ -9,14 +9,13 @@ cdm$stroke_broad <- conceptCohort(
 
 cdm <- bind(cdm$stroke, cdm$stroke_broad, name = "stroke")
 
+inpatientCodes <- c(9201, 262, 9203)
+
 cdm$inpatient_visit <- conceptCohort(
   cdm = cdm,
-  conceptSet = list(inpatient = c(9201,262,9203)),
+  conceptSet = list(inpatient = inpatientCodes),
   name = "inpatient_visit"
 ) 
-
-cdm$inpatient_visit <- cdm$inpatient_visit |>
-  collapseCohorts(gap = 1, name = "inpatient_visit") 
 
 info(logger, "GOT INPATIENT COHORT")
 info(logger, "INSTANTIATING HOSPITAL MI COHORT")

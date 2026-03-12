@@ -3,12 +3,27 @@ drugs_cl <- importCodelist(here("Cohorts", "Hospital", "drugs"), type = "csv")
 drugs_tromb <- drugs_cl[grepl("thrombolytics", names(drugs_cl))]
 drugs_rest <- drugs_cl[!grepl("thrombolytics", names(drugs_cl))]
 mi_proc <- importCodelist(here("Cohorts", "Hospital", "miProcedures"), type = "csv")
-comorb <- importCodelist(here("Cohorts", "comorbidities"), type = "csv")
 stroke_proc <- importCodelist(here("Cohorts", "Hospital", "strokeProcedures"), type = "csv")
+comorb <- importCodelist(here("Cohorts", "comorbidities"), type = "csv")
 miTypes <- importCodelist(here("Cohorts", "Hospital", "miTypes"), type = "csv")
 
 ageGroupStrata <- list("age_range" = list(c(18, 64), c(65, 84), c(85, Inf)))
 ageGroupChar <- list(c(18, 39), c(40, 49), c(50, 59), c(60, 69), c(70, 79), c(80, 89), c(90, Inf))
+
+cdm$ckd_any <- cdm$ckd_stage |>
+  dplyr::group_by(subject_id) |>
+  dplyr::summarise(cohort_start_date = min(cohort_start_date, na.rm = TRUE)) |>
+  dplyr::compute(name = "ckd_any") |>
+  dplyr::mutate(
+    cohort_definition_id = 1L,
+    cohort_end_date = cohort_start_date
+  ) |>
+  dplyr::compute(name = "ckd_any") |>
+  omopgenerics::newCohortTable(
+    cohortSetRef = dplyr::tibble(cohort_definition_id = 1L, cohort_name = "ckd"),
+    cohortAttritionRef = NULL, 
+    cohortCodelistRef = NULL
+  )
 
 # Cohort Counts + Attrition
 
@@ -88,7 +103,22 @@ char_mi <- cdm$mi_inpatient_chars |>
         window = c(-Inf, 0)
       ),
       "Prior Comorbidities (-Inf to 0)" = list(
+        conceptSet = acute_mi_cl,
+        window = c(-Inf, 0)
+      ),
+      "Prior Comorbidities (-Inf to 0)" = list(
         conceptSet = comorb,
+        window = c(-Inf, 0)
+      )
+    ),
+    
+    cohortIntersectFlag = list(
+      "Prior Comorbidities (-Inf to 0)" = list(
+        targetCohortTable = "ckd_any",
+        window = c(-Inf, 0)
+      ),
+      "Prior Comorbidities (-Inf to 0)" = list(
+        targetCohortTable = "obesity",
         window = c(-Inf, 0)
       )
     ),
@@ -101,7 +131,8 @@ char_mi <- cdm$mi_inpatient_chars |>
     ),
     
     strata = list("mi_type", c("age_range"), c("sex"), c("ses")),
-    otherVariables = c("ses", "ethnicity")
+    
+    otherVariables = c("ses", "ethnicity", "mi_type")
   )
 
 results[["summmarise_characteristics_mi"]] <- char_mi
@@ -142,7 +173,22 @@ char_stroke <- cdm$stroke_inpatient_chars |>
         window = c(-Inf, 0)
       ),
       "Prior Comorbidities (-Inf to 0)" = list(
+        conceptSet = stroke_cl,
+        window = c(-Inf, 0)
+      ),
+      "Prior Comorbidities (-Inf to 0)" = list(
         conceptSet = comorb,
+        window = c(-Inf, 0)
+      )
+    ),
+    
+    cohortIntersectFlag = list(
+      "Prior Comorbidities (-Inf to 0)" = list(
+        targetCohortTable = "ckd_any",
+        window = c(-Inf, 0)
+      ),
+      "Prior Comorbidities (-Inf to 0)" = list(
+        targetCohortTable = "obesity",
         window = c(-Inf, 0)
       )
     ),
@@ -179,7 +225,7 @@ persons <- cdm$stroke_inpatient_first |>
 
 visits <- cdm$visit_occurrence |>
   dplyr::rename("subject_id" = "person_id") |>
-  dplyr::filter(.data$visit_concept_id %in% c(9201, 262, 9203)) |>
+  dplyr::filter(.data$visit_concept_id %in% !!inpatientCodes) |>
   dplyr::inner_join(persons, by = "subject_id") |>
   dplyr::select("subject_id", "visit_start_date", "visit_start_datetime", "visit_end_date", dplyr::all_of(colsAD)) |>
   dplyr::compute(name = omopgenerics::uniqueTableName())
@@ -295,10 +341,9 @@ results$extra_stroke <- PatientProfiles::summariseResult(
 nm <- omopgenerics::uniqueTableName()
 miAdmission <- visits |>
   dplyr::inner_join(
-    cdm$mi_inpatient_first |>
-      PatientProfiles::addCohortName() |>
+    cdm$mi_inpatient_chars |>
       dplyr::select(
-        "subject_id", "mi_date" = "cohort_start_date", "cohort_name"
+        "subject_id", "mi_date" = "cohort_start_date", "mi_type"
       ),
     by = c("subject_id")
   ) |>
@@ -308,7 +353,7 @@ miAdmission <- visits |>
   ) |>
   dplyr::select(
     "subject_id", "visit_start_datetime", "admit", "discharge", "visit_end_date",
-    "cohort_name"
+    "mi_type"
   ) |>
   dplyr::compute(name = nm)
 
@@ -367,7 +412,7 @@ proceduresOfInterest <- cdm$procedure_occurrence |>
   )
 
 x <- miAdmission |>
-  dplyr::select("subject_id", "visit_start_datetime", "admit", "discharge") |>
+  dplyr::select("subject_id", "visit_start_datetime", "admit", "discharge", "mi_type") |>
   dplyr::collect() |>
   dplyr::left_join(drugOfInterest, by = "subject_id") |>
   dplyr::left_join(proceduresOfInterest, by = "subject_id")
@@ -387,7 +432,8 @@ x$cohort_name <- "acute_mi"
 
 results$extra_mi <- PatientProfiles::summariseResult(
   table = x,
-  group = "cohort_name", 
+  group = "cohort_name",
+  strata = "mi_type",
   variables = list(
     c("discharge", "admit"),
     cols
