@@ -9,7 +9,6 @@ cdm$stroke_broad <- conceptCohort(
 
 cdm <- bind(cdm$stroke, cdm$stroke_broad, name = "stroke")
 
-
 cdm$inpatient_visit <- conceptCohort(
   cdm = cdm,
   conceptSet = list(inpatient = c(9201,262,9203)),
@@ -24,17 +23,16 @@ info(logger, "INSTANTIATING HOSPITAL MI COHORT")
 
 cdm$hospital_mi_first <- cdm$acute_mi |>
   requireInDateRange(
-    dateRange = study_period
+    dateRange = study_period,
+    name = "hospital_mi_first"
   ) |>
   requireAge(
     ageRange = c(18, 150)
   ) |>
-  requireIsFirstEntry(
-    name = "hospital_mi_first"
-  )
+  requireIsFirstEntry()
 
 cdm$mi_inpatient_first <- cdm$hospital_mi_first |>
-  irequireCohortIntersect(
+  requireCohortIntersect(
     targetCohortTable = "inpatient_visit",
     window = c(0, 0),
     name = "mi_inpatient_first"
@@ -46,14 +44,13 @@ info(logger, "INSTANTIATING HOSPITAL STROKE COHORT")
 
 cdm$hospital_stroke_first <- cdm$stroke |>
   requireInDateRange(
-    dateRange = study_period
+    dateRange = study_period,
+    name = "hospital_stroke_first"
   ) |>
   requireAge(
     ageRange = c(18, 150)
   ) |>
-  requireIsFirstEntry(
-    name = "hospital_stroke_first"
-  )
+  requireIsFirstEntry()
 
 cdm$stroke_inpatient_first <- cdm$hospital_stroke_first |>
   requireCohortIntersect(
