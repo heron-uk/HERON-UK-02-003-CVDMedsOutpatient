@@ -156,13 +156,13 @@ persons <- cdm$stroke_inpatient_first |>
       dplyr::select("subject_id")
   ) |>
   dplyr::distinct(subject_id) |>
-  dplyr::rename(person_id = "subject_id") |>
   dplyr::compute(name = omopgenerics::uniqueTableName())
 
 visits <- cdm$visit_occurrence |>
+  dplyr::rename("subject_id" = "person_id") |>
   dplyr::filter(.data$visit_concept_id %in% c(9201, 262, 9203)) |>
-  dplyr::inner_join(persons, by = "person_id") |>
-  dplyr::select("person_id", "visit_start_date", "visit_start_datetime", "visit_end_date", dplyr::all_of(colsAD)) |>
+  dplyr::inner_join(persons, by = "subject_id") |>
+  dplyr::select("subject_id", "visit_start_date", "visit_start_datetime", "visit_end_date", dplyr::all_of(colsAD)) |>
   dplyr::compute(name = omopgenerics::uniqueTableName())
 
 # timing between admission fro Stroke and medication/procedures
@@ -255,8 +255,8 @@ for (col in cols) {
   }
 }
 
-x$admit <- sprintf("%i", x$admit)
-x$discharge <- sprintf("%i", x$discharge)
+x$admit <- sprintf("%i", dplyr::coalesce(x$admit, 0))
+x$discharge <- sprintf("%i", dplyr::coalesce(x$discharge, 0))
 
 results$extra_stroke <- PatientProfiles::summariseResult(
   table = x,
@@ -362,8 +362,8 @@ for (col in cols) {
   }
 }
 
-x$admit <- sprintf("%i", x$admit)
-x$discharge <- sprintf("%i", x$discharge)
+x$admit <- sprintf("%i", dplyr::coalesce(x$admit, 0))
+x$discharge <- sprintf("%i", dplyr::coalesce(x$discharge, 0))
 x$cohort_name <- "acute_mi"
 
 results$extra_mi <- PatientProfiles::summariseResult(
