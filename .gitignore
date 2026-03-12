@@ -44,3 +44,5 @@ diagnostics_code/Results/*.csv
 diagnostics_shiny/data/raw/*.csv
 diagnostics_shiny/data/appData.RData
 diagnostics_shiny/data/appData.qs
+
+*.DS_Store
