@@ -129,4 +129,6 @@ for (cn in cns) {
 
 ### Compare age groups
 
+### new table
+
 ### Compare Socioeconomic status
