@@ -5,6 +5,7 @@ drugs_rest <- drugs_cl[!grepl("thrombolytics", names(drugs_cl))]
 mi_proc <- importCodelist(here("Cohorts", "Hospital", "miProcedures"), type = "csv")
 comorb <- importCodelist(here("Cohorts", "comorbidities"), type = "csv")
 stroke_proc <- importCodelist(here("Cohorts", "Hospital", "strokeProcedures"), type = "csv")
+miTypes <- importCodelist(here("Cohorts", "Hospital", "miTypes"), type = "csv")
 
 ageGroupStrata <- list("age_range" = list(c(18, 64), c(65, 84), c(85, Inf)))
 ageGroupChar <- list(c(18, 39), c(40, 49), c(50, 59), c(60, 69), c(70, 79), c(80, 89), c(90, Inf))
@@ -46,7 +47,25 @@ cdm$mi_inpatient_chars <- cdm$mi_inpatient_first |>
     name = "mi_inpatient_chars"
   ) |>
   addEthnicity() |>
-  addSES()
+  addSES() |>
+  addConceptIntersectFlag(
+    conceptSet = miTypes["nstemi"],
+    window = c(0, 0),
+    name = "mi_inpatient_chars",
+    nameStyle = "not_stemi"
+  ) |>
+  addConceptIntersectFlag(
+    conceptSet = miTypes["stemi"],
+    window = c(0, 0),
+    name = "mi_inpatient_chars",
+    nameStyle = "stemi"
+  ) |>
+  mutate(mi_type = case_when(
+    stemi == 1 & not_stemi == 1 ~ "Both",
+    stemi == 1 & not_stemi == 0 ~ "STEMI",
+    stemi == 0 & not_stemi == 1 ~ "not STEMI",
+    stemi == 0 & not_stemi == 0 ~ "None"
+  ))
 
 char_mi <- cdm$mi_inpatient_chars |>
   summariseCharacteristics(
@@ -81,7 +100,7 @@ char_mi <- cdm$mi_inpatient_chars |>
       )
     ),
     
-    strata = list(c("age_range"), c("sex"), c("ses")),
+    strata = list("mi_type", c("age_range"), c("sex"), c("ses")),
     otherVariables = c("ses", "ethnicity")
   )
 
