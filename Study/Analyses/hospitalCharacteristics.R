@@ -7,6 +7,8 @@ thrombolWindow <- c(-28, 28)
 thrombolNm <- "Drugs [-28, 28]"
 drugWindow <- c(0, 14)
 drugNm <- "Drugs [0, 14]"
+deathWindow <- c(0, 28)
+deathNm <- "28-day mortality"
 
 drugs_cl <- importCodelist(here("Cohorts", "Hospital", "drugs"), type = "csv")
 drugs_tromb <- drugs_cl[grepl("thrombolytics", names(drugs_cl))]
@@ -91,11 +93,13 @@ char_mi <- cdm$mi_inpatient_chars |>
     ),
     
     tableIntersectFlag = list(
-      "30-day mortality" = list(
+      list(
         tableName = "death",
-        window = c(0, 30)
-      )
+        window = deathWindow
+      ) |>
+        rlang::set_names(deathNm)
     ),
+    
     strata = list(c("age_range"), c("sex"), c("ses")),
     otherVariables = c("ses", "ethnicity")
   )
@@ -151,10 +155,11 @@ char_stroke <- cdm$stroke_inpatient_chars |>
     ),
     
     tableIntersectFlag = list(
-      "30-day mortality" = list(
+      list(
         tableName = "death",
-        window = c(0, 30)
-      )
+        window = deathWindow
+      ) |>
+        rlang::set_names(deathNm)
     ),
     
     strata = list(c("age_range"), c("sex"), c("ses")),
