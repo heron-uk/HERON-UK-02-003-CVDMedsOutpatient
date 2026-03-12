@@ -180,9 +180,10 @@ nm <- omopgenerics::uniqueTableName()
 strokeAdmission <- cdm$visit_occurrence |>
   dplyr::inner_join(
     cdm$stroke_inpatient |>
+      PatientProfiles::addCohortName() |>
       dplyr::select(
         "person_id" = "subject_id", "visit_start_date" = "cohort_start_date",
-        "stroke_date"
+        "stroke_date", "cohort_name"
       ),
     by = c("person_id", "visit_start_date")
   ) |>
@@ -192,7 +193,8 @@ strokeAdmission <- cdm$visit_occurrence |>
       .data$visit_end_date >= .data$stroke_date
   ) |>
   dplyr::select(
-    "person_id", "visit_start_datetime", dplyr::all_of(colsAD), "visit_end_date"
+    "person_id", "visit_start_datetime", dplyr::all_of(colsAD), "visit_end_date",
+    "cohort_name"
   ) |>
   dplyr::compute(name = nm)
   
@@ -209,14 +211,14 @@ drugOfInterest <- cdm$drug_exposure |>
   dplyr::inner_join(cdm[[nm]], by = "drug_concept_id") |>
   dplyr::inner_join(
     strokeAdmission |>
-      dplyr::select("person_id", "visit_start_datetime", "visit_end_date"),
+      dplyr::select("cohort_name", "person_id", "visit_start_datetime", "visit_end_date"),
     by = "person_id"
   ) |>
   dplyr::filter(
     drug_exposure_start_date <= visit_end_date &
       visit_start_datetime <= drug_exposure_start_datetime
   ) |>
-  dplyr::group_by(person_id, drug) |>
+  dplyr::group_by(cohort_name, person_id, drug) |>
   dplyr::summarise(drug_exposure_start_datetime = min(drug_exposure_start_datetime)) |>
   dplyr::collect() |>
   tidyr::pivot_wider(
@@ -236,14 +238,14 @@ proceduresOfInterest <- cdm$procedure_occurrence |>
   dplyr::inner_join(cdm[[nm]], by = "procedure_concept_id") |>
   dplyr::inner_join(
     strokeAdmission |>
-      dplyr::select("person_id", "visit_start_datetime", "visit_end_date"),
+      dplyr::select("cohort_name", "person_id", "visit_start_datetime", "visit_end_date"),
     by = "person_id"
   ) |>
   dplyr::filter(
     procedure_date <= visit_end_date &
       visit_start_datetime <= procedure_datetime
   ) |>
-  dplyr::group_by(person_id, procedure) |>
+  dplyr::group_by(cohort_name, person_id, procedure) |>
   dplyr::summarise(procedure_datetime = min(procedure_datetime)) |>
   dplyr::collect() |>
   tidyr::pivot_wider(
@@ -252,10 +254,10 @@ proceduresOfInterest <- cdm$procedure_occurrence |>
   )
 
 x <- strokeAdmission |>
-  dplyr::select("person_id", "visit_start_datetime", "admit", "discharge") |>
+  dplyr::select("cohort_name","person_id", "visit_start_datetime", "admit", "discharge") |>
   dplyr::collect() |>
-  dplyr::inner_join(drugOfInterest, by = "person_id") |>
-  dplyr::inner_join(proceduresOfInterest, by = "person_id")
+  dplyr::left_join(drugOfInterest, by = c("cohort_name", "person_id")) |>
+  dplyr::left_join(proceduresOfInterest, by = c("cohort_name", "person_id"))
 
 cols <- c(names(stroke_proc), "thrombolytics_alteplase", "thrombolytics_tenecteplase")
 for (col in cols) {
@@ -268,7 +270,6 @@ for (col in cols) {
 
 x$admit <- sprintf("%i", x$admit)
 x$discharge <- sprintf("%i", x$discharge)
-x$cohort_name <- "stroke"
 
 results$extra_stroke <- PatientProfiles::summariseResult(
   table = x,
@@ -362,8 +363,8 @@ proceduresOfInterest <- cdm$procedure_occurrence |>
 x <- miAdmission |>
   dplyr::select("person_id", "visit_start_datetime", "admit", "discharge") |>
   dplyr::collect() |>
-  dplyr::inner_join(drugOfInterest, by = "person_id") |>
-  dplyr::inner_join(proceduresOfInterest, by = "person_id")
+  dplyr::left_join(drugOfInterest, by = "person_id") |>
+  dplyr::left_join(proceduresOfInterest, by = "person_id")
 
 cols <- c(names(mi_proc), "thrombolytics_alteplase", "thrombolytics_tenecteplase")
 for (col in cols) {
