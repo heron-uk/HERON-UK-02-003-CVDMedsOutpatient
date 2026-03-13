@@ -458,36 +458,8 @@ ui <- bslib::page_navbar(
                 ),
                 class = "text-end"
               ),
-              bslib::layout_sidebar(
-                sidebar = bslib::sidebar(
-                  sortable::bucket_list(
-                    header = NULL,
-                    sortable::add_rank_list(
-                      text = "None",
-                      labels = "reason",
-                      input_id = "summarise_cohort_attrition_table_none"
-                    ),
-                    sortable::add_rank_list(
-                      text = "Header",
-                      labels = "variable_name",
-                      input_id = "summarise_cohort_attrition_table_header"
-                    ),
-                    sortable::add_rank_list(
-                      text = "Group columns",
-                      labels = c("cdm_name", "cohort_name"),
-                      input_id = "summarise_cohort_attrition_table_group_column"
-                    ),
-                    sortable::add_rank_list(
-                      text = "Hide",
-                      labels = c("variable_level", "reason_id", "estimate_name", "age_range", "cdm_version", "cohort_definition_id", "table_name", "vocabulary_version"),
-                      input_id = "summarise_cohort_attrition_table_hide"
-                    )
-                  ),
-                  position = "right"
-                ),
-                gt::gt_output("summarise_cohort_attrition_table") |>
-                  shinycssloaders::withSpinner()
-              )
+              gt::gt_output("summarise_cohort_attrition_table") |>
+                shinycssloaders::withSpinner()
             )
           ),
           bslib::nav_panel(

@@ -136,10 +136,11 @@ server <- function(input, output, session) {
   })
   getSummariseCohortCountTable <- shiny::reactive({
     getSummariseCohortCountData() |>
+      dplyr::filter(variable_name == "Number subjects") |>
       CohortCharacteristics::tableCohortCount(
-        header = input$summarise_cohort_count_table_header,
-        groupColumn = input$summarise_cohort_count_table_group_column,
-        hide = input$summarise_cohort_count_table_hide
+        header = "cdm_name",
+        groupColumn = c("cohort_name"),
+        hide = c("variable_level", "table_name", "estimate_name")
       )
   })
   output$summarise_cohort_count_table <- gt::render_gt({
@@ -188,11 +189,7 @@ server <- function(input, output, session) {
   })
   getSummariseCohortAttritionTable <- shiny::reactive({
     getSummariseCohortAttritionData() |>
-      CohortCharacteristics::tableCohortAttrition(
-        header = input$summarise_cohort_attrition_table_header,
-        groupColumn = input$summarise_cohort_attrition_table_group_column,
-        hide = input$summarise_cohort_attrition_table_hide
-      )
+      CohortCharacteristics::tableCohortAttrition()
   })
   output$summarise_cohort_attrition_table <- gt::render_gt({
     getSummariseCohortAttritionTable()

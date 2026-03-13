@@ -5,7 +5,8 @@ cdm$stroke_broad <- conceptCohort(
   cdm = cdm,
   conceptSet = stroke_broad,
   name = "stroke_broad"
-)
+) |>
+  collapseCohorts(gap = 28)
 
 cdm <- bind(cdm$stroke, cdm$stroke_broad, name = "stroke")
 

@@ -109,26 +109,22 @@ char_mi <- cdm$mi_inpatient_chars |>
         conceptSet = mi_proc,
         window = c(-28, 28)
       ),
-      "Prior Comorbidities (-Inf to 0)" = list(
+      "Prior Stroke [-30 to 0]" = list(
         conceptSet = stroke_cl,
-        window = c(-Inf, 0)
+        window = c(-30, 0)
       ),
-      "Prior Comorbidities (-Inf to 0)" = list(
-        conceptSet = acute_mi_cl,
-        window = c(-Inf, 0)
-      ),
-      "Prior Comorbidities (-Inf to 0)" = list(
+      "Prior Comorbidities (-Inf to 0]" = list(
         conceptSet = comorb,
         window = c(-Inf, 0)
       )
     ),
     
     cohortIntersectFlag = list(
-      "Prior Comorbidities (-Inf to 0)" = list(
+      "Prior Comorbidities (-Inf to 0]" = list(
         targetCohortTable = "ckd_any",
         window = c(-Inf, 0)
       ),
-      "Prior Comorbidities (-Inf to 0)" = list(
+      "Prior Comorbidities (-Inf to 0]" = list(
         targetCohortTable = "obesity",
         window = c(-Inf, 0)
       )
@@ -179,26 +175,22 @@ char_stroke <- cdm$stroke_inpatient_chars |>
         conceptSet = stroke_proc,
         window = c(-28, 28)
       ),
-      "Prior Comorbidities (-Inf to 0)" = list(
+      "Prior MI (-30 to 0]" = list(
         conceptSet = acute_mi_cl,
-        window = c(-Inf, 0)
+        window = c(-30, 0)
       ),
-      "Prior Comorbidities (-Inf to 0)" = list(
-        conceptSet = stroke_cl,
-        window = c(-Inf, 0)
-      ),
-      "Prior Comorbidities (-Inf to 0)" = list(
+      "Prior Comorbidities (-Inf to 0]" = list(
         conceptSet = comorb,
         window = c(-Inf, 0)
       )
     ),
     
     cohortIntersectFlag = list(
-      "Prior Comorbidities (-Inf to 0)" = list(
+      "Prior Comorbidities (-Inf to 0]" = list(
         targetCohortTable = "ckd_any",
         window = c(-Inf, 0)
       ),
-      "Prior Comorbidities (-Inf to 0)" = list(
+      "Prior Comorbidities (-Inf to 0]" = list(
         targetCohortTable = "obesity",
         window = c(-Inf, 0)
       )

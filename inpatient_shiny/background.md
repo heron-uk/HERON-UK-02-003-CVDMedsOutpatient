@@ -15,9 +15,15 @@ content
 ![](hdruk_logo.png){width=100px}
 
 "#3db28c"
+
 "#475da7"
+
 "#29235c"
+
 "#addad9"
+
 "#3c3c3b"
+
 "#d0d3d4"
+
 "#f98e2b"
