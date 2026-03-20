@@ -19,7 +19,7 @@ cdm$stroke_drugs <- cdm$stroke_drugs |>
 cdm$stroke_drugs_first <- cdm$stroke_drugs |>
   requireCohortIntersect(
     targetCohortTable = "stroke_first",
-    window = c(-30,0),
+    window = c(-28,0),
     name = "stroke_drugs_first"
   ) |>
   requireIsFirstEntry() |>
