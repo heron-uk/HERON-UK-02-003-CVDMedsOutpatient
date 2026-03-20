@@ -20,11 +20,11 @@ addSES <- function(cohort){
                                                         inObservation = FALSE) |>
       dplyr::mutate(
         ses = dplyr::case_when(
-          ses %in% c(1, 2)  ~ 5L,
-          ses %in% c(3, 4)  ~ 4L,
+          ses %in% c(1, 2)  ~ 1L,
+          ses %in% c(3, 4)  ~ 2L,
           ses %in% c(5, 6)  ~ 3L,
-          ses %in% c(7, 8)  ~ 2L,
-          ses %in% c(9, 10) ~ 1L,
+          ses %in% c(7, 8)  ~ 4L,
+          ses %in% c(9, 10) ~ 5L,
           TRUE ~ NA_real_
         ),
         ses = as.character(.data$ses),
