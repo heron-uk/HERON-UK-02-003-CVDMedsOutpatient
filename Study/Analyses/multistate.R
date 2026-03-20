@@ -228,7 +228,12 @@ msm_results <- list()
 
 for (coh in cohorts) {
   msdata <- x |>
-    filter(cohort_name == coh)
+    filter(cohort_name == coh) |>
+    mutate(
+      sex = relevel(factor(sex), ref = "Female"),
+      age_group = relevel(factor(age_group), ref = "50 to 59"),
+      ses = relevel(factor(ses), ref = "5")
+    )
   
   cli::cli_inform(c(i = "Fitting MS model for {.pkg {coh}}"))
   
