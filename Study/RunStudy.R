@@ -78,7 +78,7 @@ info(logger, "PRIMARY CARE COHORTS INSTANTIATED")
 
 if(isTRUE(run_drug_adherence) & isTRUE(primary_care)){
 info(logger, "RUN DRUG ADHERENCE")
-source(here("Analyses", "drugAdherence.R"))
+source(here("Analyses", "competingRisk.R"))
 source(here("Analyses", "multistate.R"))
 info(logger, "DRUG ADHERENCE FINISHED")
 }
