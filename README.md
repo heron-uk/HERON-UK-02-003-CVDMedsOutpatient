@@ -1,17 +1,25 @@
-# Study Title
+---
 <img src="https://img.shields.io/badge/Study%20Status-Started-blue.svg" alt="Study Status: Started">
 
-- **Study title**: 
-- **Study start date**: 
-- **Study leads**:
-- **Study end date**:
-- **ShinyApp**:
+- **Study title**: Acute Stroke Infarct and Acute Myocardial Infarction Characterisation in Outpatient Settings
+- **Study start date**: 1st February 2026
+- **Study leads**: @elinrow
+- **Study end date**: Ongoing
+- **ShinyApp**: 
 - **Report**:
 - **Publications**:
 
 ---
 
-This repo is organized as follows:
-- [Documents](https://github.com/oxford-pharmacoepi/StudyTemplate/blob/main/Documents/): please find there the relevant documents related to the study.
-- [Study](https://github.com/oxford-pharmacoepi/StudyTemplate/blob/main/Study/): please find there the relevant code to obtain the study results.
-- [Report](https://github.com/oxford-pharmacoepi/StudyTemplate/blob/main/Report/): please find there the code to visualise the results with the shiny app and generate the report with the plots and tables.
+#### Repo Structure
+
+This repo is organised as follows:
+
+- [Diagnostics Code](https://github.com/heron-uk/HERON-UK-02-003-CVDMedsOutpatient/blob/main/diagnostics_code/): please find here the relevant code to run diagnostics for the phenotyping of the conditions and medications used throughout the study.
+- [Diagnostics Shiny App](https://github.com/heron-uk/HERON-UK-02-003-CVDMedsOutpatient/blob/main/diagnostics_shiny/): please find here the relevant code to visualise the diagnostics results and review the phenotyping of the conditions and medications used throughout the study.
+- [Study Code](https://github.com/heron-uk/HERON-UK-02-003-CVDMedsOutpatient/blob/main/study/): please find here the relevant code to run the study and obtain the results.
+- [Study Report](https://github.com/heron-uk/HERON-UK-02-003-CVDMedsOutpatient/blob/main/report/): please find here the relevant code to visualise the study results in a Shiny App and generate the Quarto document from the study results.
+
+#### Run Code
+
+Each folder is an R project with its own instructions. Please refer to the relevant folder.
