@@ -29,7 +29,7 @@ info(logger, "INSTANTIATED MI COHORT")
 
 info(logger, "INSTANTIATING STROKE COHORT")
 stroke_cl <- CodelistGenerator::importCodelist(
-  path = here::here("Cohorts", "conditions", "ischemic_stroke.csv"),
+  path = here::here("Cohorts", "conditions", "stroke_broad.csv"),
   type = "csv"
 )
 

@@ -22,6 +22,10 @@ cdm$person <- cdm$person |>
     gender_concept_id %in% c(8507,8532)
   )
 
+if(db_name == "GOLD" | db_name == "GOLD_100k"){
+  source(here("Analyses", "functionsGOLD.R"))
+}
+
 # Load functions
 source(here("Analyses","functions.R"))
 
