@@ -1,4 +1,4 @@
-info(logger, "INSTANTIATING CARDIOVASCULAR DRUGS COHORT - STROKE")
+logMessage("INSTANTIATING CARDIOVASCULAR DRUGS COHORT - STROKE")
 
 stroke_drugs_cl <- importCodelist(here("Cohorts", "Primary", "drugs"), type = "csv")
 
@@ -34,7 +34,7 @@ cdm$stroke_drugs_after_event <- cdm$stroke_drugs |>
   compute(name = "stroke_drugs_after_event", temporary = FALSE)
 
 ########
-info(logger, "INSTANTIATE ANTIPLATELETS COHORT - STROKE")
+logMessage("INSTANTIATE ANTIPLATELETS COHORT - STROKE")
 ### antiplatelets
 
 cdm$antiplatelets_stroke <- unionCohorts(
@@ -51,10 +51,10 @@ cdm$antiplatelets_stroke <- unionCohorts(
 cdm$antiplatelets_stroke_first <- cdm$antiplatelets_stroke |>
   requireIsFirstEntry(name = "antiplatelets_stroke_first")
 
-info(logger, "INSTANTIATED ANTIPLATELETS COHORTS - STROKE")
+logMessage("INSTANTIATED ANTIPLATELETS COHORTS - STROKE")
 
 ########
-info(logger, "INSTANTIATE DUAL ANTIPLATELETS COHORT - STROKE")
+logMessage("INSTANTIATE DUAL ANTIPLATELETS COHORT - STROKE")
 ### antiplatelets
 
 cdm$dual_antiplatelet_stroke_1 <- cdm$stroke_drugs_after_event |>
@@ -92,10 +92,10 @@ cdm$dual_antiplatelet_stroke <- unionCohorts(
 cdm$dual_antiplatelet_stroke_first <- cdm$dual_antiplatelet_stroke |>
   requireIsFirstEntry(name = "dual_antiplatelet_stroke_first")
 
-info(logger, "INSTANTIATED DUAL ANTIPLATELETS COHORTS - STROKE")
+logMessage("INSTANTIATED DUAL ANTIPLATELETS COHORTS - STROKE")
 
 
-info(logger, "INSTANTIATE ANTICOAGULANT COHORT - STROKE")
+logMessage("INSTANTIATE ANTICOAGULANT COHORT - STROKE")
 ### anticoagulents
 
 cdm$anticoagulants_stroke <- unionCohorts(
@@ -112,9 +112,9 @@ cdm$anticoagulants_stroke <- unionCohorts(
 cdm$anticoagulants_stroke_first <- cdm$anticoagulants_stroke |>
   requireIsFirstEntry(name = "anticoagulants_stroke_first")
 
-info(logger, "INSTANTIATED ANTICOAGULANT COHORT - STROKE")
+logMessage("INSTANTIATED ANTICOAGULANT COHORT - STROKE")
 
-info(logger, "INSTANTIATE ANTICOAGULANT WITH AF COHORT - STROKE")
+logMessage("INSTANTIATE ANTICOAGULANT WITH AF COHORT - STROKE")
 
 cdm$anticoagulants_stroke_af <- cdm$anticoagulants_stroke |>
   requireCohortIntersect(
@@ -130,9 +130,9 @@ cdm$anticoagulants_stroke_af <- cdm$anticoagulants_stroke |>
 cdm$anticoagulants_stroke_af_first <- cdm$anticoagulants_stroke_af |>
   requireIsFirstEntry(name = "anticoagulants_stroke_af_first")
 
-info(logger, "INSTANTIATED ANTICOAGULANT WITH AF COHORT - STROKE")
+logMessage("INSTANTIATED ANTICOAGULANT WITH AF COHORT - STROKE")
 
-info(logger, "INSTANTIATE LIPID-LOWERING COHORT - STROKE")
+logMessage("INSTANTIATE LIPID-LOWERING COHORT - STROKE")
 ### antiplatelets
 
 cdm$lipid_lowering_stroke <- unionCohorts(
@@ -149,9 +149,9 @@ cdm$lipid_lowering_stroke <- unionCohorts(
 cdm$lipid_lowering_stroke_first <- cdm$lipid_lowering_stroke |>
   requireIsFirstEntry(name = "lipid_lowering_stroke_first")
 
-info(logger, "INSTANTIATED LIPID-LOWERING COHORT - STROKE")
+logMessage("INSTANTIATED LIPID-LOWERING COHORT - STROKE")
 
-info(logger, "INSTANTIATE ANTIHYPERTENSIVE COHORT - STROKE")
+logMessage("INSTANTIATE ANTIHYPERTENSIVE COHORT - STROKE")
 ### antiplatelets
 
 cdm$antihypertensive_stroke <- unionCohorts(
@@ -168,7 +168,7 @@ cdm$antihypertensive_stroke <- unionCohorts(
 cdm$antihypertensive_stroke_first <- cdm$antihypertensive_stroke |>
   requireIsFirstEntry(name = "antihypertensive_stroke_first")
 
-info(logger, "INSTANTIATED ANTIHYPERTENSIVE COHORT - STROKE")
+logMessage("INSTANTIATED ANTIHYPERTENSIVE COHORT - STROKE")
 
 
 ### combine into one table
@@ -195,4 +195,4 @@ cdm <- omopgenerics::bind(
   name = "stroke_drugs_first"
 )
 
-info(logger, "INSTANTIATED CARDIOVASCULAR DRUGS COHORT - STROKE")
+logMessage("INSTANTIATED CARDIOVASCULAR DRUGS COHORT - STROKE")
