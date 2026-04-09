@@ -1,5 +1,5 @@
 ### cardio drugs (excl. bb)
-info(logger, "INSTANTIATING CARDIOVASCULAR DRUGS COHORT")
+logMessage("INSTANTIATING CARDIOVASCULAR DRUGS COHORT")
 
 mi_drugs_cl <- importCodelist(here("Cohorts", "Primary", "drugs"), type = "csv")
 
@@ -35,10 +35,10 @@ cdm$mi_drugs_after_event <- cdm$mi_drugs |>
   compute(name = "mi_drugs_after_event", temporary = FALSE)
 
 
-info(logger, "INSTANTIATED CARDIOVASCULAR DRUGS COHORT")
+logMessage("INSTANTIATED CARDIOVASCULAR DRUGS COHORT")
 
 ########
-info(logger, "INSTANTIATE BETA BLOCKERS AND HF COHORTS - MI")
+logMessage("INSTANTIATE BETA BLOCKERS AND HF COHORTS - MI")
 ### beta blockers
 
 cdm$beta_blockers_after_event <- cdm$mi_drugs_after_event |>
@@ -76,10 +76,10 @@ cdm$beta_blockers_hf_first <- cdm$beta_blockers_hf |>
 cdm$beta_blockers_no_hf_first <- cdm$beta_blockers_no_hf |>
   requireIsFirstEntry(name = "beta_blockers_no_hf_first")
 
-info(logger, "INSTANTIATED BETA BLOCKERS AND HF COHORTS - MI")
+logMessage("INSTANTIATED BETA BLOCKERS AND HF COHORTS - MI")
 
 ########
-info(logger, "INSTANTIATE ANTIPLATELETS COHORT - MI")
+logMessage("INSTANTIATE ANTIPLATELETS COHORT - MI")
 ### antiplatelets
 
 cdm$antiplatelets_mi <- unionCohorts(
@@ -96,10 +96,10 @@ cdm$antiplatelets_mi <- unionCohorts(
 cdm$antiplatelets_mi_first <- cdm$antiplatelets_mi |>
   requireIsFirstEntry(name = "antiplatelets_mi_first")
 
-info(logger, "INSTANTIATED ANTIPLATELETS COHORTS - MI")
+logMessage("INSTANTIATED ANTIPLATELETS COHORTS - MI")
 
 ########
-info(logger, "INSTANTIATE DUAL ANTIPLATELETS COHORT - MI")
+logMessage("INSTANTIATE DUAL ANTIPLATELETS COHORT - MI")
 ### antiplatelets
 
 cdm$dual_antiplatelet_mi_1 <- cdm$mi_drugs_after_event |>
@@ -137,9 +137,9 @@ cdm$dual_antiplatelet_mi <- unionCohorts(
 cdm$dual_antiplatelet_mi_first <- cdm$dual_antiplatelet_mi |>
   requireIsFirstEntry(name = "dual_antiplatelet_mi_first")
 
-info(logger, "INSTANTIATED DUAL ANTIPLATELETS COHORTS - MI")
+logMessage("INSTANTIATED DUAL ANTIPLATELETS COHORTS - MI")
 
-info(logger, "INSTANTIATE ANTICOAGULANT COHORT - MI")
+logMessage("INSTANTIATE ANTICOAGULANT COHORT - MI")
 ### anticoagulents
 
 cdm$anticoagulants_mi <- unionCohorts(
@@ -156,9 +156,9 @@ cdm$anticoagulants_mi <- unionCohorts(
 cdm$anticoagulants_mi_first <- cdm$anticoagulants_mi |>
   requireIsFirstEntry(name = "anticoagulants_mi_first")
 
-info(logger, "INSTANTIATED ANTICOAGULANT COHORT - MI")
+logMessage("INSTANTIATED ANTICOAGULANT COHORT - MI")
 
-info(logger, "INSTANTIATE ANTICOAGULANT WITH AF COHORT - MI")
+logMessage("INSTANTIATE ANTICOAGULANT WITH AF COHORT - MI")
 
 cdm$anticoagulants_mi_af <- cdm$anticoagulants_mi |>
   requireCohortIntersect(
@@ -174,9 +174,9 @@ cdm$anticoagulants_mi_af <- cdm$anticoagulants_mi |>
 cdm$anticoagulants_mi_af_first <- cdm$anticoagulants_mi_af |>
   requireIsFirstEntry(name = "anticoagulants_mi_af_first")
 
-info(logger, "INSTANTIATED ANTICOAGULANT WITH AF COHORT - MI")
+logMessage("INSTANTIATED ANTICOAGULANT WITH AF COHORT - MI")
 
-info(logger, "INSTANTIATE LIPID-LOWERING COHORT - MI")
+logMessage("INSTANTIATE LIPID-LOWERING COHORT - MI")
 ### antiplatelets
   
   cdm$lipid_lowering_mi <- unionCohorts(
@@ -193,9 +193,9 @@ info(logger, "INSTANTIATE LIPID-LOWERING COHORT - MI")
 cdm$lipid_lowering_mi_first <- cdm$lipid_lowering_mi |>
   requireIsFirstEntry(name = "lipid_lowering_mi_first")
 
-info(logger, "INSTANTIATED LIPID-LOWERING COHORT - MI")
+logMessage("INSTANTIATED LIPID-LOWERING COHORT - MI")
 
-info(logger, "INSTANTIATE ANTIHYPERTENSIVE COHORT - MI")
+logMessage("INSTANTIATE ANTIHYPERTENSIVE COHORT - MI")
 ### antiplatelets
 
 cdm$antihypertensive_mi <- unionCohorts(
@@ -212,7 +212,7 @@ cdm$antihypertensive_mi <- unionCohorts(
 cdm$antihypertensive_mi_first <- cdm$antihypertensive_mi |>
   requireIsFirstEntry(name = "antihypertensive_mi_first")
 
-info(logger, "INSTANTIATED ANTIHYPERTENSIVE COHORT - MI")
+logMessage("INSTANTIATED ANTIHYPERTENSIVE COHORT - MI")
 
 
 ### combine into one table
@@ -243,4 +243,4 @@ cdm <- omopgenerics::bind(
   name = "mi_drugs_first"
 )
 
-info(logger, "INSTANTIATED CARDIOVASCULAR DRUGS COHORT")
+logMessage("INSTANTIATED CARDIOVASCULAR DRUGS COHORT")
