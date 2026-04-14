@@ -19,6 +19,25 @@ cdm$person <- cdm$person |>
   )
 
 if(db_name == "GOLD" | db_name == "GOLD_100k"){
+  location <- cdm$location |>
+    collect() |>
+    filter(country_source_value %in% c("Wales", "Scotland", "Northern Ireland"))
+
+  care_site <- cdm$care_site |>
+    collect() |>
+    filter(location_id %in% location$location_id)
+
+  persons <- cdm$person |>
+    filter(care_site_id %in% care_site$care_site_id) |>
+    distinct(person_id) |>
+    pull(person_id)
+
+  persons <- bit64::as.integer64(persons)
+
+  cdm <- cdmSubset(cdm, personId = persons)
+}
+
+if(db_name == "GOLD" | db_name == "GOLD_100k"){
   source(here("Analyses", "functionsGOLD.R"))
 }
 
