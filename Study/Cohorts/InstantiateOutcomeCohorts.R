@@ -12,17 +12,24 @@ cdm$acute_mi <- conceptCohort(
   name = "acute_mi"
 ) |> 
   collapseCohorts(gap = 28,
-                  name = "acute_mi") 
+                  name = "acute_mi")
 
 cdm$acute_mi_first <- cdm$acute_mi |>
   requireIsFirstEntry(
     name = "acute_mi_first"
-  ) # first ever MI
+  ) |>
+  requirePriorObservation(
+    minPriorObservation = 365
+  )
 
 cdm$acute_mi_second <- cdm$acute_mi |>
   requireIsEntry(
     entryRange = c(2,2),
     name = "acute_mi_second"
+  ) |>
+  requireCohortIntersect(
+    targetCohortTable = "acute_mi_first",
+    window = c(-Inf, -1)
   )
 
 logMessage("INSTANTIATED MI COHORT")
@@ -39,17 +46,24 @@ cdm$stroke <- conceptCohort(
   name = "stroke"
 ) |> 
   collapseCohorts(gap = 28,
-                  name = "stroke") 
+                  name = "stroke")
 
 cdm$stroke_first <- cdm$stroke |>
   requireIsFirstEntry(
     name = "stroke_first"
-  ) # first ever stroke
+  ) |>
+  requirePriorObservation(
+    minPriorObservation = 365
+  )
 
 cdm$stroke_second<- cdm$stroke |>
   requireIsEntry(
     entryRange = c(2,2),
     name = "stroke_second"
+  ) |>
+  requireCohortIntersect(
+    targetCohortTable = "stroke_first",
+    window = c(-Inf, -1)
   )
 
 logMessage("INSTANTIATED STROKE COHORT")
