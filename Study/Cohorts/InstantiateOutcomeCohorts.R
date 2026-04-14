@@ -18,10 +18,13 @@ cdm$acute_mi_first <- cdm$acute_mi |>
   requireIsFirstEntry(
     name = "acute_mi_first"
   ) |>
-  requirePriorObservation(
+  requireDemographics(
+    ageRange = c(18, 150),
     minPriorObservation = 365
-  )
+  ) |>
+  requireInDateRange(study_period)
 
+  
 cdm$acute_mi_second <- cdm$acute_mi |>
   requireIsEntry(
     entryRange = c(2,2),
@@ -52,9 +55,11 @@ cdm$stroke_first <- cdm$stroke |>
   requireIsFirstEntry(
     name = "stroke_first"
   ) |>
-  requirePriorObservation(
+  requireDemographics(
+    ageRange = c(18, 150),
     minPriorObservation = 365
-  )
+  ) |>
+  requireInDateRange(study_period)
 
 cdm$stroke_second<- cdm$stroke |>
   requireIsEntry(
