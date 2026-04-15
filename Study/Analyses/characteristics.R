@@ -347,7 +347,7 @@ char_stroke <- summariseCharacteristics(cdm$stroke_chars,
                                             )
                                           ),
                                           "Prior comorbidities (-Inf, -1)" = list(
-                                            targetCohortTable = "comorb",
+                                            targetCohortTable = "comorbs",
                                             window = list(
                                               c(-Inf, -1)
                                             )

@@ -56,6 +56,14 @@ cdm$mi_drugs_msm <- cdm$mi_drugs_final |>
 }
 }
 
+stroke_drugs_count <- cdm$stroke_drugs_final |>
+  collect() |>
+  group_by(cohort_definition_id) |>
+  distinct(subject_id) |>
+  tally() |>
+  filter(n >= 100) |>
+  pull(cohort_definition_id)
+
 if(length(stroke_drugs_count) > 0){
 if(db_name == "GOLD" | db_name == "GOLD_100k"){
 cdm$stroke_drugs_msm <- cdm$stroke_drugs_final |>
@@ -179,7 +187,7 @@ xd_2 <- cdm$stroke_drugs_msm |>
   addDeathDays(indexDate = "t0", name = nm_2) |>
   addFutureObservation(indexDate = "t0", futureObservationType = "days", name = nm_2) |>
   addCohortIntersectDays(indexDate = "t0", targetCohortTable = "stroke_second", window = c(-Inf,Inf)) |>
-  rename(second_event = ischemic_stroke_minf_to_inf) |>
+  rename(second_event = stroke_broad_minf_to_inf) |>
   select("cohort_name", "subject_id", "age_group", "sex", "ses",  "start_drug", "start_discontinuation", "days_to_death", "future_observation", "second_event") |>
   collect() |>
   mutate(
@@ -206,7 +214,7 @@ xd_2 <- cdm$stroke_drugs_msm |>
     addDeathDays(indexDate = "t0", name = nm_2) |>
     addFutureObservation(indexDate = "t0", futureObservationType = "days", name = nm_2) |>
     addCohortIntersectDays(indexDate = "t0", targetCohortTable = "stroke_second", window = c(-Inf,Inf)) |>
-    rename(second_event = ischemic_stroke_minf_to_inf) |>
+    rename(second_event = stroke_broad_minf_to_inf) |>
     select("cohort_name", "subject_id", "age_group", "sex", "ses",  "start_drug", "start_discontinuation", "days_to_death", "future_observation", "second_event") |>
     collect() |>
     mutate(
