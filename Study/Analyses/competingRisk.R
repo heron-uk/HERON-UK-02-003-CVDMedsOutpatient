@@ -71,13 +71,14 @@ x_mi <- cdm$mi_crm |>
     days_to_death = coalesce(days_to_death, 9999),
     future_observation = pmin(days_to_death, future_observation)
   ) |>
-  mutate(event = case_when(
-    days_to_treatment < future_observation ~ "treatment",
-    days_to_death < days_to_treatment ~ "death",
-    TRUE ~ "censor"
-  ),
-  event = factor(event, levels = c("censor", "treatment", "death")),
-  time = pmin(days_to_treatment, days_to_death, future_observation, na.rm = TRUE)) |>
+  mutate(
+    time = pmin(days_to_treatment, days_to_death, future_observation, na.rm = TRUE),
+    event = case_when(
+      days_to_treatment <= days_to_death & days_to_treatment <= future_observation ~ "treatment",
+      days_to_death <= days_to_treatment & days_to_death <= future_observation ~ "death",
+      TRUE ~ "censor"
+    ),
+    event = factor(event, levels = c("censor", "treatment", "death"))) |>
   mutate(
     sex = factor(sex),
     age_group = factor(age_group),
@@ -112,13 +113,14 @@ x_mi <- cdm$mi_crm |>
     days_to_death = coalesce(days_to_death, 9999),
     future_observation = pmin(days_to_death, future_observation)
   ) |>
-  mutate(event = case_when(
-    days_to_treatment < future_observation ~ "treatment",
-    days_to_death < days_to_treatment ~ "death",
-    TRUE ~ "censor"
-  ),
-  event = factor(event, levels = c("censor", "treatment", "death")),
-  time = pmin(days_to_treatment, days_to_death, future_observation, na.rm = TRUE)) |>
+  mutate(
+    time = pmin(days_to_treatment, days_to_death, future_observation, na.rm = TRUE),
+    event = case_when(
+      days_to_treatment <= days_to_death & days_to_treatment <= future_observation ~ "treatment",
+      days_to_death <= days_to_treatment & days_to_death <= future_observation ~ "death",
+      TRUE ~ "censor"
+    ),
+    event = factor(event, levels = c("censor", "treatment", "death"))) |>
   mutate(
     sex = factor(sex),
     age_group = factor(age_group),
@@ -201,13 +203,14 @@ x_stroke <- cdm$stroke_crm |>
     days_to_death = coalesce(days_to_death, 9999),
     future_observation = pmin(days_to_death, future_observation)
   ) |>
-  mutate(event = case_when(
-    days_to_treatment < future_observation ~ "treatment",
-    days_to_death < days_to_treatment ~ "death",
+  mutate(
+    time = pmin(days_to_treatment, days_to_death, future_observation, na.rm = TRUE),
+    event = case_when(
+    days_to_treatment <= days_to_death & days_to_treatment <= future_observation ~ "treatment",
+    days_to_death <= days_to_treatment & days_to_death <= future_observation ~ "death",
     TRUE ~ "censor"
   ),
-  event = factor(event, levels = c("censor", "treatment", "death")),
-  time = pmin(days_to_treatment, days_to_death, future_observation, na.rm = TRUE)) |>
+  event = factor(event, levels = c("censor", "treatment", "death"))) |>
   mutate(
     sex = factor(sex),
     age_group = factor(age_group),
@@ -241,13 +244,14 @@ x_stroke <- cdm$stroke_crm |>
     days_to_death = coalesce(days_to_death, 9999),
     future_observation = pmin(days_to_death, future_observation)
   ) |>
-  mutate(event = case_when(
-    days_to_treatment < future_observation ~ "treatment",
-    days_to_death < days_to_treatment ~ "death",
-    TRUE ~ "censor"
-  ),
-  event = factor(event, levels = c("censor", "treatment", "death")),
-  time = pmin(days_to_treatment, days_to_death, future_observation, na.rm = TRUE)) |>
+  mutate(
+    time = pmin(days_to_treatment, days_to_death, future_observation, na.rm = TRUE),
+    event = case_when(
+      days_to_treatment <= days_to_death & days_to_treatment <= future_observation ~ "treatment",
+      days_to_death <= days_to_treatment & days_to_death <= future_observation ~ "death",
+      TRUE ~ "censor"
+    ),
+    event = factor(event, levels = c("censor", "treatment", "death"))) |>
   mutate(
     sex = factor(sex),
     age_group = factor(age_group),
@@ -289,11 +293,8 @@ cif_df <- cif |>
   filter(time <= 28) |>
   select(time, outcome, estimate) |>
   pivot_wider(names_from = outcome, values_from = estimate, values_fill = 0) |>
-  mutate(
-    no_treatment = 1 - treatment - death
-  )|>
   pivot_longer(
-    cols = c(treatment, death, no_treatment),
+    cols = c(treatment, death),
     names_to = "state",
     values_to = "prob"
   ) |>
@@ -386,11 +387,8 @@ for(coh in cohorts){
     filter(time <= 28) |>
     select(time, outcome, estimate) |>
     pivot_wider(names_from = outcome, values_from = estimate, values_fill = 0) |>
-    mutate(
-      no_treatment = 1 - treatment - death
-    )|>
     pivot_longer(
-      cols = c(treatment, death, no_treatment),
+      cols = c(treatment, death),
       names_to = "state",
       values_to = "prob"
     ) |>
