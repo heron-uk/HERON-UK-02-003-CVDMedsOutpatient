@@ -13,8 +13,7 @@ cdm$stroke_drugs <- conceptCohort(
 
 # collapse records that are within 14 days of each other
 cdm$stroke_drugs_first <- cdm$stroke_drugs |>
-  collapseCohorts(gap = 28,
-                  name = "stroke_drugs_first") |>
+  collapseCohorts(gap = 28) |>
   PatientProfiles::addCohortIntersectDate(
     window = c(-28, Inf),
     censorDate = "cohort_end_date",
