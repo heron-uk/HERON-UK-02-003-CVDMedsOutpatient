@@ -1,6 +1,6 @@
 # Cohort Counts + Attrition
 
-results[["cohort_count_mi_drugs"]] <- cdm$mi_drugs_final |>
+results[["cohort_count_mi_drugs"]] <- cdm$mi_drugs_first |>
   summariseCohortCount()
 
 results[["cohort_count_stroke_drugs"]] <- cdm$stroke_drugs_final |>
@@ -127,7 +127,7 @@ cdm$char_anticoag <- cdm$mi_drugs |>
   unionCohorts(
     cohortId = c("warfarin_mi", "doacs_mi"),
     gap = 28,
-    keepOriginalCohorts = FALSE,
+    keepOriginalCohorts = TRUE,
     cohortName = "any_anticoagulant_mi",
   )
 
@@ -139,7 +139,7 @@ cdm$char_antip <- cdm$mi_drugs |>
   unionCohorts(
     cohortId = c("aspirin_mi", "dipyridamole_mi", "p2y12_inhibitors_mi"),
     gap = 28,
-    keepOriginalCohorts = FALSE,
+    keepOriginalCohorts = TRUE,
     cohortName = "any_antiplatelet_mi"
   )
 
@@ -151,7 +151,7 @@ cdm$char_antihyp <- cdm$mi_drugs |>
   unionCohorts(
     cohortId = c("acei_arbs_mi", "beta_blockers_mi", "calcium_channel_blockers_mi", "thiazide_diuretics_mi"),
     gap = 28,
-    keepOriginalCohorts = FALSE,
+    keepOriginalCohorts = TRUE,
     cohortName = "any_antihypertensives_mi"
   )
 
@@ -163,7 +163,7 @@ cdm$char_lip_lowering <- cdm$mi_drugs |>
   unionCohorts(
     cohortId = c("statin_mi", "pcsk9_inhibitors_mi", "ezetimibe_mi"),
     gap = 28,
-    keepOriginalCohorts = FALSE,
+    keepOriginalCohorts = TRUE,
     cohortName = "any_lipid_lowering_mi"
   )
 
@@ -185,14 +185,15 @@ char_mi <- summariseCharacteristics(cdm$mi_chars,
                                       "80 to 89" = c(80, 89),
                                       "90+" = c(90, 150)),
                                     cohortIntersectFlag = list(
-                                      "Prevalent drug use (-28 to -1)" = list(
+                                      "Prevalent users (-28 to -1)" = list(
                                         targetCohortTable = "mi_drug_char",
                                         window = list(
                                           c(-28, -1)
                                         )
                                       ),
-                                      "Future drug use (0 to 28)" = list(
+                                      "New initiators (0 to 28)" = list(
                                         targetCohortTable = "mi_drug_char",
+                                        targetEndDate = "cohort_start_date",
                                         window = list(
                                           c(0, 28)
                                         )
@@ -270,7 +271,7 @@ cdm$char_anticoag <- cdm$stroke_drugs |>
   unionCohorts(
     cohortId = c("warfarin_stroke", "doacs_stroke"),
     gap = 28,
-    keepOriginalCohorts = FALSE,
+    keepOriginalCohorts = TRUE,
     cohortName = "any_anticoagulant_stroke",
   )
 
@@ -282,7 +283,7 @@ cdm$char_antip <- cdm$stroke_drugs |>
   unionCohorts(
     cohortId = c("aspirin_stroke", "dipyridamole_stroke", "p2y12_inhibitors_stroke"),
     gap = 28,
-    keepOriginalCohorts = FALSE,
+    keepOriginalCohorts = TRUE,
     cohortName = "any_antiplatelet_stroke"
   )
 
@@ -294,7 +295,7 @@ cdm$char_antihyp <- cdm$stroke_drugs |>
   unionCohorts(
     cohortId = c("acei_arbs_stroke", "beta_blockers_stroke", "calcium_channel_blockers_stroke", "thiazide_diuretics_stroke"),
     gap = 28,
-    keepOriginalCohorts = FALSE,
+    keepOriginalCohorts = TRUE,
     cohortName = "any_antihypertensives_stroke"
   )
 
@@ -306,7 +307,7 @@ cdm$char_lip_lowering <- cdm$stroke_drugs |>
   unionCohorts(
     cohortId = c("statin_stroke", "pcsk9_inhibitors_stroke", "ezetimibe_stroke"),
     gap = 28,
-    keepOriginalCohorts = FALSE,
+    keepOriginalCohorts = TRUE,
     cohortName = "any_lipid_lowering_stroke"
   )
 
@@ -328,14 +329,15 @@ char_stroke <- summariseCharacteristics(cdm$stroke_chars,
                                           "80 to 89" = c(80, 89),
                                           "90+" = c(90, 150)),
                                         cohortIntersectFlag = list(
-                                          "Prevalent drug use (-28 to -1)" = list(
+                                          "Prevalent users (-28 to -1)" = list(
                                             targetCohortTable = "stroke_drug_char",
                                             window = list(
                                               c(-28, -1)
                                             )
                                           ),
-                                          "Future drug use (0 to 28)" = list(
+                                          "New initiators (0 to 28)" = list(
                                             targetCohortTable = "stroke_drug_char",
+                                            targetEndDate = "cohort_start_date",
                                             window = list(
                                               c(0, 28)
                                             )

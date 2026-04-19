@@ -11,24 +11,30 @@ cdm$acute_mi <- conceptCohort(
   conceptSet = acute_mi_cl,
   name = "acute_mi"
 ) |> 
-  collapseCohorts(gap = 28) |>
+  collapseCohorts(gap = 28) 
+
+cdm$acute_mi_first <- cdm$acute_mi |>
+  requireIsFirstEntry(
+    name = "acute_mi_first"
+  ) |> 
   requireDemographics(
     ageRange = c(18, 150),
     minPriorObservation = 365,
     atFirst = TRUE
   ) |>
   requireInDateRange(study_period)
-
-cdm$acute_mi_first <- cdm$acute_mi |>
-  requireIsFirstEntry(
-    name = "acute_mi_first"
-  )
   
 cdm$acute_mi_second <- cdm$acute_mi |>
   requireIsEntry(
     entryRange = c(2,2),
     name = "acute_mi_second"
-  )
+  ) |> 
+  requireDemographics(
+    ageRange = c(18, 150),
+    minPriorObservation = 365,
+    atFirst = TRUE
+  ) |>
+  requireInDateRange(study_period)
 
 logMessage("INSTANTIATED MI COHORT")
 
@@ -43,7 +49,12 @@ cdm$stroke <- conceptCohort(
   conceptSet = stroke_cl,
   name = "stroke"
 ) |> 
-  collapseCohorts(gap = 28) |>
+  collapseCohorts(gap = 28) 
+
+cdm$stroke_first <- cdm$stroke |>
+  requireIsFirstEntry(
+    name = "stroke_first"
+  ) |>
   requireDemographics(
     ageRange = c(18, 150),
     minPriorObservation = 365,
@@ -51,16 +62,17 @@ cdm$stroke <- conceptCohort(
   ) |>
   requireInDateRange(study_period)
 
-cdm$stroke_first <- cdm$stroke |>
-  requireIsFirstEntry(
-    name = "stroke_first"
-  )
-
 cdm$stroke_second<- cdm$stroke |>
   requireIsEntry(
     entryRange = c(2,2),
     name = "stroke_second"
-  )
+  ) |>
+  requireDemographics(
+    ageRange = c(18, 150),
+    minPriorObservation = 365,
+    atFirst = TRUE
+  ) |>
+  requireInDateRange(study_period)
 
 logMessage("INSTANTIATED STROKE COHORT")
 

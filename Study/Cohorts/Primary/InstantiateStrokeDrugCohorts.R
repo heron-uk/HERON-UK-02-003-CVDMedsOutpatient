@@ -12,19 +12,26 @@ cdm$stroke_drugs <- conceptCohort(
 )
 
 # collapse records that are within 14 days of each other
-cdm$stroke_drugs <- cdm$stroke_drugs |>
-  collapseCohorts(gap = 28,
-                  name = "stroke_drugs") 
-
 cdm$stroke_drugs_first <- cdm$stroke_drugs |>
-  requireCohortIntersect(
+  collapseCohorts(gap = 28) |>
+  PatientProfiles::addCohortIntersectDate(
+    window = c(-28, Inf),
+    censorDate = "cohort_end_date",
     targetCohortTable = "stroke_first",
-    window = c(-28,0),
+    nameStyle = "stroke_date",
     name = "stroke_drugs_first"
+  )|>
+  dplyr::filter(!is.na(stroke_date)) |>
+  dplyr::compute(name = "stroke_drugs_first")  |>
+  omopgenerics::recordCohortAttrition("Stroke record within treatment or before") |>
+  dplyr::filter(
+    !cohort_end_date <= stroke_date
   ) |>
-  requireIsFirstEntry() |>
+  CohortConstructor::entryAtLastDate(dateColumns = c("cohort_start_date", "stroke_date")) |>
+  CohortConstructor::requireDuration(daysInCohort = c(2, Inf)) |> #days in cohort = 1 would include those who enter and exit the cohort on the same day. #TO DISCUSS
   requireInDateRange(study_period) |>
-  requireAge(ageRange = c(18,150))
+  requireAge(ageRange = c(18,150)) |>
+  dplyr::select(-stroke_date)
 
 cdm$stroke_drugs_after_event <- cdm$stroke_drugs |>
   inner_join(cdm$stroke_drugs_first |> select(subject_id, cohort_definition_id, start_date = cohort_start_date), 
