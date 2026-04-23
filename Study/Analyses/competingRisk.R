@@ -274,7 +274,7 @@ msdata <- x |>
   mutate(
     cohort_name = coh,
     sex = relevel(factor(sex), ref = "Female"),
-    age_group = relevel(factor(age_group), ref = "50 to 59"),
+    age_group = relevel(factor(age_group), ref = "60 to 69"),
     ses = relevel(factor(ses), ref = "5")
   )
 
@@ -368,7 +368,7 @@ for(coh in cohorts){
            country == cou) |>
     mutate(
       sex = relevel(factor(sex), ref = "Female"),
-      age_group = relevel(factor(age_group), ref = "50 to 59"),
+      age_group = relevel(factor(age_group), ref = "60 to 69"),
       ses = relevel(factor(ses), ref = "5"),
       cohort_name = paste0(coh, "_", cou)
     )
