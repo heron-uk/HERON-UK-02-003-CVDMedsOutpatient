@@ -390,7 +390,7 @@ for (coh in cohorts) {
     filter(cohort_name == coh) |>
     mutate(
       sex = relevel(factor(sex), ref = "Female"),
-      age_group = relevel(factor(age_group), ref = "50 to 59"),
+      age_group = relevel(factor(age_group), ref = "60 to 69"),
       ses = relevel(factor(ses), ref = "5")
     )
   
@@ -501,7 +501,7 @@ if(db_name == "GOLD" | db_name == "GOLD_100k"){
              country == cou) |>
       mutate(
         sex = relevel(factor(sex), ref = "Female"),
-        age_group = relevel(factor(age_group), ref = "50 to 59"),
+        age_group = relevel(factor(age_group), ref = "60 to 69"),
         ses = relevel(factor(ses), ref = "5"),
         cohort_name = paste0(coh, "_", cou)
       )
