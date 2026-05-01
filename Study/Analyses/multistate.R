@@ -188,7 +188,7 @@ xd_2 <- cdm$stroke_drugs_msm |>
   addFutureObservation(indexDate = "t0", futureObservationType = "days", name = nm_2) |>
   addCohortIntersectDays(indexDate = "t0", targetCohortTable = "stroke_second", window = c(-Inf,Inf)) |>
   rename(second_event = stroke_broad_minf_to_inf) |>
-  select("cohort_name", "subject_id", "age_group", "sex", "ses",  "start_drug", "start_discontinuation", "days_to_death", "future_observation", "second_event") |>
+  select("cohort_name", "subject_id", "age_group", "sex", "ses", "country", "start_drug", "start_discontinuation", "days_to_death", "future_observation", "second_event") |>
   collect() |>
   mutate(
     days_to_death = coalesce(days_to_death, 9999L),

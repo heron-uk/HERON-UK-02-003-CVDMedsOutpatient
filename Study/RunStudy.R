@@ -72,7 +72,9 @@ source(here("Cohorts","Primary", "InstantiateStrokeDrugCohorts.R"))
 logMessage("PRIMARY CARE COHORTS INSTANTIATED")
 
 logMessage("RUN DRUG ADHERENCE")
+logMessage("RUN COMPETING RISK")
 source(here("Analyses", "competingRisk.R"))
+logMessage("RUN MULTI STATE")
 source(here("Analyses", "multistate.R"))
 logMessage("DRUG ADHERENCE FINISHED")
 
