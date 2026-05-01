@@ -409,7 +409,14 @@ server <- function(input, output, session) {
         .data$age_group %in% input$summarise_characteristics_age_group,
         .data$sex %in% input$summarise_characteristics_sex,
         .data$ses %in% input$summarise_characteristics_ses
-      )
+      ) |>
+      dplyr::mutate(variable_level = sub(" mi$", "", variable_level),
+                    variable_level = sub(" stroke$", "", variable_level),
+                    variable_level = dplyr::case_when(
+                      variable_level == "Acute" ~ "MI",
+                      variable_level == "Stroke broad" ~ "Stroke",
+                      TRUE ~ variable_level
+                    ))
   })
   getSummariseCharacteristicsTable <- shiny::reactive({
     getSummariseCharacteristicsData() |>
@@ -602,6 +609,39 @@ server <- function(input, output, session) {
       gt::gtsave(getCrmProbabilitiesTable(), file)
     }
   )
+  
+  getSummariseCrmProbabilitiesPlot <- shiny::reactive({
+    getCrmProbabilitiesData() |>
+    omopgenerics::splitAdditional() |>
+    dplyr::mutate(estimate_value = as.numeric(estimate_value),
+                    time = as.numeric(time)) |>
+      ggplot(aes(x = time, y = estimate_value, color = state, group = state)) +
+      geom_line(linewidth = 0.8) +
+      coord_cartesian(xlim = c(0, 28)) +
+      facet_wrap(~cdm_name + group_level) +
+      labs(x = "Time",
+           y = "Probability",
+           color = "State") +
+      theme_minimal()
+  })
+  
+  output$summarise_crm_probabilities_plot <- shiny::renderUI({
+    x <- getSummariseCrmProbabilitiesPlot()
+    renderInteractivePlot(x, input$summarise_crm_probabilities_plot_interactive)
+  })
+  output$summarise_crm_probabilities_plot_download <- shiny::downloadHandler(
+    filename = "plot_crm_probabilities.png",
+    content = function(file) {
+      ggplot2::ggsave(
+        filename = file,
+        plot = getSummariseCrmProbabilitiesPlot(),
+        width = as.numeric(input$summarise_crm_probabilities_plot_width),
+        height = as.numeric(input$summarise_crm_probabilities_plot_height),
+        units = input$summarise_crm_probabilities_plot_units,
+        dpi = as.numeric(input$summarise_crm_probabilities_plot_dpi)
+      )
+    }
+  )
 
   # crm_coefficients -----
   ## update message if filter is changed
@@ -667,6 +707,54 @@ server <- function(input, output, session) {
       gt::gtsave(getCrmCoefficientsTable(), file)
     }
   )
+  
+  getSummariseCrmCoefficientsPlot <- shiny::reactive({
+    getCrmCoefficientsData() |>
+      dplyr::mutate(estimate_value = as.numeric(estimate_value)) |>
+      tidyr::pivot_wider(
+        names_from = estimate_name,
+        values_from = estimate_value
+      ) |>
+      dplyr::mutate(
+        coef = as.numeric(coef),
+        se = as.numeric(se),
+        coef_exp = round(exp(coef), digits = 2),
+        lci = round(exp(coef - qnorm(0.975)*se), digits = 2),
+        uci = round(exp(coef + qnorm(0.975)*se), digits = 2),
+        sig = ifelse(coef_exp > 1 & lci > 1 | coef_exp < 1 & uci < 1, "sig", "not sig")
+      ) |>
+      dplyr::filter(uci != "Inf") |>
+      ggplot(aes(x = coef_exp, y = variable_level, colour = sig, fill = sig)) +
+      geom_vline(xintercept = 1, linetype = "dashed", color = "grey40") +
+      geom_point(size = 3, position = ggstance::position_dodgev(height = 0.6)) +
+      geom_errorbarh(aes(xmin = lci, xmax = uci), height = 0.2,
+                     position = ggstance::position_dodgev(height = 0.6)) +
+      facet_wrap( ~ group_level) +
+      labs(
+        x = "Hazard ratio (log scale) with 95% CI",
+        y = NULL,
+        colour = "Variable"
+      ) +
+      theme_minimal()
+  })
+  
+  output$summarise_crm_coefficients_plot <- shiny::renderUI({
+    x <- getSummariseCrmCoefficientsPlot()
+    renderInteractivePlot(x, input$summarise_crm_coefficients_plot_interactive)
+  })
+  output$summarise_crm_coefficients_plot_download <- shiny::downloadHandler(
+    filename = "plot_crm_coefficients.png",
+    content = function(file) {
+      ggplot2::ggsave(
+        filename = file,
+        plot = getSummariseCrmCoefficientsPlot(),
+        width = as.numeric(input$summarise_crm_coefficients_plot_width),
+        height = as.numeric(input$summarise_crm_coefficients_plot_height),
+        units = input$summarise_crm_coefficients_plot_units,
+        dpi = as.numeric(input$summarise_crm_coefficients_plot_dpi)
+      )
+    }
+  )
 
   # crm_probabilities_by_country -----
   ## update message if filter is changed
@@ -702,7 +790,10 @@ server <- function(input, output, session) {
         .data$estimate_name %in% input$crm_probabilities_by_country_estimate_name
       ) |>
       omopgenerics::filterGroup(.data$cohort_name %in% input$crm_probabilities_by_country_cohort_name) |>
-      omopgenerics::filterAdditional(
+      omopgenerics::splitAdditional() |>
+      dplyr::mutate(time = as.numeric(.data$time),
+                    estimate_value = as.numeric(.data$estimate_value)) |>
+      dplyr::filter(
         .data$time %in% input$crm_probabilities_by_country_time,
         .data$state %in% input$crm_probabilities_by_country_state
       )
@@ -736,6 +827,36 @@ server <- function(input, output, session) {
     filename = paste0("table.", input$crm_probabilities_by_country_table_format),
     content = function(file) {
       gt::gtsave(getCrmProbabilitiesByCountryTable(), file)
+    }
+  )
+  
+  getSummariseCrmProbabilitiesByCountryPlot <- shiny::reactive({
+    getCrmProbabilitiesByCountryData()|>
+      ggplot(aes(x = time, y = estimate_value, color = state, group = state)) +
+      geom_line(linewidth = 0.8) +
+      coord_cartesian(xlim = c(0, 28)) +
+      facet_wrap(~cdm_name + group_level) +
+      labs(x = "Time",
+           y = "Probability",
+           color = "State") +
+      theme_minimal()
+  })
+  
+  output$summarise_crm_probabilities_by_country_plot <- shiny::renderUI({
+    x <- getSummariseCrmProbabilitiesByCountryPlot()
+    renderInteractivePlot(x, input$summarise_crm_probabilities_by_country_plot_interactive)
+  })
+  output$summarise_crm_probabilities_by_country_plot_download <- shiny::downloadHandler(
+    filename = "plot_crm_probabilities_by_country.png",
+    content = function(file) {
+      ggplot2::ggsave(
+        filename = file,
+        plot = getSummariseCrmProbabilitiesByCountryPlot(),
+        width = as.numeric(input$summarise_crm_probabilities_by_country_plot_width),
+        height = as.numeric(input$summarise_crm_probabilities_by_country_plot_height),
+        units = input$summarise_crm_probabilities_by_country_plot_units,
+        dpi = as.numeric(input$summarise_crm_probabilities_by_country_plot_dpi)
+      )
     }
   )
 
@@ -803,6 +924,54 @@ server <- function(input, output, session) {
       gt::gtsave(getCrmCoefficientsByCountryTable(), file)
     }
   )
+  
+  getSummariseCrmCoefficientsByCountryPlot <- shiny::reactive({
+    getCrmCoefficientsByCountryData() |>
+      dplyr::mutate(estimate_value = as.numeric(estimate_value)) |>
+      tidyr::pivot_wider(
+        names_from = estimate_name,
+        values_from = estimate_value
+      ) |>
+      dplyr::mutate(
+        coef = as.numeric(coef),
+        se = as.numeric(se),
+        coef_exp = round(exp(coef), digits = 2),
+        lci = round(exp(coef - qnorm(0.975)*se), digits = 2),
+        uci = round(exp(coef + qnorm(0.975)*se), digits = 2),
+        sig = ifelse(coef_exp > 1 & lci > 1 | coef_exp < 1 & uci < 1, "sig", "not sig")
+      ) |>
+      dplyr::filter(uci != "Inf") |>
+      ggplot(aes(x = coef_exp, y = variable_level, colour = sig, fill = sig)) +
+      geom_vline(xintercept = 1, linetype = "dashed", color = "grey40") +
+      geom_point(size = 3, position = ggstance::position_dodgev(height = 0.6)) +
+      geom_errorbarh(aes(xmin = lci, xmax = uci), height = 0.2,
+                     position = ggstance::position_dodgev(height = 0.6)) +
+      facet_wrap( ~ group_level) +
+      labs(
+        x = "Hazard ratio (log scale) with 95% CI",
+        y = NULL,
+        colour = "Variable"
+      ) +
+      theme_minimal()
+  })
+  
+  output$summarise_crm_coefficients_by_country_plot <- shiny::renderUI({
+    x <- getSummariseCrmCoefficientsByCountryPlot()
+    renderInteractivePlot(x, input$summarise_crm_coefficients_by_country_plot_interactive)
+  })
+  output$summarise_crm_coefficients_by_countryplot_download <- shiny::downloadHandler(
+    filename = "plot_crm_coefficients_by_country.png",
+    content = function(file) {
+      ggplot2::ggsave(
+        filename = file,
+        plot = getSummariseCrmCoefficientsPlot(),
+        width = as.numeric(input$summarise_crm_coefficients_by_country_plot_width),
+        height = as.numeric(input$summarise_crm_coefficients_by_country_plot_height),
+        units = input$summarise_crm_coefficients_by_country_plot_units,
+        dpi = as.numeric(input$summarise_crm_coefficients_by_country_plot_dpi)
+      )
+    }
+  )
 
   # mms_probabilities -----
   ## update message if filter is changed
@@ -837,7 +1006,10 @@ server <- function(input, output, session) {
         .data$estimate_name %in% input$mms_probabilities_estimate_name
       ) |>
       omopgenerics::filterGroup(.data$cohort_name %in% input$mms_probabilities_cohort_name) |>
-      omopgenerics::filterAdditional(.data$state %in% input$mms_probabilities_state)
+      omopgenerics::splitAdditional() |>
+      dplyr::mutate(estimate_value = as.numeric(estimate_value),
+                    time = as.numeric(time)) |>
+      dplyr::filter(.data$state %in% input$mms_probabilities_state)
   })
   getMmsProbabilitiesTidy <- shiny::reactive({
     tidyDT(getMmsProbabilitiesData(), input$mms_probabilities_tidy_columns, input$mms_probabilities_tidy_pivot_estimates)
@@ -870,6 +1042,49 @@ server <- function(input, output, session) {
       gt::gtsave(getMmsProbabilitiesTable(), file)
     }
   )
+  
+  getSummariseMmsProbabilitiesPlot <- shiny::reactive({
+    getMmsProbabilitiesData() |>
+      dplyr::mutate(step = 1) |>
+      dplyr::bind_rows(
+        getMmsProbabilitiesData() |>
+          dplyr::group_by(state) |>
+          dplyr::mutate(time = dplyr::lead(time), step = -1) |>
+          dplyr::ungroup()
+      ) |>
+      # drop rows where lead() produced NA time
+      dplyr::filter(!is.na(time)) |>
+      dplyr::arrange(time, state, step) |>
+      ggplot(aes(x = time, y = estimate_value, fill = state, group = state)) +
+      geom_area(color = "black") +
+      facet_wrap(~ group_level) +
+      coord_cartesian(xlim = c(0, 5*365)) +
+      scale_fill_manual(values = c(
+        "#4C6A92", "#7A9E7E", "#8C6A8C"
+      )) +
+      labs(x = "Time",
+           y = "Probability",
+           fill = "State") +
+      theme_minimal()
+  })
+  
+  output$summarise_mms_probabilities_plot <- shiny::renderUI({
+    x <- getSummariseMmsProbabilitiesPlot()
+    renderInteractivePlot(x, input$summarise_mms_probabilities_plot_interactive)
+  })
+  output$summarise_mms_probabilities_plot_download <- shiny::downloadHandler(
+    filename = "plot_msm_probabilities.png",
+    content = function(file) {
+      ggplot2::ggsave(
+        filename = file,
+        plot = getSummariseMmsProbabilitiesPlot(),
+        width = as.numeric(input$summarise_mms_probabilities_plot_width),
+        height = as.numeric(input$summarise_mms_probabilities_plot_height),
+        units = input$summarise_mms_probabilities_plot_units,
+        dpi = as.numeric(input$summarise_mms_probabilities_plot_dpi)
+      )
+    }
+  )
 
   # cox_coefficients -----
   ## update message if filter is changed
@@ -897,12 +1112,46 @@ server <- function(input, output, session) {
   ## get cox_coefficients data
   getCoxCoefficientsData <- shiny::eventReactive(input$update_cox_coefficients, {
     data[["cox_coefficients"]] |>
-      dplyr::filter(
-        .data$cdm_name %in% input$cox_coefficients_cdm_name,
-        .data$variable_name %in% input$cox_coefficients_variable_name,
-        .data$estimate_name %in% input$cox_coefficients_estimate_name
+    dplyr::filter(
+    .data$cdm_name %in% input$cox_coefficients_cdm_name,
+    .data$variable_name %in% input$cox_coefficients_variable_name,
+    .data$estimate_name %in% input$cox_coefficients_estimate_name
+    ) |>
+      omopgenerics::filterGroup(.data$cohort_name %in% input$cox_coefficients_cohort_name) |>
+      tidyr::pivot_wider(
+        names_from = estimate_name,
+        values_from = estimate_value
       ) |>
-      omopgenerics::filterGroup(.data$cohort_name %in% input$cox_coefficients_cohort_name)
+      dplyr::mutate(
+        coef = as.numeric(coef),
+        se = as.numeric(se),
+        coef_exp = round(exp(coef), digits = 2),
+        lci = round(exp(coef - qnorm(0.975)*se), digits = 2),
+        uci = round(exp(coef + qnorm(0.975)*se), digits = 2)
+      ) |>
+      dplyr::filter(uci != "Inf") |>
+      dplyr::select(-c(coef, se, se_robust)) |>
+      tidyr::pivot_longer(
+        cols = c(coef_exp, lci, uci),
+        names_to = "estimate_name",
+        values_to = "estimate_value"
+      ) |>
+      dplyr::mutate(
+        trans = stringr::str_extract(variable_level, "(?<=trans=)\\d+") |> as.numeric(),
+        variable = stringr::str_extract(variable_level, "(?<=:)\\w+") |>
+          stringr::str_remove("^sex")
+      ) |>
+      dplyr::mutate(trans = dplyr::case_when(
+        trans == "1" ~ "Treatment -> No treatment",
+        trans == "2" ~ "No treatment -> Treatment",
+        trans == "3" ~ "Treatment -> Death",
+        trans == "4" ~ "No treatment -> Death"
+      )) |>
+      dplyr::mutate(variable_level = paste0(trans, ": ", variable)) |>
+      dplyr::select(-c(trans, variable)) |>
+      dplyr::select(c(result_id, cdm_name, group_name, group_level, strata_name, strata_level, variable_name,
+                      variable_level, estimate_name, estimate_type, estimate_value, additional_name, additional_level)) |>
+      omopgenerics::newSummarisedResult()
   })
   getCoxCoefficientsTidy <- shiny::reactive({
     tidyDT(getCoxCoefficientsData(), input$cox_coefficients_tidy_columns, input$cox_coefficients_tidy_pivot_estimates)
@@ -933,6 +1182,49 @@ server <- function(input, output, session) {
     filename = paste0("table.", input$cox_coefficients_table_format),
     content = function(file) {
       gt::gtsave(getCoxCoefficientsTable(), file)
+    }
+  )
+  
+  getCoxCoefficientsPlot <- shiny::reactive({
+    getCoxCoefficientsData() |>
+      dplyr::mutate(estimate_value = as.numeric(estimate_value)) |>
+      tidyr::pivot_wider(
+        names_from = estimate_name,
+        values_from = estimate_value
+      ) |>
+      ggplot(aes(x = coef_exp, y = variable_level, colour = variable_level)) +
+      geom_vline(xintercept = 1, linetype = "dashed", color = "grey40") +
+      geom_point(size = 3, position = ggstance::position_dodgev(height = 0.6)) +
+      geom_errorbarh(aes(xmin = lci, xmax = uci), height = 0.2,
+                     position = ggstance::position_dodgev(height = 0.6)) +
+      facet_wrap( ~ group_level) +
+      labs(
+        x = "Hazard ratio (log scale) with 95% CI",
+        y = NULL,
+        colour = "Variable"
+      ) +
+      theme_minimal(base_size = 14) +
+      theme(
+        panel.grid.minor = element_blank(),
+        axis.text.y = element_text(hjust = 0)
+      ) 
+  })
+  
+  output$summarise_cox_coefficients_plot <- shiny::renderUI({
+    x <- getCoxCoefficientsPlot()
+    renderInteractivePlot(x, input$summarise_cox_coefficients_plot_interactive)
+  })
+  output$summarise_cox_coefficients_plot_download <- shiny::downloadHandler(
+    filename = "plot_cox_coefficients.png",
+    content = function(file) {
+      ggplot2::ggsave(
+        filename = file,
+        plot =  getCoxCoefficientsPlot(),
+        width = as.numeric(input$summarise_cox_coefficients_plot_width),
+        height = as.numeric(input$summarise_cox_coefficients_plot_height),
+        units = input$summarise_cox_coefficients_plot_units,
+        dpi = as.numeric(input$summarise_cox_coefficients_plot_dpi)
+      )
     }
   )
 
@@ -1034,7 +1326,41 @@ server <- function(input, output, session) {
         .data$variable_name %in% input$cox_coefficients_by_country_variable_name,
         .data$estimate_name %in% input$cox_coefficients_by_country_estimate_name
       ) |>
-      omopgenerics::filterGroup(.data$cohort_name %in% input$cox_coefficients_by_country_cohort_name)
+      omopgenerics::filterGroup(.data$cohort_name %in% input$cox_coefficients_by_country_cohort_name) |>
+      tidyr::pivot_wider(
+        names_from = estimate_name,
+        values_from = estimate_value
+      ) |>
+      dplyr::mutate(
+        coef = as.numeric(coef),
+        se = as.numeric(se),
+        coef_exp = round(exp(coef), digits = 2),
+        lci = round(exp(coef - qnorm(0.975)*se), digits = 2),
+        uci = round(exp(coef + qnorm(0.975)*se), digits = 2)
+      ) |>
+      dplyr::filter(uci != "Inf") |>
+      dplyr::select(-c(coef, se, se_robust)) |>
+      tidyr::pivot_longer(
+        cols = c(coef_exp, lci, uci),
+        names_to = "estimate_name",
+        values_to = "estimate_value"
+      ) |>
+      dplyr::mutate(
+        trans = stringr::str_extract(variable_level, "(?<=trans=)\\d+") |> as.numeric(),
+        variable = stringr::str_extract(variable_level, "(?<=:)\\w+") |>
+          stringr::str_remove("^sex")
+      ) |>
+      dplyr::mutate(trans = dplyr::case_when(
+        trans == "1" ~ "Treatment -> No treatment",
+        trans == "2" ~ "No treatment -> Treatment",
+        trans == "3" ~ "Treatment -> Death",
+        trans == "4" ~ "No treatment -> Death"
+      )) |>
+      dplyr::mutate(variable_level = paste0(trans, ": ", variable)) |>
+      dplyr::select(-c(trans, variable)) |>
+      dplyr::select(c(result_id, cdm_name, group_name, group_level, strata_name, strata_level, variable_name,
+                      variable_level, estimate_name, estimate_type, estimate_value, additional_name, additional_level)) |>
+      omopgenerics::newSummarisedResult()
   })
   getCoxCoefficientsByCountryTidy <- shiny::reactive({
     tidyDT(getCoxCoefficientsByCountryData(), input$cox_coefficients_by_country_tidy_columns, input$cox_coefficients_by_country_tidy_pivot_estimates)

@@ -766,7 +766,7 @@ ui <- bslib::page_navbar(
             inputId = "summarise_characteristics_cohort_name",
             label = "Cohort name",
             choices = choices$summarise_characteristics_cohort_name,
-            selected = selected$summarise_characteristics_cohort_name,
+            selected = c("acute_mi", "stroke_broad"),
             multiple = TRUE,
             options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
           ),
@@ -782,7 +782,7 @@ ui <- bslib::page_navbar(
             inputId = "summarise_characteristics_age_group",
             label = "Age group",
             choices = choices$summarise_characteristics_age_group,
-            selected = selected$summarise_characteristics_age_group,
+            selected = "overall",
             multiple = TRUE,
             options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
           ),
@@ -790,7 +790,7 @@ ui <- bslib::page_navbar(
             inputId = "summarise_characteristics_sex",
             label = "Sex",
             choices = choices$summarise_characteristics_sex,
-            selected = selected$summarise_characteristics_sex,
+            selected = "overall",
             multiple = TRUE,
             options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
           ),
@@ -798,7 +798,7 @@ ui <- bslib::page_navbar(
             inputId = "summarise_characteristics_ses",
             label = "Ses",
             choices = choices$summarise_characteristics_ses,
-            selected = selected$summarise_characteristics_ses,
+            selected = "overall",
             multiple = TRUE,
             options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
           ),
@@ -806,7 +806,9 @@ ui <- bslib::page_navbar(
             inputId = "summarise_characteristics_variable_name",
             label = "Variable name",
             choices = choices$summarise_characteristics_variable_name,
-            selected = selected$summarise_characteristics_variable_name,
+            selected = c("Age", "Age group", "Ckd stage", "Ethnicity", "New initiators (0 to 28)", "Number records",
+                         "Number subjects", "Prevalent users (-28 to -1)", "Prior comorbidities (-inf, -1)",
+                         "Prior myocardial infarction (-inf to -1)", "Prior stroke (-inf to -1)", "Ses", "Sex"),
             multiple = TRUE,
             options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
           ),
@@ -846,12 +848,12 @@ ui <- bslib::page_navbar(
                     header = NULL,
                     sortable::add_rank_list(
                       text = "None",
-                      labels = c("country", "age_group", "sex", "ses", "variable_name", "variable_level", "estimate_name"),
+                      labels = c("age_group", "sex", "ses", "variable_name", "variable_level", "estimate_name"),
                       input_id = "summarise_characteristics_table_none"
                     ),
                     sortable::add_rank_list(
                       text = "Header",
-                      labels = c("cdm_name", "cohort_name"),
+                      labels = c("cdm_name", "cohort_name", "country"),
                       input_id = "summarise_characteristics_table_header"
                     ),
                     sortable::add_rank_list(
@@ -1065,6 +1067,9 @@ ui <- bslib::page_navbar(
       )
     )
   ),
+  bslib::nav_menu(
+    title = "Competing Risk Models",
+    icon = shiny::icon("list"),
   bslib::nav_panel(
     title = "Crm probabilities",
     icon = shiny::icon("folder"),
@@ -1215,6 +1220,54 @@ ui <- bslib::page_navbar(
                 shinycssloaders::withSpinner()
             )
           )
+        ),
+        bslib::nav_panel(
+          title = "Plot CRM Probabilities",
+          bslib::card(
+            full_screen = TRUE,
+            bslib::card_header(
+              bslib::popover(
+                shiny::icon("download"),
+                shiny::numericInput(
+                  inputId = "summarise_crm_probabilities_plot_width",
+                  label = "Width",
+                  value = 15
+                ),
+                shiny::numericInput(
+                  inputId = "summarise_crm_probabilities_plot_height",
+                  label = "Height",
+                  value = 15
+                ),
+                shinyWidgets::pickerInput(
+                  inputId = "summarise_crm_probabilities_plot_units",
+                  label = "Units",
+                  choices = c("px", "cm", "inch"),
+                  selected = "cm",
+                  multiple = FALSE,
+                  options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
+                ),
+                shiny::numericInput(
+                  inputId = "summarise_crm_probabilities_plot_dpi",
+                  label = "DPI",
+                  value = 300
+                ),
+                shiny::downloadButton(outputId = "summarise_crm_probabilities_plot_download", label = "Download plot")
+              ),
+              class = "text-end"
+            ),
+            bslib::layout_sidebar(
+              sidebar = bslib::sidebar(
+                shinyWidgets::materialSwitch(
+                  inputId = "summarise_crm_probabilities_plot_interactive",
+                  label = "Interactive",
+                  value = TRUE
+                ),
+                position = "right"
+              ),
+              shiny::uiOutput("summarise_crm_probabilities_plot") |>
+                shinycssloaders::withSpinner()
+            )
+          )
         )
       )
     )
@@ -1350,6 +1403,54 @@ ui <- bslib::page_navbar(
                 position = "right"
               ),
               gt::gt_output("crm_coefficients_table") |>
+                shinycssloaders::withSpinner()
+            )
+          )
+        ),
+        bslib::nav_panel(
+          title = "Plot CRM Coefficients",
+          bslib::card(
+            full_screen = TRUE,
+            bslib::card_header(
+              bslib::popover(
+                shiny::icon("download"),
+                shiny::numericInput(
+                  inputId = "summarise_crm_coefficients_plot_width",
+                  label = "Width",
+                  value = 15
+                ),
+                shiny::numericInput(
+                  inputId = "summarise_crm_coefficients_plot_height",
+                  label = "Height",
+                  value = 15
+                ),
+                shinyWidgets::pickerInput(
+                  inputId = "summarise_crm_coefficients_plot_units",
+                  label = "Units",
+                  choices = c("px", "cm", "inch"),
+                  selected = "cm",
+                  multiple = FALSE,
+                  options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
+                ),
+                shiny::numericInput(
+                  inputId = "summarise_crm_coefficients_plot_dpi",
+                  label = "DPI",
+                  value = 300
+                ),
+                shiny::downloadButton(outputId = "summarise_crm_coefficients_plot_download", label = "Download plot")
+              ),
+              class = "text-end"
+            ),
+            bslib::layout_sidebar(
+              sidebar = bslib::sidebar(
+                shinyWidgets::materialSwitch(
+                  inputId = "summarise_crm_coefficients_plot_interactive",
+                  label = "Interactive",
+                  value = TRUE
+                ),
+                position = "right"
+              ),
+              shiny::uiOutput("summarise_crm_coefficients_plot") |>
                 shinycssloaders::withSpinner()
             )
           )
@@ -1507,6 +1608,54 @@ ui <- bslib::page_navbar(
                 shinycssloaders::withSpinner()
             )
           )
+        ),
+        bslib::nav_panel(
+          title = "Plot CRM Probabilities by Country",
+          bslib::card(
+            full_screen = TRUE,
+            bslib::card_header(
+              bslib::popover(
+                shiny::icon("download"),
+                shiny::numericInput(
+                  inputId = "summarise_crm_probabilities_by_country_plot_width",
+                  label = "Width",
+                  value = 15
+                ),
+                shiny::numericInput(
+                  inputId = "summarise_crm_probabilities_by_country_plot_height",
+                  label = "Height",
+                  value = 15
+                ),
+                shinyWidgets::pickerInput(
+                  inputId = "summarise_crm_probabilities_by_country_plot_units",
+                  label = "Units",
+                  choices = c("px", "cm", "inch"),
+                  selected = "cm",
+                  multiple = FALSE,
+                  options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
+                ),
+                shiny::numericInput(
+                  inputId = "summarise_crm_probabilities_by_country_plot_dpi",
+                  label = "DPI",
+                  value = 300
+                ),
+                shiny::downloadButton(outputId = "summarise_crm_probabilities_by_country_plot_download", label = "Download plot")
+              ),
+              class = "text-end"
+            ),
+            bslib::layout_sidebar(
+              sidebar = bslib::sidebar(
+                shinyWidgets::materialSwitch(
+                  inputId = "summarise_crm_probabilities_by_country_plot_interactive",
+                  label = "Interactive",
+                  value = TRUE
+                ),
+                position = "right"
+              ),
+              shiny::uiOutput("summarise_crm_probabilities_by_country_plot") |>
+                shinycssloaders::withSpinner()
+            )
+          )
         )
       )
     )
@@ -1645,10 +1794,62 @@ ui <- bslib::page_navbar(
                 shinycssloaders::withSpinner()
             )
           )
+        ), 
+        bslib::nav_panel(
+          title = "Plot CRM Coefficients by Country",
+          bslib::card(
+            full_screen = TRUE,
+            bslib::card_header(
+              bslib::popover(
+                shiny::icon("download"),
+                shiny::numericInput(
+                  inputId = "summarise_crm_coefficients_by_country_plot_width",
+                  label = "Width",
+                  value = 15
+                ),
+                shiny::numericInput(
+                  inputId = "summarise_crm_coefficients_by_country_plot_height",
+                  label = "Height",
+                  value = 15
+                ),
+                shinyWidgets::pickerInput(
+                  inputId = "summarise_crm_coefficients_by_country_plot_units",
+                  label = "Units",
+                  choices = c("px", "cm", "inch"),
+                  selected = "cm",
+                  multiple = FALSE,
+                  options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
+                ),
+                shiny::numericInput(
+                  inputId = "summarise_crm_coefficients_by_country_plot_dpi",
+                  label = "DPI",
+                  value = 300
+                ),
+                shiny::downloadButton(outputId = "summarise_crm_coefficients_by_country_plot_download", label = "Download plot")
+              ),
+              class = "text-end"
+            ),
+            bslib::layout_sidebar(
+              sidebar = bslib::sidebar(
+                shinyWidgets::materialSwitch(
+                  inputId = "summarise_crm_coefficients_by_country_plot_interactive",
+                  label = "Interactive",
+                  value = TRUE
+                ),
+                position = "right"
+              ),
+              shiny::uiOutput("summarise_crm_coefficients_by_country_plot") |>
+                shinycssloaders::withSpinner()
+            )
+          )
         )
       )
     )
+  )
   ),
+  bslib::nav_menu(
+    title = "Multi State Model",
+    icon = shiny::icon("list"),
   bslib::nav_panel(
     title = "Mms probabilities",
     icon = shiny::icon("folder"),
@@ -1791,6 +1992,54 @@ ui <- bslib::page_navbar(
                 shinycssloaders::withSpinner()
             )
           )
+        ),
+        bslib::nav_panel(
+          title = "Plot MSM Probabilities",
+          bslib::card(
+            full_screen = TRUE,
+            bslib::card_header(
+              bslib::popover(
+                shiny::icon("download"),
+                shiny::numericInput(
+                  inputId = "summarise_mms_probabilities_plot_width",
+                  label = "Width",
+                  value = 15
+                ),
+                shiny::numericInput(
+                  inputId = "summarise_mms_probabilities_plot_height",
+                  label = "Height",
+                  value = 15
+                ),
+                shinyWidgets::pickerInput(
+                  inputId = "summarise_mms_probabilities_plot_units",
+                  label = "Units",
+                  choices = c("px", "cm", "inch"),
+                  selected = "cm",
+                  multiple = FALSE,
+                  options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
+                ),
+                shiny::numericInput(
+                  inputId = "summarise_mms_probabilities_plot_dpi",
+                  label = "DPI",
+                  value = 300
+                ),
+                shiny::downloadButton(outputId = "summarise_mms_probabilities_plot_download", label = "Download plot")
+              ),
+              class = "text-end"
+            ),
+            bslib::layout_sidebar(
+              sidebar = bslib::sidebar(
+                shinyWidgets::materialSwitch(
+                  inputId = "summarise_mms_probabilities_plot_interactive",
+                  label = "Interactive",
+                  value = TRUE
+                ),
+                position = "right"
+              ),
+              shiny::uiOutput("summarise_mms_probabilities_plot") |>
+                shinycssloaders::withSpinner()
+            )
+          )
         )
       )
     )
@@ -1926,6 +2175,54 @@ ui <- bslib::page_navbar(
                 position = "right"
               ),
               gt::gt_output("cox_coefficients_table") |>
+                shinycssloaders::withSpinner()
+            )
+          )
+        ),
+        bslib::nav_panel(
+          title = "Plot Cox Coefficients",
+          bslib::card(
+            full_screen = TRUE,
+            bslib::card_header(
+              bslib::popover(
+                shiny::icon("download"),
+                shiny::numericInput(
+                  inputId = "summarise_cox_coefficients_plot_width",
+                  label = "Width",
+                  value = 15
+                ),
+                shiny::numericInput(
+                  inputId = "summarise_cox_coefficients_plot_height",
+                  label = "Height",
+                  value = 15
+                ),
+                shinyWidgets::pickerInput(
+                  inputId = "summarise_cox_coefficients_plot_units",
+                  label = "Units",
+                  choices = c("px", "cm", "inch"),
+                  selected = "cm",
+                  multiple = FALSE,
+                  options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
+                ),
+                shiny::numericInput(
+                  inputId = "summarise_cox_coefficients_plot_dpi",
+                  label = "DPI",
+                  value = 300
+                ),
+                shiny::downloadButton(outputId = "summarise_cox_coefficients_plot_download", label = "Download plot")
+              ),
+              class = "text-end"
+            ),
+            bslib::layout_sidebar(
+              sidebar = bslib::sidebar(
+                shinyWidgets::materialSwitch(
+                  inputId = "summarise_cox_coefficients_plot_interactive",
+                  label = "Interactive",
+                  value = TRUE
+                ),
+                position = "right"
+              ),
+              shiny::uiOutput("summarise_cox_coefficients_plot") |>
                 shinycssloaders::withSpinner()
             )
           )
@@ -2216,6 +2513,7 @@ ui <- bslib::page_navbar(
         )
       )
     )
+  )
   ),
   bslib::nav_spacer(),
   bslib::nav_item(
