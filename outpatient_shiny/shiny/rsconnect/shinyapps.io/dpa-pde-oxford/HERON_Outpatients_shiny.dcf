@@ -1,0 +1,12 @@
+name: HERON_Outpatients_shiny
+title: HERON_Outpatients_shiny
+username: dpa-pde-oxford
+account: dpa-pde-oxford
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 17274843
+bundleId: 11934829
+url: https://dpa-pde-oxford.shinyapps.io/HERON_Outpatients_shiny/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
