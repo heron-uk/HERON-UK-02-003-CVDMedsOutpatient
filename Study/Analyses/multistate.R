@@ -1,25 +1,12 @@
-# prepare data drug episodes - MI
-mi_drugs_count <- cdm$mi_drugs_final |>
-  collect() |>
-  group_by(cohort_definition_id) |>
-  distinct(subject_id) |>
-  tally() |>
-  filter(n >= 100) |>
-  pull(cohort_definition_id)
 
-if(length(mi_drugs_count) > 0){
 if(db_name == "GOLD" | db_name == "GOLD_100k"){
-cdm$mi_drugs_msm <- cdm$mi_drugs_final |>
-  subsetCohorts(
-    cohortId = mi_drugs_count,
-    name = "mi_drugs_msm"
-  )  |>
+cdm$msm_cohorts <- cdm$bb_after_event |>
   addDemographics(
     sex = TRUE,
     age = FALSE,
     priorObservation = FALSE,
     futureObservation = FALSE,
-    name = "mi_drugs_msm",
+    name = "msm_cohorts",
     ageGroup = list(
       "18 to 39" = c(18, 39),
       "40 to 49" = c(40, 49),
@@ -32,17 +19,13 @@ cdm$mi_drugs_msm <- cdm$mi_drugs_final |>
   addSES() |>
   addCountry()
 } else {
-  cdm$mi_drugs_msm <- cdm$mi_drugs_final |>
-    subsetCohorts(
-      cohortId = mi_drugs_count,
-      name = "mi_drugs_msm"
-    )  |>
+  cdm$msm_cohorts <- cdm$bb_after_event |>
     addDemographics(
       sex = TRUE,
       age = FALSE,
       priorObservation = FALSE,
       futureObservation = FALSE,
-      name = "mi_drugs_msm",
+      name = "msm_cohorts",
       ageGroup = list(
         "18 to 39" = c(18, 39),
         "40 to 49" = c(40, 49),
@@ -54,69 +37,11 @@ cdm$mi_drugs_msm <- cdm$mi_drugs_final |>
     ) |>
     addSES()
 }
-}
 
-stroke_drugs_count <- cdm$stroke_drugs_final |>
-  collect() |>
-  group_by(cohort_definition_id) |>
-  distinct(subject_id) |>
-  tally() |>
-  filter(n >= 100) |>
-  pull(cohort_definition_id)
+nm_1 <- omopgenerics::uniqueTableName()
 
-if(length(stroke_drugs_count) > 0){
 if(db_name == "GOLD" | db_name == "GOLD_100k"){
-cdm$stroke_drugs_msm <- cdm$stroke_drugs_final |>
-  subsetCohorts(
-    cohortId = stroke_drugs_count,
-    name = "stroke_drugs_msm"
-  ) |>
-  addDemographics(
-    sex = TRUE,
-    age = FALSE,
-    priorObservation = FALSE,
-    futureObservation = FALSE,
-    name = "stroke_drugs_msm",
-    ageGroup = list(
-      "18 to 39" = c(18, 39),
-      "40 to 49" = c(40, 49),
-      "50 to 59" = c(50, 59),
-      "60 to 69" = c(60, 69),
-      "70 to 79" = c(70, 79),
-      "80 to 89" = c(80, 89),
-      "90+" = c(90, 150))
-  ) |>
-  addSES() |>
-  addCountry()
-} else {
-cdm$stroke_drugs_msm <- cdm$stroke_drugs_final |>
-    subsetCohorts(
-      cohortId = stroke_drugs_count,
-      name = "stroke_drugs_msm"
-    ) |>
-    addDemographics(
-      sex = TRUE,
-      age = FALSE,
-      priorObservation = FALSE,
-      futureObservation = FALSE,
-      name = "stroke_drugs_msm",
-      ageGroup = list(
-        "18 to 39" = c(18, 39),
-        "40 to 49" = c(40, 49),
-        "50 to 59" = c(50, 59),
-        "60 to 69" = c(60, 69),
-        "70 to 79" = c(70, 79),
-        "80 to 89" = c(80, 89),
-        "90+" = c(90, 150))
-    ) |>
-    addSES()
-}
-}
-
-if(length(mi_drugs_count) > 0){
-  nm_1 <- omopgenerics::uniqueTableName()
-  if(db_name == "GOLD" | db_name == "GOLD_100k"){
-xd_1 <- cdm$mi_drugs_msm |>
+xd <- cdm$msm_cohorts |>
   addCohortName() |>
   group_by(cohort_name, subject_id, age_group, sex, ses) |>
   mutate(t0 = min(cohort_start_date, na.rm = TRUE)) |>
@@ -141,7 +66,7 @@ xd_1 <- cdm$mi_drugs_msm |>
   arrange(cohort_name, subject_id, start_drug) |>
   filter(second_event > 0)
   } else {
-    xd_1 <- cdm$mi_drugs_msm |>
+    xd <- cdm$msm_cohorts |>
       addCohortName() |>
       group_by(cohort_name, subject_id, age_group, sex, ses) |>
       mutate(t0 = min(cohort_start_date, na.rm = TRUE)) |>
@@ -166,79 +91,9 @@ xd_1 <- cdm$mi_drugs_msm |>
       arrange(cohort_name, subject_id, start_drug) |>
       filter(second_event > 0)
 }
-  omopgenerics::dropSourceTable(cdm = cdm, name = nm_1)
-} else {
-  cli::cli_alert_info("Insufficient cohort counts for MI treatment - skipping multistate model")
-}
 
-if(length(stroke_drugs_count) > 0){
-nm_2 <- omopgenerics::uniqueTableName()
-if(db_name == "GOLD" | db_name == "GOLD_100k"){
-xd_2 <- cdm$stroke_drugs_msm |>
-  addCohortName() |>
-  group_by(cohort_name, subject_id, age_group, sex, ses) |>
-  mutate(t0 = min(cohort_start_date, na.rm = TRUE)) |>
-  ungroup() |>
-  mutate(
-    start_discontinuation = date_count_between(t0, cohort_end_date),
-    start_drug = date_count_between(t0, cohort_start_date)
-  ) |>
-  compute(name = nm_2) |>
-  addDeathDays(indexDate = "t0", name = nm_2) |>
-  addFutureObservation(indexDate = "t0", futureObservationType = "days", name = nm_2) |>
-  addCohortIntersectDays(indexDate = "t0", targetCohortTable = "stroke_second", window = c(-Inf,Inf)) |>
-  rename(second_event = stroke_broad_minf_to_inf) |>
-  select("cohort_name", "subject_id", "age_group", "sex", "ses", "country", "start_drug", "start_discontinuation", "days_to_death", "future_observation", "second_event") |>
-  collect() |>
-  mutate(
-    days_to_death = coalesce(days_to_death, 9999L),
-    second_event = coalesce(second_event, 9999L),
-    future_observation = pmin(days_to_death, future_observation, second_event),
-    start_discontinuation = start_discontinuation + 1
-  ) |>
-  arrange(cohort_name, subject_id, start_drug) |>
-  filter(second_event > 0)
+omopgenerics::dropSourceTable(cdm = cdm, name = nm_1)
 
-  omopgenerics::dropSourceTable(cdm = cdm, name = nm_2)
-} else {
-  xd_2 <- cdm$stroke_drugs_msm |>
-    addCohortName() |>
-    group_by(cohort_name, subject_id, age_group, sex, ses) |>
-    mutate(t0 = min(cohort_start_date, na.rm = TRUE)) |>
-    ungroup() |>
-    mutate(
-      start_discontinuation = date_count_between(t0, cohort_end_date),
-      start_drug = date_count_between(t0, cohort_start_date)
-    ) |>
-    compute(name = nm_2) |>
-    addDeathDays(indexDate = "t0", name = nm_2) |>
-    addFutureObservation(indexDate = "t0", futureObservationType = "days", name = nm_2) |>
-    addCohortIntersectDays(indexDate = "t0", targetCohortTable = "stroke_second", window = c(-Inf,Inf)) |>
-    rename(second_event = stroke_broad_minf_to_inf) |>
-    select("cohort_name", "subject_id", "age_group", "sex", "ses",  "start_drug", "start_discontinuation", "days_to_death", "future_observation", "second_event") |>
-    collect() |>
-    mutate(
-      days_to_death = coalesce(days_to_death, 9999L),
-      second_event = coalesce(second_event, 9999L),
-      future_observation = pmin(days_to_death, future_observation, second_event),
-      start_discontinuation = start_discontinuation + 1
-    ) |>
-    arrange(cohort_name, subject_id, start_drug) |>
-    filter(second_event > 0)
-  
-  omopgenerics::dropSourceTable(cdm = cdm, name = nm_2)
-}
-} else {
-  cli::cli_alert_info("Insufficient cohort counts for stroke treatment - skipping multistate model")
-}
-
-if(length(mi_drugs_count) > 0 & length(stroke_drugs_count) > 0) {
-  xd <- bind_rows(xd_1,xd_2)
-} else if(length(mi_drugs_count) > 0 & length(stroke_drugs_count) == 0) {
-  xd <- xd_1
-} else if(length(mi_drugs_count) == 0 & length(stroke_drugs_count) > 0) {
-  xd <- xd_2
-}
 
 # transitions
 tmat <- matrix(NA, 3, 3)
