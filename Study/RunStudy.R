@@ -19,29 +19,9 @@ cdm$person <- cdm$person |>
   )
 
 if(db_name == "GOLD" | db_name == "GOLD_100k"){
-  location <- cdm$location |>
-    collect() |>
-    filter(country_source_value %in% c("Wales", "Scotland", "Northern Ireland"))
-
-  care_site <- cdm$care_site |>
-    collect() |>
-    filter(location_id %in% location$location_id)
-
-  persons <- cdm$person |>
-    filter(care_site_id %in% care_site$care_site_id) |>
-    distinct(person_id) |>
-    pull(person_id)
-
-  persons <- bit64::as.integer64(persons)
-
-  cdm <- cdmSubset(cdm, personId = persons)
-}
-
-if(db_name == "GOLD" | db_name == "GOLD_100k"){
   source(here("Analyses", "functionsGOLD.R"))
 }
 
-# Load functions
 source(here("Analyses","functions.R"))
 
 if(db_name == "DataLoch") {
@@ -66,14 +46,10 @@ logMessage("INSTANTIATING OUTCOME COHORTS")
 source(here("Cohorts","InstantiateOutcomeCohorts.R"))
 logMessage("INSTANTIATED OUTCOME COHORTS")
 
-logMessage("INSTANTIATING PRIMARY CARE COHORTS")
-source(here("Cohorts","Primary", "InstantiateMIDrugCohorts.R"))
-source(here("Cohorts","Primary", "InstantiateStrokeDrugCohorts.R"))
+logMessage("INSTANTIATING DRUG COHORTS")
+source(here("Cohorts", "InstantiateDrugCohorts.R"))
 logMessage("PRIMARY CARE COHORTS INSTANTIATED")
 
-logMessage("RUN DRUG ADHERENCE")
-logMessage("RUN COMPETING RISK")
-source(here("Analyses", "competingRisk.R"))
 logMessage("RUN MULTI STATE")
 source(here("Analyses", "multistate.R"))
 logMessage("DRUG ADHERENCE FINISHED")
