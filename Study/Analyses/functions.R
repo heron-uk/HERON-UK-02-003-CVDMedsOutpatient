@@ -1,23 +1,47 @@
 ## Add socio-economic status
 addSES <- function(cohort){
-  n_imd <- cdm$observation |> dplyr::filter(.data$observation_source_concept_id == 35812882L) |> dplyr::tally() |> dplyr::pull()
-  n_townsend <- cdm$measurement |> dplyr::filter(.data$measurement_concept_id == 715996L) |> dplyr::tally() |> dplyr::pull() 
-  if (n_imd > 0){
-    cohort |> dplyr::left_join(cdm$observation |> 
-                                 dplyr::filter(.data$observation_source_concept_id == 35812882L) |> 
-                                 dplyr::select("person_id", "ses" = "value_as_number"),
-                               by = c("subject_id" = "person_id")) |>
-      dplyr::mutate(ses = as.character(.data$ses),
-                    ses = coalesce(.data$ses, "Missing"))
-    
-  }else if (n_townsend>0) {
-    cohort |> PatientProfiles::addConceptIntersectField(conceptSet = list(townsend = 715996L), 
-                                                        indexDate = "cohort_start_date",
-                                                        field = "value_as_number", 
-                                                        window = list(c(-Inf, Inf)), 
-                                                        order = "last", 
-                                                        nameStyle = "ses", 
-                                                        inObservation = FALSE) |>
+ n_imd <- cdm$observation |>
+    dplyr::filter(.data$observation_source_concept_id == 35812882L) |>
+    dplyr::tally() |>
+    dplyr::pull()
+  n_townsend <- cdm$measurement |>
+    dplyr::filter(.data$measurement_concept_id == 715996L) |>
+    dplyr::tally() |>
+    dplyr::pull()
+  
+  if (n_imd > 0) {
+    max_ses <- cdm$observation |>
+      dplyr::filter(.data$observation_source_concept_id == 35812882L) |>
+      dplyr::summarise(max_ses = max(.data$value_as_number, na.rm = TRUE)) |>
+      dplyr::pull()
+    cohort <- cohort |>
+      dplyr::left_join(
+        cdm$observation |>
+          dplyr::filter(.data$observation_source_concept_id == 35812882L) |>
+          dplyr::select("person_id", "ses" = "value_as_number"),
+        by = c("subject_id" = "person_id")
+      )
+  } else if (n_townsend > 0) {
+    max_ses <- cdm$measurement |>
+      dplyr::filter(.data$measurement_concept_id == 715996L) |>
+      dplyr::summarise(max_ses = max(.data$value_as_number, na.rm = TRUE)) |>
+      dplyr::pull()
+    cohort <- cohort |>
+      PatientProfiles::addConceptIntersectField(
+        conceptSet    = list(townsend = 715996L),
+        indexDate     = date_name,
+        field         = "value_as_number",
+        window        = list(c(-Inf, Inf)),
+        order         = "last",
+        nameStyle     = "ses",
+        inObservation = FALSE
+      )
+  } else {
+    return(cohort)
+  }
+  
+  if (max_ses > 5) {
+    cohort <- cohort |>
       dplyr::mutate(
         ses = dplyr::case_when(
           ses %in% c(1, 2)  ~ 1L,
@@ -25,14 +49,13 @@ addSES <- function(cohort){
           ses %in% c(5, 6)  ~ 3L,
           ses %in% c(7, 8)  ~ 4L,
           ses %in% c(9, 10) ~ 5L,
-          TRUE ~ NA_real_
-        ),
-        ses = as.character(.data$ses),
-        ses = dplyr::coalesce(ses, "Missing")
+          TRUE              ~ NA_integer_
+        )
       )
-  }else {
-    cohort
   }
+  
+  cohort |>
+    dplyr::mutate(ses = dplyr::coalesce(as.character(.data$ses), "Missing"))
 }
 
 ## Add ethnicity
