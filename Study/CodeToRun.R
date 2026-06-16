@@ -77,6 +77,12 @@ study_start <- "2012-01-01"
 
 min_cell_count <- 5
 
+beta_blockers <- TRUE
+dual_antiplatelets <-FALSE
+statins <- FALSE
+ace_inhibitors <- FALSE
+
+
 # Run the study
 source(here("RunStudy.R"))
 
