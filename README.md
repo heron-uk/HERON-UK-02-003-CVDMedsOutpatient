@@ -1,6 +1,6 @@
 <img src="https://img.shields.io/badge/Study%20Status-Started-blue.svg" alt="Study Status: Started">
 
-- **Study title**: Acute Stroke Infarct and Acute Myocardial Infarction Characterisation in Outpatient Settings
+- **Study title**: Geographic variation in adherence to beta blockers after myocardial infarction: a UK cohort study
 - **Study start date**: 1st February 2026
 - **Study leads**: @elinrow
 - **Study end date**: Ongoing
