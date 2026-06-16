@@ -1,0 +1,1025 @@
+---
+title: "outpatient_report"
+format: "docx"
+---
+
+## Initiation and Adherence to secondary prevention therapy following Myocardial Infarction.
+
+```{r data, echo = FALSE}
+source("data/preprocess.R")
+
+fileData <- file.path(getwd(), "data", "studyData.RData")
+# load shiny data
+load(fileData)
+```
+
+#### Table 1: Characterisation of patients at first record of MI. 
+
+```{r table 1, echo =FALSE, warning=FALSE, message=FALSE}
+char_mi <- data[["summarise_characteristics"]] |>
+  dplyr::filter(group_level %in% c("acute_mi", "stroke_broad"),
+                strata_name %in% c("overall", "country"),
+                !variable_name %in% c("Prior observation", "Future observation", "Days in cohort", 
+                                      "Days to next record", "Cohort start date", "Cohort end date")) |>
+  dplyr::mutate(group_level = dplyr::case_when(
+    group_level == "acute_mi" ~ "Myocardial Infarction",
+    group_level == "stroke_broad" ~ "Ischaemic Stroke",
+  ),
+  strata_level = dplyr::case_when(
+    strata_level == "overall" ~ "All countries",
+    TRUE ~ strata_level
+  ))
+
+CohortCharacteristics::tableCharacteristics(char_mi,
+                                            header = c("cdm_name", "cohort_name", "strata_level"),
+                                            hide = c("strata_name", "table_name"))
+```
+
+#### Figure 1: Proportion of individuals initiating treatment in the 28 days following MI.
+
+```{r crm}
+library(ggplot2)
+crm <- data[["crm_probabilities"]] |>
+  dplyr::filter(group_level %in% 
+                  c("crm_antiplatelets_mi", "crm_anticoagulants_mi",
+                    "crm_antihypertensive_mi", "crm_lipid_lowering_mi",
+                    "crm_beta_blockers_mi")) |>
+  omopgenerics::splitAdditional() |>
+  dplyr::mutate(estimate_value = as.numeric(estimate_value),
+                time = as.numeric(time),
+                group_level = dplyr::case_when(
+                  group_level == "crm_antiplatelets_mi" ~ "Antiplatelets",
+                  group_level == "crm_anticoagulants_mi" ~ "Anticoagulants",
+                  group_level == "crm_antihypertensive_mi" ~ "Antihypertensives",
+                  group_level == "crm_lipid_lowering_mi" ~ "Lipid Lowering",
+                  group_level == "crm_beta_blockers_mi" ~ "Beta Blockers"
+                ),
+                state = dplyr::case_when(
+                  state == "death" ~ "Death",
+                  state == "no_treatment" ~ "No Treatment",
+                  state == "treatment" ~ "Treatment"
+                ))
+
+plot_data <- crm |>
+  # drop rows where lead() produced NA time
+  dplyr::filter(!is.na(time)) |>
+  dplyr::arrange(time, state) |>
+  dplyr::filter(state == "Treatment")
+
+ggplot(plot_data, aes(x = time, y = estimate_value, color = group_level, group = group_level)) +
+  geom_line(linewidth = 0.8) +
+  coord_cartesian(xlim = c(0, 28)) +
+  labs(x = "Time",
+       y = "Proportion",
+       color = "Drug Group",
+       title = "Proportion of individuals initiating treatment in the 28 days following MI") +
+  theme_minimal() +
+  theme(
+    strip.text = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 12, face = "bold"),
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 12, face = "bold")
+  )
+```
+
+```{r crm 2}
+library(ggplot2)
+crm <- data[["crm_probabilities"]] |>
+  dplyr::filter(!group_level %in% 
+                  c("crm_antiplatelets_mi", "crm_anticoagulants_mi",
+                    "crm_antihypertensive_mi", "crm_lipid_lowering_mi",
+                    "crm_beta_blockers_mi")) |>
+  omopgenerics::splitAdditional() |>
+  dplyr::mutate(estimate_value = as.numeric(estimate_value),
+                time = as.numeric(time),
+                state = dplyr::case_when(
+                  state == "death" ~ "Death",
+                  state == "no_treatment" ~ "No Treatment",
+                  state == "treatment" ~ "Treatment"
+                ))
+
+plot_data <- crm |>
+  # drop rows where lead() produced NA time
+  dplyr::filter(!is.na(time)) |>
+  dplyr::arrange(time, state) |>
+  dplyr::filter(state == "Treatment")
+
+ggplot(plot_data, aes(x = time, y = estimate_value, color = group_level, group = group_level)) +
+  geom_line(linewidth = 0.8) +
+  coord_cartesian(xlim = c(0, 28)) +
+  facet_wrap(~group_level) +
+  labs(x = "Time",
+       y = "Probability",
+       color = "State",
+       title = "Proportion of individuals initiating treatment in the 28 days following MI") +
+  theme_minimal() +
+  theme(
+    strip.text = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 12, face = "bold"),
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 12, face = "bold")
+  )
+```
+
+
+```{r crm by country}
+library(ggplot2)
+crm_country <- data[["crm_probabilities_by_country"]] |>
+  tidyr::separate(group_level, into = c("group_level", "country"), sep = "_(?=[^_]+$)") |>
+  dplyr::filter(group_level %in% 
+                  c("crm_antiplatelets_mi", "crm_anticoagulants_mi",
+                    "crm_antihypertensive_mi", "crm_lipid_lowering_mi",
+                    "crm_beta_blockers_mi")) |>
+  omopgenerics::splitAdditional() |>
+  dplyr::mutate(estimate_value = as.numeric(estimate_value),
+                time = as.numeric(time),
+                group_level = dplyr::case_when(
+                  group_level == "crm_antiplatelets_mi" ~ "Antiplatelets",
+                  group_level == "crm_anticoagulants_mi" ~ "Anticoagulants",
+                  group_level == "crm_antihypertensive_mi" ~ "Antihypertensives",
+                  group_level == "crm_lipid_lowering_mi" ~ "Lipid Lowering",
+                  group_level == "crm_beta_blockers_mi" ~ "Beta Blockers"
+                ))
+
+plot_data <- crm_country |>
+  dplyr::filter(!is.na(time)) |>
+  dplyr::arrange(country,time, state) |>
+  dplyr::filter(state == "treatment")
+
+ggplot(plot_data, aes(x = time, y = estimate_value, color = country, group = country)) +
+  geom_line(linewidth = 0.8) +
+  coord_cartesian(xlim = c(0, 28)) +
+  labs(x = "Time",
+       y = "Probability",
+       color = "State") +
+  theme_minimal() +
+  facet_wrap(~ group_level) +
+  theme(
+    strip.text = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 12, face = "bold"),
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 12, face = "bold")
+  )
+```
+```{r crm by country (stroke)}
+library(ggplot2)
+crm_country <- data[["crm_probabilities_by_country"]] |>
+  tidyr::separate(group_level, into = c("group_level", "country"), sep = "_(?=[^_]+$)") |>
+  dplyr::filter(group_level %in% 
+                  c("crm_antiplatelets_stroke", "crm_anticoagulants_stroke",
+                    "crm_antihypertensive_stroke", "crm_lipid_lowering_stroke",
+                    "crm_beta_blockers_stroke")) |>
+  omopgenerics::splitAdditional() |>
+  dplyr::mutate(estimate_value = as.numeric(estimate_value),
+                time = as.numeric(time),
+                group_level = dplyr::case_when(
+                  group_level == "crm_antiplatelets_stroke" ~ "Antiplatelets",
+                  group_level == "crm_anticoagulants_stroke" ~ "Anticoagulants",
+                  group_level == "crm_antihypertensive_stroke" ~ "Antihypertensives",
+                  group_level == "crm_lipid_lowering_stroke" ~ "Lipid Lowering",
+                  group_level == "crm_beta_blockers_stroke" ~ "Beta Blockers"
+                ))
+
+plot_data <- crm_country |>
+  dplyr::filter(!is.na(time)) |>
+  dplyr::arrange(country,time, state) |>
+  dplyr::filter(state == "treatment")
+
+ggplot(plot_data, aes(x = time, y = estimate_value, color = country, group = country)) +
+  geom_line(linewidth = 0.8) +
+  coord_cartesian(xlim = c(0, 28)) +
+  labs(x = "Time",
+       y = "Probability",
+       color = "State") +
+  theme_minimal() +
+  facet_wrap(~ group_level) +
+  theme(
+    strip.text = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 12, face = "bold"),
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 12, face = "bold")
+  )
+```
+
+```{r crm by country 2}
+library(ggplot2)
+crm_country <- data[["crm_probabilities_by_country"]] |>
+  tidyr::separate(group_level, into = c("group_level", "country"), sep = "_(?=[^_]+$)") |>
+  dplyr::filter(!group_level %in% 
+                  c("crm_antiplatelets_mi", "crm_anticoagulants_mi",
+                    "crm_antihypertensive_mi", "crm_lipid_lowering_mi",
+                    "crm_beta_blockers_mi")) |>
+  omopgenerics::splitAdditional() |>
+  dplyr::mutate(estimate_value = as.numeric(estimate_value),
+                time = as.numeric(time))
+
+plot_data <- crm_country |>
+  dplyr::filter(!is.na(time)) |>
+  dplyr::arrange(country,time, state) |>
+  dplyr::filter(state == "treatment")
+
+ggplot(plot_data, aes(x = time, y = estimate_value, color = country, group = country)) +
+  geom_line(linewidth = 0.8) +
+  coord_cartesian(xlim = c(0, 28)) +
+  labs(x = "Time",
+       y = "Probability",
+       color = "State") +
+  theme_minimal() +
+  facet_wrap(~ group_level, scales = "free_y") +
+  theme(
+    strip.text = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 12, face = "bold"),
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 12, face = "bold")
+  )
+```
+
+```{r crm coef}
+crm_coef <- data[["crm_coefficients"]] |>
+  dplyr::filter(group_level %in% 
+                  c("crm_antiplatelets_mi", "crm_anticoagulants_mi",
+                    "crm_antihypertensive_mi", "crm_lipid_lowering_mi",
+                    "crm_beta_blockers_mi")) |>
+  dplyr::mutate(estimate_value = as.numeric(estimate_value)) |>
+  tidyr::pivot_wider(
+    names_from = estimate_name,
+    values_from = estimate_value
+  ) |>
+  dplyr::mutate(
+    coef = as.numeric(coef),
+    se = as.numeric(se),
+    coef_exp = round(exp(coef), digits = 2),
+    lci = round(exp(coef - qnorm(0.975)*se), digits = 2),
+    uci = round(exp(coef + qnorm(0.975)*se), digits = 2),
+                group_level = dplyr::case_when(
+                  group_level == "crm_antiplatelets_mi" ~ "Antiplatelets",
+                  group_level == "crm_anticoagulants_mi" ~ "Anticoagulants",
+                  group_level == "crm_antihypertensive_mi" ~ "Antihypertensives",
+                  group_level == "crm_lipid_lowering_mi" ~ "Lipid Lowering",
+                  group_level == "crm_beta_blockers_mi" ~ "Beta Blockers"
+                ),
+    variable_level = dplyr::case_when(
+      variable_level == "age_group18 to 39" ~ "Age: 18 - 39",
+      variable_level == "age_group40 to 49" ~ "Age: 40 - 49",
+      variable_level == "age_group50 to 59" ~ "Age: 50 - 59",
+      variable_level == "age_group70 to 79" ~ "Age: 70 - 79",
+      variable_level == "age_group80 to 89" ~ "Age: 80 - 89",
+      variable_level == "age_group90+" ~ "Age: 90+",
+      variable_level == "sexMale" ~ "Sex: Male",
+      variable_level == "ses1" ~ "Socio-economic Status: 1",
+      variable_level == "ses2" ~ "Socio-economic Status: 2",
+      variable_level == "ses3" ~ "Socio-economic Status: 3",
+      variable_level == "ses4" ~ "Socio-economic Status: 4"
+    )
+  ) |>
+  dplyr::filter(uci != "Inf")
+
+pdv <- ggstance::position_dodgev(height = 0.6)
+
+ggplot(crm_coef, aes(x = coef_exp, y = variable_level)) +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "grey40") +
+  geom_point(size = 3, position = pdv, colour = "slateblue") +
+  geom_errorbarh(aes(xmin = lci, xmax = uci), height = 0.2,
+                 position = pdv, colour = "slateblue") +
+  facet_wrap( ~ group_level) +
+  labs(
+    x = "Hazard ratio (log scale) with 95% CI",
+    y = NULL,
+    colour = "Variable"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    panel.grid.minor = element_blank(),
+    axis.text.y = element_text(hjust = 0)
+  )
+```
+```{r crm coef 2}
+crm_coef <- data[["crm_coefficients"]] |>
+  dplyr::mutate(estimate_value = as.numeric(estimate_value)) |>
+  tidyr::pivot_wider(
+    names_from = estimate_name,
+    values_from = estimate_value
+  ) |>
+  dplyr::mutate(
+    coef = as.numeric(coef),
+    se = as.numeric(se),
+    coef_exp = round(exp(coef), digits = 2),
+    lci = round(exp(coef - qnorm(0.975)*se), digits = 2),
+    uci = round(exp(coef + qnorm(0.975)*se), digits = 2),
+    variable_level = dplyr::case_when(
+      variable_level == "age_group18 to 39" ~ "Age: 18 - 39",
+      variable_level == "age_group40 to 49" ~ "Age: 40 - 49",
+      variable_level == "age_group50 to 59" ~ "Age: 50 - 59",
+      variable_level == "age_group70 to 79" ~ "Age: 70 - 79",
+      variable_level == "age_group80 to 89" ~ "Age: 80 - 89",
+      variable_level == "age_group90+" ~ "Age: 90+",
+      variable_level == "sexMale" ~ "Sex: Male",
+      variable_level == "ses1" ~ "Socio-economic Status: 1",
+      variable_level == "ses2" ~ "Socio-economic Status: 2",
+      variable_level == "ses3" ~ "Socio-economic Status: 3",
+      variable_level == "ses4" ~ "Socio-economic Status: 4"
+    )
+  ) |>
+  dplyr::filter(uci != "Inf")
+
+pdv <- ggstance::position_dodgev(height = 0.6)
+
+ggplot(crm_coef, aes(x = coef_exp, y = variable_level)) +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "grey40") +
+  geom_point(size = 3, position = pdv, colour = "slateblue") +
+  geom_errorbarh(aes(xmin = lci, xmax = uci), height = 0.2,
+                 position = pdv, colour = "slateblue") +
+  facet_wrap( ~ group_level, scales = "free_x") +
+  labs(
+    x = "Hazard ratio (log scale) with 95% CI",
+    y = NULL,
+    colour = "Variable"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    panel.grid.minor = element_blank(),
+    axis.text.y = element_text(hjust = 0)
+  )
+```
+
+
+```{r crm coef by country}
+library(ggplot2)
+
+crm_coef <- data[["crm_coefficients"]] |>
+  dplyr::filter(group_level %in% 
+                  c("crm_antiplatelets_mi", "crm_anticoagulants_mi",
+                    "crm_antihypertensive_mi", "crm_lipid_lowering_mi",
+                    "crm_beta_blockers_mi")) |>
+  dplyr::mutate(estimate_value = as.numeric(estimate_value)) |>
+  tidyr::pivot_wider(
+    names_from = estimate_name,
+    values_from = estimate_value
+  ) |>
+  dplyr::mutate(
+    coef = as.numeric(coef),
+    se = as.numeric(se),
+    coef_exp = round(exp(coef), digits = 2),
+    lci = round(exp(coef - qnorm(0.975)*se), digits = 2),
+    uci = round(exp(coef + qnorm(0.975)*se), digits = 2),
+                group_level = dplyr::case_when(
+                  group_level == "crm_antiplatelets_mi" ~ "Antiplatelets",
+                  group_level == "crm_anticoagulants_mi" ~ "Anticoagulants",
+                  group_level == "crm_antihypertensive_mi" ~ "Antihypertensives",
+                  group_level == "crm_lipid_lowering_mi" ~ "Lipid Lowering",
+                  group_level == "crm_beta_blockers_mi" ~ "Beta Blockers"
+                ),
+    variable_level = dplyr::case_when(
+      variable_level == "age_group18 to 39" ~ "Age: 18 - 39",
+      variable_level == "age_group40 to 49" ~ "Age: 40 - 49",
+      variable_level == "age_group60 to 69" ~ "Age: 60 - 69",
+      variable_level == "age_group70 to 79" ~ "Age: 70 - 79",
+      variable_level == "age_group80 to 89" ~ "Age: 80 - 89",
+      variable_level == "age_group90+" ~ "Age: 90+",
+      variable_level == "sexMale" ~ "Sex: Male",
+      variable_level == "ses1" ~ "Socio-economic Status: 1",
+      variable_level == "ses2" ~ "Socio-economic Status: 2",
+      variable_level == "ses3" ~ "Socio-economic Status: 3",
+      variable_level == "ses4" ~ "Socio-economic Status: 4"
+    )
+  ) |>
+  dplyr::filter(uci != "Inf") |>
+  dplyr::mutate(country = "UK")
+
+crm_coef_country <- data[["crm_coefficients_by_country"]] |>
+    tidyr::separate(group_level, into = c("group_level", "country"), sep = "_(?=[^_]+$)") |>
+  dplyr::filter(group_level %in% 
+                  c("crm_antiplatelets_mi", "crm_anticoagulants_mi",
+                    "crm_antihypertensive_mi", "crm_lipid_lowering_mi",
+                    "crm_beta_blockers_mi")) |>
+  dplyr::mutate(estimate_value = as.numeric(estimate_value)) |>
+  tidyr::pivot_wider(
+    names_from = estimate_name,
+    values_from = estimate_value
+  ) |>
+  dplyr::mutate(
+    coef = as.numeric(coef),
+    se = as.numeric(se),
+    coef_exp = round(exp(coef), digits = 2),
+    lci = round(exp(coef - qnorm(0.975)*se), digits = 2),
+    uci = round(exp(coef + qnorm(0.975)*se), digits = 2),
+    group_level = dplyr::case_when(
+                  group_level == "crm_antiplatelets_mi" ~ "Antiplatelets",
+                  group_level == "crm_anticoagulants_mi" ~ "Anticoagulants",
+                  group_level == "crm_antihypertensive_mi" ~ "Antihypertensives",
+                  group_level == "crm_lipid_lowering_mi" ~ "Lipid Lowering",
+                  group_level == "crm_beta_blockers_mi" ~ "Beta Blockers"
+                ),
+    variable_level = dplyr::case_when(
+      variable_level == "age_group18 to 39" ~ "Age: 18 - 39",
+      variable_level == "age_group40 to 49" ~ "Age: 40 - 49",
+      variable_level == "age_group60 to 69" ~ "Age: 60 - 69",
+      variable_level == "age_group70 to 79" ~ "Age: 70 - 79",
+      variable_level == "age_group80 to 89" ~ "Age: 80 - 89",
+      variable_level == "age_group90+" ~ "Age: 90+",
+      variable_level == "sexMale" ~ "Sex: Male",
+      variable_level == "ses1" ~ "Socio-economic Status: 1",
+      variable_level == "ses2" ~ "Socio-economic Status: 2",
+      variable_level == "ses3" ~ "Socio-economic Status: 3",
+      variable_level == "ses4" ~ "Socio-economic Status: 4"
+    )
+  ) |>
+  dplyr::filter(uci < 10,
+                uci != "Inf")
+plot_data <- rbind(crm_coef, crm_coef_country)
+pdv <- ggstance::position_dodgev(height = 0.6)
+
+ggplot(plot_data |> dplyr::filter(variable_level == "Sex: Male"), aes(x = coef_exp, y = variable_level, colour = country)) +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "grey40") +
+  geom_point(size = 3, position = pdv) +
+  geom_errorbarh(aes(xmin = lci, xmax = uci), height = 0.2,
+                 position = pdv) +
+  facet_wrap( ~ group_level) +
+  labs(
+    x = "Hazard ratio (log scale) with 95% CI",
+    y = NULL,
+    colour = "Country"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    panel.grid.minor = element_blank(),
+    axis.text.y = element_text(hjust = 0)
+  )
+
+ggplot(plot_data |> dplyr::filter(variable_level %in% c("Socio-economic Status: 1", "Socio-economic Status: 2",
+                                                        "Socio-economic Status: 3", "Socio-economic Status: 4")), aes(x = coef_exp, y = variable_level, colour = country)) +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "grey40") +
+  geom_point(size = 3, position = pdv) +
+  geom_errorbarh(aes(xmin = lci, xmax = uci), height = 0.2,
+                 position = pdv) +
+  facet_wrap( ~ group_level) +
+  labs(
+    x = "Hazard ratio (log scale) with 95% CI",
+    y = NULL,
+    colour = "Country"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    panel.grid.minor = element_blank(),
+    axis.text.y = element_text(hjust = 0)
+  )
+
+ggplot(plot_data |> dplyr::filter(!variable_level %in% c("Socio-economic Status: 1", "Socio-economic Status: 2",
+                                                        "Socio-economic Status: 3", "Socio-economic Status: 4",
+                                                        "Sex: Male")), aes(x = coef_exp, y = variable_level, colour = country)) +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "grey40") +
+  geom_point(size = 3, position = pdv) +
+  geom_errorbarh(aes(xmin = lci, xmax = uci), height = 0.2,
+                 position = pdv) +
+  facet_wrap( ~ group_level) +
+  labs(
+    x = "Hazard ratio (log scale) with 95% CI",
+    y = NULL,
+    colour = "Country"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    panel.grid.minor = element_blank(),
+    axis.text.y = element_text(hjust = 0)
+  )
+
+```
+
+### Multi-State Model
+
+```{r msm}
+library(ggplot2)
+msm <- data[["mms_probabilities"]] |>
+  dplyr::filter(group_level %in% 
+                  c("antiplatelets_mi", "anticoagulants_mi",
+                    "antihypertensive_mi", "lipid_lowering_mi",
+                    "beta_blockers_mi","antiplatelets_stroke", "anticoagulants_stroke",
+                    "antihypertensive_stroke", "lipid_lowering_stroke",
+                    "beta_blockers_stroke")) |>
+  omopgenerics::splitAdditional() |>
+  dplyr::mutate(estimate_value = as.numeric(estimate_value),
+                time = as.numeric(time),
+                group_level = dplyr::case_when(
+                    group_level == "beta_blockers_mi" ~ "Beta Blockers (MI)",
+                    group_level == "antiplatelets_mi" ~ "Antiplatelets (MI)",
+                    group_level == "anticoagulants_mi" ~ "Anticoagulants (MI)",
+                    group_level == "lipid_lowering_mi" ~ "Lipid Lowering (MI)",
+                    group_level == "antihypertensive_mi" ~ "Antihypertensives (MI)",
+                    group_level == "beta_blockers_stroke" ~ "Beta Blockers (Stroke)",
+                    group_level == "antiplatelets_stroke" ~ "Antiplatelets (Stroke)",
+                    group_level == "anticoagulants_stroke" ~ "Anticoagulants (Stroke)",
+                    group_level == "lipid_lowering_stroke" ~ "Lipid Lowering (Stroke)",
+                    group_level == "antihypertensive_stroke" ~ "Antihypertensives (Stroke)"
+                ))
+
+plot_data <- msm |>
+  dplyr::mutate(step = 1) |>
+  dplyr::bind_rows(
+    msm |>
+      dplyr::group_by(state) |>
+      dplyr::mutate(time = dplyr::lead(time), step = -1) |>
+      dplyr::ungroup()
+  ) |>
+  # drop rows where lead() produced NA time
+  dplyr::filter(!is.na(time)) |>
+  dplyr::arrange(time, state, step)
+
+ggplot(plot_data, aes(x = time, y = estimate_value, fill = state, group = state)) +
+  geom_area(color = "black") +
+  facet_wrap(~ group_level) +
+  coord_cartesian(xlim = c(0, 5*365)) +
+  scale_fill_manual(values = c(
+  "#4C6A92", "#7A9E7E", "#8C6A8C"
+)) +
+  labs(x = "Time",
+       y = "Probability",
+       fill = "State") +
+  theme_minimal() +
+  theme(
+    strip.text = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 12, face = "bold"),
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 12, face = "bold")
+  )
+```
+
+```{r msm by country}
+library(ggplot2)
+
+msm <- data[["mms_probabilities"]] |>
+  omopgenerics::splitAdditional() |>
+  dplyr::mutate(estimate_value = as.numeric(estimate_value),
+                time = as.numeric(time),
+                country = "UK")
+  
+msm_country <- data[["mms_probabilities_by_country"]] |>
+    tidyr::separate(group_level, into = c("group_level", "country"), sep = "_(?=[^_]+$)") |>
+    omopgenerics::splitAdditional() |>
+  dplyr::mutate(estimate_value = as.numeric(estimate_value),
+                time = as.numeric(time))
+
+plot_data <- rbind(msm, msm_country)
+
+
+plot_data <- plot_data |>
+  dplyr::filter(group_level %in% 
+                  c("antiplatelets_mi", "anticoagulants_mi",
+                    "antihypertensive_mi", "lipid_lowering_mi",
+                    "beta_blockers_mi")) |>
+  dplyr::mutate(estimate_value = as.numeric(estimate_value),
+                time = as.numeric(time),
+                group_level = dplyr::case_when(
+                    group_level == "beta_blockers_mi" ~ "Beta Blockers",
+                    group_level == "antiplatelets_mi" ~ "Antiplatelets",
+                    group_level == "anticoagulants_mi" ~ "Anticoagulants",
+                    group_level == "lipid_lowering_mi" ~ "Lipid Lowering",
+                    group_level == "antihypertensive_mi" ~ "Antihypertensives",
+                    TRUE ~ group_level
+                )) |>
+  dplyr::filter(!is.na(time)) |>
+  dplyr::arrange(time, state)
+
+ggplot(plot_data |> dplyr::filter(!is.na(country)), aes(x = time, y = estimate_value, fill = state, group = state)) +
+  geom_area(color = "black") +
+  facet_wrap(~ group_level + country, ncol = 5) +
+  coord_cartesian(xlim = c(0, 5*365)) +
+  scale_fill_manual(values = c(
+  "#4C6A92", "#7A9E7E", "#8C6A8C"
+)) +
+  labs(x = "Time",
+       y = "Probability",
+       fill = "State") +
+  theme_minimal() +
+  theme(
+    strip.text = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 12, face = "bold"),
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 12, face = "bold")
+  )
+
+
+plot_data_2 <- plot_data |>
+  dplyr::filter(state == "Treated")
+
+pos1 <- ggplot(plot_data_2 |> dplyr::filter(country != "UK"), aes(x = time, y = estimate_value, colour = country, group = country)) +
+  geom_line(linewidth = 1.2) +
+  facet_wrap(~ group_level) +
+  coord_cartesian(xlim = c(0, 5*365)) +
+  labs(x = "Time",
+       y = "Probability",
+       colour = "Country") +
+  scale_color_manual(
+    values = c("Wales" = "#C62828", "Scotland" = "#1565C0", "Northern Ireland" = "#2E7D32",
+               "England" = "#F9A825")) +
+  ylim(0, 1) +
+  theme_bw() +
+  theme(
+    strip.text = element_text(size = 20, face = "bold"),
+    axis.text = element_text(size = 16),
+    axis.title = element_text(size = 16, face = "bold"),
+    legend.text = element_text(size = 16),
+    legend.title = element_text(size = 16, face = "bold"),
+    legend.position = "bottom"
+  )
+
+pos1
+
+ggsave(filename = "poster1.png",
+       plot = pos1,
+       path = getwd(),
+       height = 20,
+       width = 30,
+       units = "cm",
+       dpi = 1000)
+
+plot_data_2 |> dplyr::filter(country != "UK")|> dplyr::filter(time %in% c(365)) |> dplyr::select(c(group_level, estimate_value, time, country))
+tbl <- plot_data_2 |> dplyr::filter(country != "UK")|> dplyr::group_by(country) |> dplyr::filter(time == max(time)) |> dplyr::ungroup() |> dplyr::select(c(group_level, estimate_value, time, country))
+```
+
+```{r msm by country 2}
+msm <- data[["mms_probabilities"]] |>
+  omopgenerics::splitAdditional() |>
+  dplyr::mutate(estimate_value = as.numeric(estimate_value),
+                time = as.numeric(time),
+                country = "UK")
+  
+msm_country <- data[["mms_probabilities_by_country"]] |>
+    tidyr::separate(group_level, into = c("group_level", "country"), sep = "_(?=[^_]+$)") |>
+    omopgenerics::splitAdditional() |>
+  dplyr::mutate(estimate_value = as.numeric(estimate_value),
+                time = as.numeric(time))
+
+plot_data <- rbind(msm, msm_country)
+
+
+plot_data <- plot_data |>
+  dplyr::filter(group_level %in% 
+                  c("aspirin_mi", "p2y12_inhibitors_mi",
+                    "antiplatelets_mi", "dual_antiplatelet_mi",
+                    "dipyridamole_mi")) |>
+  dplyr::mutate(group_level = dplyr::case_when(
+                    group_level == "aspirin_mi" ~ "Aspirin",
+                    group_level == "p2y12_inhibitors_mi" ~ "P2Y12 Inhibitors",
+                    group_level == "antiplatelets_mi" ~ "Antiplatelets",
+                    group_level == "dual_antiplatelet_mi" ~ "Dual Antiplatelet Therapy",
+                    group_level == "dipyridamole_mi" ~ "Dipyridamole",
+                    TRUE ~ group_level
+                )) |>
+  dplyr::filter(!is.na(time)) |>
+  dplyr::arrange(time, state)
+
+ggplot(plot_data, aes(x = time, y = estimate_value, fill = state, group = state)) +
+  geom_area(color = "black") +
+  facet_wrap(~ group_level + country, ncol = 5) +
+  coord_cartesian(xlim = c(0, 5*365)) +
+  scale_fill_manual(values = c(
+  "#4C6A92", "#7A9E7E", "#8C6A8C"
+)) +
+  labs(x = "Time",
+       y = "Probability",
+       fill = "State") +
+  theme_minimal() +
+  theme(
+    strip.text = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 12, face = "bold"),
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 12, face = "bold")
+  )
+
+```
+
+```{r cox coeff}
+coef_1 <- data[["cox_coefficients"]] |>
+  dplyr::filter(group_level %in% c("antiplatelets_mi", "anticoagulants_mi",
+                    "antihypertensive_mi", "lipid_lowering_mi",
+                    "beta_blockers_mi")) |>
+  tidyr::pivot_wider(
+    names_from = estimate_name,
+    values_from = estimate_value
+  ) |>
+  dplyr::mutate(
+    coef = as.numeric(coef),
+    se = as.numeric(se),
+    coef_exp = round(exp(coef), digits = 2),
+    lci = round(exp(coef - qnorm(0.975)*se), digits = 2),
+    uci = round(exp(coef + qnorm(0.975)*se), digits = 2)
+  ) |>
+  dplyr::filter(uci < 1000,
+                uci != "Inf") |>
+  dplyr::mutate(
+    trans = stringr::str_extract(variable_level, "(?<=trans=)\\d+") |> as.numeric(),
+    variable = stringr::str_extract(variable_level, "(?<=:)\\w+") |>
+               stringr::str_remove("^sex")
+  ) |>
+  dplyr::mutate(trans = dplyr::case_when(
+    trans == "1" ~ "Treatment -> No treatment",
+    trans == "2" ~ "No treatment -> Treatment",
+    trans == "3" ~ "Treatment -> Death",
+    trans == "4" ~ "No treatment -> Death"
+  )) |>
+    dplyr::mutate(
+                group_level = dplyr::case_when(
+                    group_level == "beta_blockers_mi" ~ "Beta Blockers",
+                    group_level == "antiplatelets_mi" ~ "Antiplatelets",
+                    group_level == "anticoagulants_mi" ~ "Anticoagulants",
+                    group_level == "lipid_lowering_mi" ~ "Lipid Lowering",
+                    group_level == "antihypertensive_mi" ~ "Antihypertensives"
+                )) |>
+  dplyr::filter(variable %in% c("Male"))
+
+coef_2 <- data[["cox_coefficients"]] |>
+  dplyr::filter(group_level %in% c("antiplatelets_mi", "anticoagulants_mi",
+                    "antihypertensive_mi", "lipid_lowering_mi",
+                    "beta_blockers_mi")) |>
+  tidyr::pivot_wider(
+    names_from = estimate_name,
+    values_from = estimate_value
+  ) |>
+  dplyr::mutate(
+    coef = as.numeric(coef),
+    se = as.numeric(se),
+    coef_exp = round(exp(coef), digits = 2),
+    lci = round(exp(coef - qnorm(0.975)*se), digits = 2),
+    uci = round(exp(coef + qnorm(0.975)*se), digits = 2)
+  ) |>
+  dplyr::filter(uci < 1000,
+                uci != "Inf") |>
+  dplyr::mutate(
+    trans = stringr::str_extract(variable_level, "(?<=trans=)\\d+") |> as.numeric(),
+    variable = stringr::str_extract(variable_level, "(?<=:)\\w+") |>
+               stringr::str_remove("^sex")
+  ) |>
+  dplyr::mutate(trans = dplyr::case_when(
+    trans == "1" ~ "Treatment -> No treatment",
+    trans == "2" ~ "No treatment -> Treatment",
+    trans == "3" ~ "Treatment -> Death",
+    trans == "4" ~ "No treatment -> Death"
+  )) |>
+    dplyr::mutate(
+                group_level = dplyr::case_when(
+                    group_level == "beta_blockers_mi" ~ "Beta Blockers",
+                    group_level == "antiplatelets_mi" ~ "Antiplatelets",
+                    group_level == "anticoagulants_mi" ~ "Anticoagulants",
+                    group_level == "lipid_lowering_mi" ~ "Lipid Lowering",
+                    group_level == "antihypertensive_mi" ~ "Antihypertensives"
+                )) |>
+  dplyr::filter(variable %in% c("ses1", "ses3", "ses4", "ses2"))
+
+coef_3 <- data[["cox_coefficients"]] |>
+  dplyr::filter(group_level %in% c("antiplatelets_mi", "anticoagulants_mi",
+                    "antihypertensive_mi", "lipid_lowering_mi",
+                    "beta_blockers_mi")) |>
+  tidyr::pivot_wider(
+    names_from = estimate_name,
+    values_from = estimate_value
+  ) |>
+  dplyr::mutate(
+    coef = as.numeric(coef),
+    se = as.numeric(se),
+    coef_exp = round(exp(coef), digits = 2),
+    lci = round(exp(coef - qnorm(0.975)*se), digits = 2),
+    uci = round(exp(coef + qnorm(0.975)*se), digits = 2)
+  ) |>
+  dplyr::filter(uci < 1000,
+                uci != "Inf") |>
+  dplyr::mutate(
+    trans = stringr::str_extract(variable_level, "(?<=trans=)\\d+") |> as.numeric(),
+    variable = stringr::str_extract(variable_level, "(?<=:)\\w+") |>
+               stringr::str_remove("^sex")
+  ) |>
+  dplyr::mutate(trans = dplyr::case_when(
+    trans == "1" ~ "Treatment -> No treatment",
+    trans == "2" ~ "No treatment -> Treatment",
+    trans == "3" ~ "Treatment -> Death",
+    trans == "4" ~ "No treatment -> Death"
+  )) |>
+    dplyr::mutate(
+                group_level = dplyr::case_when(
+                    group_level == "beta_blockers_mi" ~ "Beta Blockers",
+                    group_level == "antiplatelets_mi" ~ "Antiplatelets",
+                    group_level == "anticoagulants_mi" ~ "Anticoagulants",
+                    group_level == "lipid_lowering_mi" ~ "Lipid Lowering",
+                    group_level == "antihypertensive_mi" ~ "Antihypertensives"
+                )) |>
+  dplyr::filter(!variable %in% c("ses2", "ses3", "ses4", "ses1", "Male"))
+
+pdv <- ggstance::position_dodgev(height = 0.6)
+
+p2 <- ggplot(coef_1, aes(x = coef_exp, y = trans, colour = variable)) +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "grey40") +
+  geom_point(size = 3, position = pdv) +
+  geom_errorbarh(aes(xmin = lci, xmax = uci), height = 0.2,
+                 position = pdv) +
+  facet_wrap( ~ group_level) +
+  labs(
+    x = "Hazard ratio (log scale) with 95% CI",
+    y = NULL,
+    colour = "Variable"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    panel.grid.minor = element_blank(),
+    axis.text.y = element_text(hjust = 0)
+  ) +
+  theme(
+    strip.text = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 12, face = "bold"),
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 12, face = "bold")
+  )
+
+ggsave(plot = p2,
+       filename = "msm_coef_sex.png",
+       bg = "white",
+       width = 16,
+       height = 10,
+       dpi = 600)
+
+p3 <- ggplot(coef_2, aes(x = coef_exp, y = trans, colour = variable)) +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "grey40") +
+  geom_point(size = 3, position = pdv) +
+  geom_errorbarh(aes(xmin = lci, xmax = uci), height = 0.2,
+                 position = pdv) +
+  facet_wrap( ~ group_level) +
+  labs(
+    x = "Hazard ratio (log scale) with 95% CI",
+    y = NULL,
+    colour = "Variable"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    panel.grid.minor = element_blank(),
+    axis.text.y = element_text(hjust = 0)
+  ) +
+  theme(
+    strip.text = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 12, face = "bold"),
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 12, face = "bold")
+  )
+
+ggsave(plot = p3,
+       filename = "msm_coef_ses.png",
+       bg = "white",
+       width = 16,
+       height = 10,
+       dpi = 600)
+
+p4 <- ggplot(coef_3, aes(x = coef_exp, y = trans, colour = variable)) +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "grey40") +
+  geom_point(size = 3, position = pdv) +
+  geom_errorbarh(aes(xmin = lci, xmax = uci), height = 0.2,
+                 position = pdv) +
+  facet_wrap( ~ group_level) +
+  labs(
+    x = "Hazard ratio (log scale) with 95% CI",
+    y = NULL,
+    colour = "Variable"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    panel.grid.minor = element_blank(),
+    axis.text.y = element_text(hjust = 0)
+  ) +
+  theme(
+    strip.text = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 12, face = "bold"),
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 12, face = "bold")
+  )
+
+ggsave(plot = p4,
+       filename = "msm_coef_age.png",
+       bg = "white",
+       width = 16,
+       height = 10,
+       dpi = 600)
+
+p2
+p3
+p4
+```
+
+```{r cox coeff by country}
+coef <- data[["cox_coefficients_by_country"]] |>
+  tidyr::separate(group_level, into = c("group_level", "country"), sep = "_(?=[^_]+$)") |>
+  dplyr::filter(group_level %in% c("antiplatelets_mi", "anticoagulants_mi",
+                    "antihypertensive_mi", "lipid_lowering_mi",
+                    "beta_blockers_mi")) |>
+  tidyr::pivot_wider(
+    names_from = estimate_name,
+    values_from = estimate_value
+  ) |>
+  dplyr::mutate(
+    coef = as.numeric(coef),
+    se = as.numeric(se),
+    coef_exp = round(exp(coef), digits = 2),
+    lci = round(exp(coef - qnorm(0.975)*se), digits = 2),
+    uci = round(exp(coef + qnorm(0.975)*se), digits = 2)
+  ) |>
+  dplyr::filter(uci < 10,
+                uci != "Inf") |>
+  dplyr::mutate(
+    trans = stringr::str_extract(variable_level, "(?<=trans=)\\d+") |> as.numeric(),
+    variable = stringr::str_extract(variable_level, "(?<=:)\\w+") |>
+               stringr::str_remove("^sex")
+  ) |>
+  dplyr::mutate(trans = dplyr::case_when(
+    trans == "1" ~ "Treatment -> No treatment",
+    trans == "2" ~ "No treatment -> Treatment",
+    trans == "3" ~ "Treatment -> Death",
+    trans == "4" ~ "No treatment -> Death"),
+    group_level = dplyr::case_when(
+                    group_level == "beta_blockers_mi" ~ "Beta Blockers",
+                    group_level == "antiplatelets_mi" ~ "Antiplatelets",
+                    group_level == "anticoagulants_mi" ~ "Anticoagulants",
+                    group_level == "lipid_lowering_mi" ~ "Lipid Lowering",
+                    group_level == "antihypertensive_mi" ~ "Antihypertensives",
+                    TRUE ~ group_level
+                ))
+
+pdv <- ggstance::position_dodgev(height = 0.6)
+
+pos2 <- ggplot(coef |> dplyr::filter(variable == "Male"), aes(x = coef_exp, y = trans, colour = country)) +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "grey40") +
+  geom_point(size = 3, position = pdv) +
+  geom_errorbarh(aes(xmin = lci, xmax = uci), height = 0.2,
+                 position = pdv) +
+  facet_wrap( ~ group_level) +
+  labs(
+    x = "Hazard ratios with 95% CI",
+    y = NULL,
+    colour = "Country"
+  ) +
+  theme_bw() +
+  theme(
+    strip.text = element_text(size = 20, face = "bold"),
+    axis.text = element_text(size = 16),
+    axis.title = element_text(size = 16, face = "bold"),
+    legend.text = element_text(size = 16),
+    legend.title = element_text(size = 16, face = "bold"),
+    legend.position = "bottom"
+  ) +
+    scale_color_manual(
+    values = c("Wales" = "#C62828", "Scotland" = "#1565C0", "Northern Ireland" = "#2E7D32",
+               "England" = "#F9A825")) 
+
+pos2 
+
+ggsave(filename = "poster2.png",
+       plot = pos2,
+       path = getwd(),
+       height = 20,
+       width = 30,
+       units = "cm",
+       dpi = 1000)
+
+ggplot(coef |> dplyr::filter(variable %in% c("ses1")), aes(x = coef_exp, y = trans, colour = country,
+                                                                                   shape = variable)) +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "grey40") +
+  geom_point(size = 3, position = pdv) +
+  geom_errorbarh(aes(xmin = lci, xmax = uci), height = 0.2,
+                 position = pdv) +
+  facet_wrap( ~ group_level) +
+  labs(
+    x = "Hazard ratio (log scale) with 95% CI",
+    y = NULL,
+    colour = "Country",
+    shape = "Socio-Economic Status"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    panel.grid.minor = element_blank(),
+    axis.text.y = element_text(hjust = 0)
+  )
+
+ggplot(coef |> dplyr::filter(!variable %in% c("Male", "ses1", "ses2", "ses3", "ses4"), trans %in% c("Treatment -> No treatment","No treatment -> Treatment")), aes(x = coef_exp, y = trans, colour = variable)) +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "grey40") +
+  geom_point(size = 3, position = pdv) +
+  geom_errorbarh(aes(xmin = lci, xmax = uci), height = 0.2,
+                 position = pdv) +
+  facet_wrap( ~ group_level + country, ncol = 4) +
+  labs(
+    x = "Hazard ratios with 95% CI",
+    y = NULL,
+    colour = "Variable"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    panel.grid.minor = element_blank(),
+    axis.text.y = element_text(hjust = 0)
+  )
+
+coef |> dplyr::filter(variable == "ses1") |> dplyr::select(group_level, country, coef_exp, lci, uci, trans)
+```
