@@ -48,7 +48,7 @@ logMessage("INSTANTIATED OUTCOME COHORTS")
 
 logMessage("INSTANTIATING DRUG COHORTS")
 source(here("Cohorts", "InstantiateDrugCohorts.R"))
-logMessage("PRIMARY CARE COHORTS INSTANTIATED")
+logMessage("DRUG COHORTS INSTANTIATED")
 
 logMessage("RUN MULTI STATE")
 source(here("Analyses", "multistate.R"))
