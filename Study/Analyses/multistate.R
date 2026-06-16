@@ -1,25 +1,30 @@
-# prepare data drug episodes - MI
-mi_drugs_count <- cdm$mi_drugs_final |>
+cohort_ids <- cdm$study_final|>
   collect() |>
-  group_by(cohort_definition_id) |>
+  group_by(cohort_definition_id) |> 
   distinct(subject_id) |>
   tally() |>
   filter(n >= 100) |>
   pull(cohort_definition_id)
 
-if(length(mi_drugs_count) > 0){
 if(db_name == "GOLD" | db_name == "GOLD_100k"){
-cdm$mi_drugs_msm <- cdm$mi_drugs_final |>
+cdm$msm_cohorts <- cdm$study_final |>
   subsetCohorts(
-    cohortId = mi_drugs_count,
-    name = "mi_drugs_msm"
-  )  |>
+    cohortId = cohort_ids,
+    name = "msm_cohorts"
+  ) |>
+  PatientProfiles::addCohortIntersectDate(
+    window = c(-Inf, Inf),
+    censorDate = "cohort_end_date",
+    targetCohortTable = "acute_mi_first",
+    nameStyle = "mi_date",
+    name = "msm_cohorts"
+  ) |>
   addDemographics(
     sex = TRUE,
-    age = FALSE,
+    age = TRUE,
     priorObservation = FALSE,
     futureObservation = FALSE,
-    name = "mi_drugs_msm",
+    name = "msm_cohorts",
     ageGroup = list(
       "18 to 39" = c(18, 39),
       "40 to 49" = c(40, 49),
@@ -27,22 +32,30 @@ cdm$mi_drugs_msm <- cdm$mi_drugs_final |>
       "60 to 69" = c(60, 69),
       "70 to 79" = c(70, 79),
       "80 to 89" = c(80, 89),
-      "90+" = c(90, 150))
+      "90+" = c(90, 150)),
+    indexDate = "mi_date"
   ) |>
   addSES() |>
   addCountry()
 } else {
-  cdm$mi_drugs_msm <- cdm$mi_drugs_final |>
+  cdm$msm_cohorts <- cdm$study_final |>
     subsetCohorts(
-      cohortId = mi_drugs_count,
-      name = "mi_drugs_msm"
-    )  |>
+      cohortId = cohort_ids,
+      name = "msm_cohorts"
+    ) |>
+    PatientProfiles::addCohortIntersectDate(
+      window = c(-Inf, Inf),
+      censorDate = "cohort_end_date",
+      targetCohortTable = "acute_mi_first",
+      nameStyle = "mi_date",
+      name = "msm_cohorts"
+    )|>
     addDemographics(
       sex = TRUE,
-      age = FALSE,
+      age = TRUE,
       priorObservation = FALSE,
       futureObservation = FALSE,
-      name = "mi_drugs_msm",
+      name = "msm_cohorts",
       ageGroup = list(
         "18 to 39" = c(18, 39),
         "40 to 49" = c(40, 49),
@@ -50,73 +63,16 @@ cdm$mi_drugs_msm <- cdm$mi_drugs_final |>
         "60 to 69" = c(60, 69),
         "70 to 79" = c(70, 79),
         "80 to 89" = c(80, 89),
-        "90+" = c(90, 150))
+        "90+" = c(90, 150)),
+      indexDate = "mi_date"
     ) |>
     addSES()
 }
-}
 
-stroke_drugs_count <- cdm$stroke_drugs_final |>
-  collect() |>
-  group_by(cohort_definition_id) |>
-  distinct(subject_id) |>
-  tally() |>
-  filter(n >= 100) |>
-  pull(cohort_definition_id)
+nm_1 <- omopgenerics::uniqueTableName()
 
-if(length(stroke_drugs_count) > 0){
 if(db_name == "GOLD" | db_name == "GOLD_100k"){
-cdm$stroke_drugs_msm <- cdm$stroke_drugs_final |>
-  subsetCohorts(
-    cohortId = stroke_drugs_count,
-    name = "stroke_drugs_msm"
-  ) |>
-  addDemographics(
-    sex = TRUE,
-    age = FALSE,
-    priorObservation = FALSE,
-    futureObservation = FALSE,
-    name = "stroke_drugs_msm",
-    ageGroup = list(
-      "18 to 39" = c(18, 39),
-      "40 to 49" = c(40, 49),
-      "50 to 59" = c(50, 59),
-      "60 to 69" = c(60, 69),
-      "70 to 79" = c(70, 79),
-      "80 to 89" = c(80, 89),
-      "90+" = c(90, 150))
-  ) |>
-  addSES() |>
-  addCountry()
-} else {
-cdm$stroke_drugs_msm <- cdm$stroke_drugs_final |>
-    subsetCohorts(
-      cohortId = stroke_drugs_count,
-      name = "stroke_drugs_msm"
-    ) |>
-    addDemographics(
-      sex = TRUE,
-      age = FALSE,
-      priorObservation = FALSE,
-      futureObservation = FALSE,
-      name = "stroke_drugs_msm",
-      ageGroup = list(
-        "18 to 39" = c(18, 39),
-        "40 to 49" = c(40, 49),
-        "50 to 59" = c(50, 59),
-        "60 to 69" = c(60, 69),
-        "70 to 79" = c(70, 79),
-        "80 to 89" = c(80, 89),
-        "90+" = c(90, 150))
-    ) |>
-    addSES()
-}
-}
-
-if(length(mi_drugs_count) > 0){
-  nm_1 <- omopgenerics::uniqueTableName()
-  if(db_name == "GOLD" | db_name == "GOLD_100k"){
-xd_1 <- cdm$mi_drugs_msm |>
+xd <- cdm$msm_cohorts |>
   addCohortName() |>
   group_by(cohort_name, subject_id, age_group, sex, ses) |>
   mutate(t0 = min(cohort_start_date, na.rm = TRUE)) |>
@@ -141,7 +97,7 @@ xd_1 <- cdm$mi_drugs_msm |>
   arrange(cohort_name, subject_id, start_drug) |>
   filter(second_event > 0)
   } else {
-    xd_1 <- cdm$mi_drugs_msm |>
+    xd <- cdm$msm_cohorts |>
       addCohortName() |>
       group_by(cohort_name, subject_id, age_group, sex, ses) |>
       mutate(t0 = min(cohort_start_date, na.rm = TRUE)) |>
@@ -166,79 +122,9 @@ xd_1 <- cdm$mi_drugs_msm |>
       arrange(cohort_name, subject_id, start_drug) |>
       filter(second_event > 0)
 }
-  omopgenerics::dropSourceTable(cdm = cdm, name = nm_1)
-} else {
-  cli::cli_alert_info("Insufficient cohort counts for MI treatment - skipping multistate model")
-}
 
-if(length(stroke_drugs_count) > 0){
-nm_2 <- omopgenerics::uniqueTableName()
-if(db_name == "GOLD" | db_name == "GOLD_100k"){
-xd_2 <- cdm$stroke_drugs_msm |>
-  addCohortName() |>
-  group_by(cohort_name, subject_id, age_group, sex, ses) |>
-  mutate(t0 = min(cohort_start_date, na.rm = TRUE)) |>
-  ungroup() |>
-  mutate(
-    start_discontinuation = date_count_between(t0, cohort_end_date),
-    start_drug = date_count_between(t0, cohort_start_date)
-  ) |>
-  compute(name = nm_2) |>
-  addDeathDays(indexDate = "t0", name = nm_2) |>
-  addFutureObservation(indexDate = "t0", futureObservationType = "days", name = nm_2) |>
-  addCohortIntersectDays(indexDate = "t0", targetCohortTable = "stroke_second", window = c(-Inf,Inf)) |>
-  rename(second_event = stroke_broad_minf_to_inf) |>
-  select("cohort_name", "subject_id", "age_group", "sex", "ses", "country", "start_drug", "start_discontinuation", "days_to_death", "future_observation", "second_event") |>
-  collect() |>
-  mutate(
-    days_to_death = coalesce(days_to_death, 9999L),
-    second_event = coalesce(second_event, 9999L),
-    future_observation = pmin(days_to_death, future_observation, second_event),
-    start_discontinuation = start_discontinuation + 1
-  ) |>
-  arrange(cohort_name, subject_id, start_drug) |>
-  filter(second_event > 0)
+omopgenerics::dropSourceTable(cdm = cdm, name = nm_1)
 
-  omopgenerics::dropSourceTable(cdm = cdm, name = nm_2)
-} else {
-  xd_2 <- cdm$stroke_drugs_msm |>
-    addCohortName() |>
-    group_by(cohort_name, subject_id, age_group, sex, ses) |>
-    mutate(t0 = min(cohort_start_date, na.rm = TRUE)) |>
-    ungroup() |>
-    mutate(
-      start_discontinuation = date_count_between(t0, cohort_end_date),
-      start_drug = date_count_between(t0, cohort_start_date)
-    ) |>
-    compute(name = nm_2) |>
-    addDeathDays(indexDate = "t0", name = nm_2) |>
-    addFutureObservation(indexDate = "t0", futureObservationType = "days", name = nm_2) |>
-    addCohortIntersectDays(indexDate = "t0", targetCohortTable = "stroke_second", window = c(-Inf,Inf)) |>
-    rename(second_event = stroke_broad_minf_to_inf) |>
-    select("cohort_name", "subject_id", "age_group", "sex", "ses",  "start_drug", "start_discontinuation", "days_to_death", "future_observation", "second_event") |>
-    collect() |>
-    mutate(
-      days_to_death = coalesce(days_to_death, 9999L),
-      second_event = coalesce(second_event, 9999L),
-      future_observation = pmin(days_to_death, future_observation, second_event),
-      start_discontinuation = start_discontinuation + 1
-    ) |>
-    arrange(cohort_name, subject_id, start_drug) |>
-    filter(second_event > 0)
-  
-  omopgenerics::dropSourceTable(cdm = cdm, name = nm_2)
-}
-} else {
-  cli::cli_alert_info("Insufficient cohort counts for stroke treatment - skipping multistate model")
-}
-
-if(length(mi_drugs_count) > 0 & length(stroke_drugs_count) > 0) {
-  xd <- bind_rows(xd_1,xd_2)
-} else if(length(mi_drugs_count) > 0 & length(stroke_drugs_count) == 0) {
-  xd <- xd_1
-} else if(length(mi_drugs_count) == 0 & length(stroke_drugs_count) > 0) {
-  xd <- xd_2
-}
 
 # transitions
 tmat <- matrix(NA, 3, 3)
@@ -278,19 +164,19 @@ if(db_name == "GOLD" | db_name == "GOLD_100k"){
 transitionsUntreated <- xd |>
   filter(start_discontinuation < future_observation) |>
   group_by(cohort_name, subject_id) |>
-  mutate(start_drug = coalesce(lead(start_drug), 9999L)) |>
+  mutate(restart_drug = coalesce(lead(start_drug), 9999L)) |>
   ungroup() |>
   mutate(
     transition = case_when(
-      days_to_death <= future_observation & days_to_death <= start_drug ~ "death",
-      future_observation <= start_drug ~ "censor",
+      days_to_death <= future_observation & days_to_death <= restart_drug ~ "death",
+      future_observation <= restart_drug ~ "censor",
       .default = "restart"
     ),
     Tstart = start_discontinuation, 
     Tstop = case_when(
       transition == "death" ~ days_to_death,
       transition == "censor" ~ future_observation,
-      transition == "restart" ~ start_drug
+      transition == "restart" ~ restart_drug
     )
   ) 
 
@@ -403,28 +289,47 @@ for (coh in cohorts) {
     )
   
   cli::cli_inform(c(i = "Fitting MS model for {.pkg {coh}}"))
-  
-  # fit probabilities over time (unadjusted model)
-  cox_mod <- coxph(
-    Surv(Tstart, Tstop, status) ~ strata(trans) + cluster(subject_id),
-    data = msdata
+    
+  # Fit the transition-specific Cox model with covariates
+  cox_mod_adj <- coxph(
+    Surv(Tstart, Tstop, status) ~ age_group + sex + ses + strata(trans) + cluster(subject_id),
+    data = msdata,
+    method = "breslow"
   )
   
-  msf <- msfit(cox_mod, trans = tmat) 
-  pt_list <- probtrans(msf, predt = 0)
+  # Build one row per transition, using the covariate values you want predictions for
+  # Replace these with your chosen reference values or a specific profile
+  newdata_adj <- data.frame(
+    trans  = seq_len(max(msdata$trans)),
+    strata = seq_len(max(msdata$trans)),
+    age_group    = factor("60 to 69", levels = levels(msdata$age_group)),
+    sex    = factor("Female", levels = levels(msdata$sex)),
+    ses    = factor("5", levels = levels(msdata$ses))
+  )
   
-  xp <- pt_list[[1]] |>
+  msf_adj <- msfit(cox_mod_adj, newdata = newdata_adj, trans = tmat)
+  pt_adj  <- probtrans(msf_adj, predt = 0)
+  
+  xp_adj <- pt_adj[[1]] |>
     as_tibble() |>
     select(time, pstate1, pstate2, pstate3) |>
-    pivot_longer(starts_with("pstate"), names_to = "state", values_to = "probability") |>
-    mutate(state = recode(state, pstate1 = "Treated", pstate2 = "Discontinued", pstate3 = "Death"))|>
+    pivot_longer(starts_with("pstate"),
+                 names_to = "state",
+                 values_to = "probability") |>
+    mutate(
+      state = recode(state,
+                     pstate1 = "Treated",
+                     pstate2 = "Discontinued",
+                     pstate3 = "Death"),
+      cohort_name = coh,
+      result_type = "mms_probabilities"
+    ) |>
     arrange(time, state) |>
-    mutate(cohort_name = coh,
-           result_type = "mms_probabilities") |>
     filter(time <= 1830)
+  ######
   
   sum_xp <- omopgenerics::transformToSummarisedResult(
-    x = xp,
+    x = xp_adj,
     group = c("cohort_name"),
     estimates = c("probability"),
     additional = c("time", "state"),
@@ -435,33 +340,11 @@ for (coh in cohorts) {
   
   msm_results[[paste0("msm_prob_",coh)]] <- sum_xp
   
-  # fit adjusted model
+  # coefficients
   
-  sex_count <- length(unique(msdata$sex))
-  ses_count <- length(unique(msdata$ses))
-  age_group_count <- length(unique(msdata$age_group))
-  
-  if (sex_count < 2 & ses_count < 2 & age_group_count < 2) {
-    cli::cli_alert_info("Insufficient levels in strata for cohort {.pkg {coh}}. Skipping multistate model.")
-  } else {
-    
-    form <- "Surv(Tstart, Tstop, status) ~ "
-    if (sex_count > 1) {
-      form <- paste0(form, "sex:strata(trans) + ")
-    }
-    if (ses_count > 1) {
-      form <- paste0(form, "ses:strata(trans) + ")
-    }
-    if (age_group_count > 1) {
-      form <- paste0(form, "age_group:strata(trans) + ")
-    }
-    form <- paste0(form, "strata(trans) + cluster(subject_id)") |>
-      as.formula()
-    
-    # fit adjusted model
     res_coef <- tryCatch({
-      cox_mod <- coxph(formula = form, data = msdata)
-      
+      cox_mod <- coxph(Surv(Tstart, Tstop, status) ~ age_group:strata(trans) + sex:strata(trans) + ses:strata(trans) + strata(trans) + cluster(subject_id), 
+                       data = msdata)
       # extract coefficients
       tidy(cox_mod) |>
         select("variable_level" = "term", "coef" = "estimate", "se" = "std.error", "se_robust" = "robust.se") |>
@@ -484,7 +367,6 @@ for (coh in cohorts) {
     msm_results[[paste0("msm_coef_",coh)]] <- res_coef
     
   }
-}
 
 all_msm_results <- msm_results |>
   purrr::compact() |>
@@ -504,39 +386,59 @@ if(db_name == "GOLD" | db_name == "GOLD_100k"){
   
   for (coh in cohorts) {
     for(cou in countries){
+  
     msdata <- x |>
       filter(cohort_name == coh,
-             country == cou) |>
-      mutate(
+             country == cou)
+    
+    if("60 to 69" %in% msdata$age_group & "5" %in% msdata$ses & "Female" %in% msdata$sex){
+      msdata <- msdata |>
+        mutate(
         sex = relevel(factor(sex), ref = "Female"),
         age_group = relevel(factor(age_group), ref = "60 to 69"),
         ses = relevel(factor(ses), ref = "5"),
         cohort_name = paste0(coh, "_", cou)
       )
-    
+      
     cli::cli_inform(c(i = "Fitting MS model for {.pkg {coh} {cou}}"))
     
-    # fit probabilities over time (unadjusted model)
-    cox_mod <- coxph(
-      Surv(Tstart, Tstop, status) ~ strata(trans) + cluster(subject_id),
-      data = msdata
+    # fit probabilities over time 
+    cox_mod_adj <- coxph(
+      Surv(Tstart, Tstop, status) ~ age_group + sex + ses + strata(trans) + cluster(subject_id),
+      data = msdata,
+      method = "breslow"
+    )
+    newdata_adj <- data.frame(
+      trans  = seq_len(max(msdata$trans)),
+      strata = seq_len(max(msdata$trans)),
+      age_group    = factor("60 to 69", levels = levels(msdata$age_group)),
+      sex    = factor("Female", levels = levels(msdata$sex)),
+      ses    = factor("5", levels = levels(msdata$ses))
     )
     
-    msf <- msfit(cox_mod, trans = tmat) 
-    pt_list <- probtrans(msf, predt = 0)
+    msf_adj <- msfit(cox_mod_adj, newdata = newdata_adj, trans = tmat)
+    pt_adj  <- probtrans(msf_adj, predt = 0)
     
-    xp <- pt_list[[1]] |>
+    xp_adj <- pt_adj[[1]] |>
       as_tibble() |>
       select(time, pstate1, pstate2, pstate3) |>
-      pivot_longer(starts_with("pstate"), names_to = "state", values_to = "probability") |>
-      mutate(state = recode(state, pstate1 = "Treated", pstate2 = "Discontinued", pstate3 = "Death"))|>
+      pivot_longer(starts_with("pstate"),
+                   names_to = "state",
+                   values_to = "probability") |>
+      mutate(
+        state = recode(state,
+                       pstate1 = "Treated",
+                       pstate2 = "Discontinued",
+                       pstate3 = "Death"),
+        cohort_name = paste0(coh, "_", cou),
+        result_type = "mms_probabilities"
+      ) |>
       arrange(time, state) |>
-      mutate(cohort_name = paste0(coh, "_", cou),
-             result_type = "mms_probabilities_by_country") |>
       filter(time <= 1830)
+    ######
     
     sum_xp <- omopgenerics::transformToSummarisedResult(
-      x = xp,
+      x = xp_adj,
       group = c("cohort_name"),
       estimates = c("probability"),
       additional = c("time", "state"),
@@ -548,40 +450,18 @@ if(db_name == "GOLD" | db_name == "GOLD_100k"){
     msm_results_by_country[[paste0("msm_prob_",coh, "_", cou)]] <- sum_xp
     
     # fit adjusted model
-    
-    sex_count <- length(unique(msdata$sex))
-    ses_count <- length(unique(msdata$ses))
-    age_group_count <- length(unique(msdata$age_group))
-    
-    if (sex_count < 2 & ses_count < 2 & age_group_count < 2) {
-      cli::cli_alert_info("Insufficient levels in strata for cohort {.pkg {coh}}. Skipping multistate model.")
-    } else {
-      
-      form <- "Surv(Tstart, Tstop, status) ~ "
-      if (sex_count > 1) {
-        form <- paste0(form, "sex:strata(trans) + ")
-      }
-      if (ses_count > 1) {
-        form <- paste0(form, "ses:strata(trans) + ")
-      }
-      if (age_group_count > 1) {
-        form <- paste0(form, "age_group:strata(trans) + ")
-      }
-      form <- paste0(form, "strata(trans) + cluster(subject_id)") |>
-        as.formula()
       
       # fit adjusted model
       res_coef <- tryCatch({
-        cox_mod <- coxph(formula = form, data = msdata)
-        
-        # extract coefficients
+        cox_mod <- coxph(Surv(Tstart, Tstop, status) ~ age_group:strata(trans) + sex:strata(trans) + ses:strata(trans) + strata(trans) + cluster(subject_id), 
+                         data = msdata)
         tidy(cox_mod) |>
           select("variable_level" = "term", "coef" = "estimate", "se" = "std.error", "se_robust" = "robust.se") |>
           mutate(
             cohort_name = paste0(coh, "_", cou),
             cdm_name = omopgenerics::cdmName(cdm),
             variable_name = "Cox regression coefficients",
-            result_type = "cox_coefficients_by_country"
+            result_type = "cox_coefficients"
           ) |>
           omopgenerics::transformToSummarisedResult(
             group = c("cohort_name"),
@@ -594,9 +474,11 @@ if(db_name == "GOLD" | db_name == "GOLD_100k"){
       })
       
       msm_results_by_country[[paste0("msm_coef_",coh, "_", cou)]] <- res_coef
-    }
+    } else {
+      cli::cli_inform(c(i = "Missing reference groups for {.pkg {coh} {cou}}. Skipped."))
     }
   }
+}
   
   country_msm_results <- msm_results_by_country |>
     purrr::compact() |>
@@ -604,5 +486,6 @@ if(db_name == "GOLD" | db_name == "GOLD_100k"){
     omopgenerics::newSummarisedResult()
   
   results[["msm_by_country"]] <- country_msm_results
+  
   
 }

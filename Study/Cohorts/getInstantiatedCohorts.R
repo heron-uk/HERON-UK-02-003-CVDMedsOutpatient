@@ -1,0 +1,15 @@
+cdm <- CDMConnector::cdmFromCon(con = db,
+                                cdmSchema = cdm_schema,
+                                writeSchema = write_schema,
+                                cohortTables = c("acute_mi_first",
+                                                 "acute_mi_second",
+                                                 "heart_failure",
+                                                 "obesity",
+                                                 "study_final",
+                                                 "study_first",
+                                                 "comorbs",
+                                                 "mi_drugs"
+                                ),
+                                writePrefix = study_prefix,
+                                achillesSchema = write_schema,
+                                cdmName = db_name)
