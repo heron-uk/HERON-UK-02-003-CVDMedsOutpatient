@@ -1,13 +1,13 @@
 # Cohort Counts + Attrition
 
-results[["cohort_count_bb"]] <- cdm$bb_first |>
+results[["cohort_count_drugs"]] <- cdm$study_first |>
   summariseCohortCount()
 
 results[["cohort_count_mis"]] <- cdm$acute_mi_first |>
   summariseCohortCount()
 
-results[["cohort_code_use_bb"]] <- summariseCohortCodeUse(
-  cohortTable = "bb_first",
+results[["cohort_code_use_drugs"]] <- summariseCohortCodeUse(
+  cohortTable = "study_first",
     cdm = cdm,
     timing = "entry"
   )
@@ -24,7 +24,7 @@ results[["cohort_code_use_mi"]] <- summariseCohortCodeUse(
   timing = "entry"
 )
 
-results[["cohort_attrition_bb"]] <- cdm$bb_first |>
+results[["cohort_attrition_drugs"]] <- cdm$study_first |>
   summariseCohortAttrition()
 
 results[["cohort_attrition_hf"]] <- cdm$heart_failure|>
@@ -33,12 +33,18 @@ results[["cohort_attrition_hf"]] <- cdm$heart_failure|>
 results[["cohort_attrition_mi"]] <- cdm$acute_mi_first |>
   summariseCohortAttrition()
 
+results[["orphan_codes_mi"]] <- summariseOrphanCodes(acute_mi_cl, cdm = cdm)
+
+results[["orphan_codes_hf"]] <- summariseOrphanCodes(hf_cl, cdm = cdm)
+
 ## Comorbidity Codelists
 
 comorbidities_cl <- CodelistGenerator::importCodelist(
   path = here::here("Cohorts", "comorbidities"),
   type = "csv"
 )
+
+results[["orphan_codes_comorbs"]] <- summariseOrphanCodes(comorbidities_cl, cdm = cdm)
 
 cdm$comorbs <- conceptCohort(
   cdm = cdm,
@@ -50,6 +56,12 @@ cdm <- omopgenerics::bind(
   cdm$comorbs,
   cdm$obesity,
   name = "comorbs"
+)
+
+results[["cohort_code_use_comorbs"]] <- summariseCohortCodeUse(
+  cohortTable = "comorbs",
+  cdm = cdm,
+  timing = "entry"
 )
   
 drugs_cl <- CodelistGenerator::importCodelist(
@@ -64,18 +76,17 @@ cdm$mi_drugs <- conceptCohort(
 )
 # Cohort Characteristics - MI
 
-cdm$bb_chars <- cdm$bb_first |>
+cdm$study_chars <- cdm$study_first |>
   addDemographics(
     sex = TRUE,
     age = TRUE,
     priorObservation = FALSE,
     futureObservation = FALSE,
-    name = "bb_chars"
+    name = "study_chars"
   )
 
 if(db_name == "GOLD" | db_name == "GOLD_100k"){
-cdm$bb_chars <- cdm$bb_chars |>
-  addCKDStage() |>
+cdm$study_chars <- cdm$study_chars |>
   addEthnicity() |>
   addSES() |>
   addCountry()
@@ -85,15 +96,14 @@ strata_list <- list(c("country"), c("age_group"), c("sex"), c("ses"),
                c("country", "sex"),
                c("country", "ses"))
 } else {
-  cdm$bb_chars <- cdm$bb_chars |>
-    addCKDStage() |>
+  cdm$study_chars <- cdm$study_chars |>
     addEthnicity() |>
     addSES()
   
   strata_list <- list(c("age_group"), c("sex"), c("ses"))
 }
 
-cdm$bb_chars <- cdm$bb_chars |>
+cdm$study_chars <- cdm$study_chars |>
   mutate(
     age_group = case_when(
       age >= 18 & age <= 39 ~ '18 to 39',
@@ -107,7 +117,7 @@ cdm$bb_chars <- cdm$bb_chars |>
     )
   )
 
-char_bb <- summariseCharacteristics(cdm$bb_chars,
+char <- summariseCharacteristics(cdm$study_chars,
                                     ageGroup = list(
                                       "18 to 39" = c(18, 39),
                                       "40 to 49" = c(40, 49),
@@ -117,10 +127,10 @@ char_bb <- summariseCharacteristics(cdm$bb_chars,
                                       "80 to 89" = c(80, 89),
                                       "90+" = c(90, 150)),
                                     cohortIntersectFlag = list(
-                                      "Prevalent users (-28 to -1)" = list(
+                                      "Drug Ingredient" = list(
                                         targetCohortTable = "mi_drugs",
                                         window = list(
-                                          c(-28, -1)
+                                          c(0, 0)
                                         )
                                       ),
                                       "Prior comorbidities (-Inf, -1)" = list(
@@ -134,4 +144,4 @@ char_bb <- summariseCharacteristics(cdm$bb_chars,
                                     otherVariables = c("ses", "ethnicity"))
 
 
-results[["summmarise_characteristics_bb"]] <- char_bb
+results[["summmarise_characteristics_bb"]] <- char
