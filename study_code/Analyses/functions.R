@@ -29,7 +29,6 @@ addSES <- function(cohort){
     cohort <- cohort |>
       PatientProfiles::addConceptIntersectField(
         conceptSet    = list(townsend = 715996L),
-        indexDate     = date_name,
         field         = "value_as_number",
         window        = list(c(-Inf, Inf)),
         order         = "last",

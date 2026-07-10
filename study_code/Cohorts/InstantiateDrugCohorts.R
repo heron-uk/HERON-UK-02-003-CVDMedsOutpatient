@@ -91,10 +91,22 @@ cdm <- omopgenerics::bind(
   name = "bb_final"
 )
 
+cdm <- omopgenerics::bind(
+  cdm$bb_hf_first,
+  cdm$bb_no_hf_first,
+  cdm$bb_first,
+  name = "bb_first"
+)
+
 } else {
   cdm <- omopgenerics::emptyCohortTable(
     cdm,
     "bb_final"
+  )
+  
+  cdm <- omopgenerics::emptyCohortTable(
+    cdm,
+    "bb_first"
   )
 }
 
