@@ -64,14 +64,25 @@ results[["cohort_code_use_comorbs"]] <- summariseCohortCodeUse(
   timing = "entry"
 )
   
-drugs_cl <- CodelistGenerator::importCodelist(
-  path = here::here("Cohorts", "table1_drugs"),
+bb_ingredient_cl <- CodelistGenerator::importCodelist(
+  path = here::here("Cohorts", "table1_drugs", "beta_blockers"),
+  type = "csv"
+)
+
+cdm$bb_ingredients <- conceptCohort(
+  cdm = cdm,
+  conceptSet = bb_ingredient_cl,
+  name = "bb_ingredients"
+)
+
+mi_drugs_cl <- CodelistGenerator::importCodelist(
+  path = here::here("Cohorts", "table1_drugs", "other"),
   type = "csv"
 )
 
 cdm$mi_drugs <- conceptCohort(
   cdm = cdm,
-  conceptSet = drugs_cl,
+  conceptSet = mi_drugs_cl,
   name = "mi_drugs"
 )
 # Cohort Characteristics - MI
@@ -127,10 +138,16 @@ char <- summariseCharacteristics(cdm$study_chars,
                                       "80 to 89" = c(80, 89),
                                       "90+" = c(90, 150)),
                                     cohortIntersectFlag = list(
-                                      "Drug Ingredient" = list(
-                                        targetCohortTable = "mi_drugs",
+                                      "Beta blocker ingredient" = list(
+                                        targetCohortTable = "bb_ingredients",
                                         window = list(
                                           c(0, 0)
+                                        )
+                                      ),
+                                      "Other drugs used" = list(
+                                        targetCohortTable = "mi_drugs",
+                                        window = list(
+                                          c(-28, 28)
                                         )
                                       ),
                                       "Prior comorbidities (-Inf, -1)" = list(
@@ -144,4 +161,4 @@ char <- summariseCharacteristics(cdm$study_chars,
                                     otherVariables = c("ses", "ethnicity"))
 
 
-results[["summmarise_characteristics_bb"]] <- char
+results[["summmarise_characteristics"]] <- char
