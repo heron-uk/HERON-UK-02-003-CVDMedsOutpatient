@@ -52,7 +52,7 @@ logMessage("DRUG COHORTS INSTANTIATED")
 
 logMessage("RUN MULTI STATE")
 source(here("Analyses", "multistate.R"))
-logMessage("DRUG ADHERENCE FINISHED")
+logMessage("MULTI STATE FINISHED")
 
 logMessage("RUN SUMMARISE CHARACTERISTICS")
 source(here("Analyses", "characteristics.R"))
