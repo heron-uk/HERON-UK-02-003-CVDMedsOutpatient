@@ -239,7 +239,7 @@ x <- transitionsTreated |>
       trans = 1L,
       status = if_else(transition == "discontinue", 1, 0)
     ) |>
-    select("cohort_name", "subject_id", "age_group", "sex", "ses", "country", "from", "to", "trans", "Tstart", "Tstop", "status") |>
+    select("cohort_name", "subject_id", "age_group", "sex", "ses", "from", "to", "trans", "Tstart", "Tstop", "status") |>
     # treated to death
     union_all(
       transitionsTreated |>
@@ -249,7 +249,7 @@ x <- transitionsTreated |>
           trans = 3L,
           status = if_else(transition == "death", 1, 0)
         ) |>
-        select("cohort_name", "subject_id","age_group", "sex", "ses", "country", "from", "to", "trans", "Tstart", "Tstop", "status")
+        select("cohort_name", "subject_id","age_group", "sex", "ses", "from", "to", "trans", "Tstart", "Tstop", "status")
     ) |>
     # untreated to treated
     union_all(
@@ -260,7 +260,7 @@ x <- transitionsTreated |>
           trans = 2L,
           status = if_else(transition == "restart", 1, 0)
         ) |>
-        select("cohort_name", "subject_id","age_group", "sex", "ses", "country", "from", "to", "trans", "Tstart", "Tstop", "status")
+        select("cohort_name", "subject_id","age_group", "sex", "ses", "from", "to", "trans", "Tstart", "Tstop", "status")
     ) |>
     # untreated to death
     union_all(
@@ -271,46 +271,39 @@ x <- transitionsTreated |>
           trans = 4L,
           status = if_else(transition == "death", 1, 0)
         ) |>
-        select("cohort_name", "subject_id","age_group", "sex", "ses", "country", "from", "to", "trans", "Tstart", "Tstop", "status")
+        select("cohort_name", "subject_id","age_group", "sex", "ses", "from", "to", "trans", "Tstart", "Tstop", "status")
     )
 }
 
 cohorts <- unique(x$cohort_name)
+sexes <- unique(x$sex)
+sesq <- unique(x$ses)
+age_groups <- unique(x$age_group)
 
-msm_results <- list()
+#Overall
+msm_overall_results <- list()
+
+if(db_name == "GOLD" | db_name == "GOLD_100k") {
+countries <- unique(x$country)
 
 for (coh in cohorts) {
+  for(cou in countries) {
   msdata <- x |>
-    filter(cohort_name == coh) |>
-    mutate(
-      sex = relevel(factor(sex), ref = "Female"),
-      age_group = relevel(factor(age_group), ref = "60 to 69"),
-      ses = relevel(factor(ses), ref = "5")
-    )
+    filter(cohort_name == coh,
+           country == cou) 
   
-  cli::cli_inform(c(i = "Fitting MS model for {.pkg {coh}}"))
+  cli::cli_inform(c(i = "Fitting MS model for {.pkg {coh} {cou}}"))
     
-  # Fit the transition-specific Cox model with covariates
-  cox_mod_adj <- coxph(
-    Surv(Tstart, Tstop, status) ~ age_group + sex + ses + strata(trans) + cluster(subject_id),
-    data = msdata,
-    method = "breslow"
+  # Fit the transition-specific Cox model
+  cox_mod <- coxph(
+    Surv(Tstart, Tstop, status) ~ strata(trans) + cluster(subject_id),
+    data = msdata
   )
   
-  # Build one row per transition, using the covariate values you want predictions for
-  # Replace these with your chosen reference values or a specific profile
-  newdata_adj <- data.frame(
-    trans  = seq_len(max(msdata$trans)),
-    strata = seq_len(max(msdata$trans)),
-    age_group    = factor("60 to 69", levels = levels(msdata$age_group)),
-    sex    = factor("Female", levels = levels(msdata$sex)),
-    ses    = factor("5", levels = levels(msdata$ses))
-  )
+  msf <- msfit(cox_mod, trans = tmat) 
+  pt_list <- probtrans(msf, predt = 0)
   
-  msf_adj <- msfit(cox_mod_adj, newdata = newdata_adj, trans = tmat)
-  pt_adj  <- probtrans(msf_adj, predt = 0)
-  
-  xp_adj <- pt_adj[[1]] |>
+  xp<- pt_list[[1]] |>
     as_tibble() |>
     select(time, pstate1, pstate2, pstate3) |>
     pivot_longer(starts_with("pstate"),
@@ -322,15 +315,17 @@ for (coh in cohorts) {
                      pstate2 = "Discontinued",
                      pstate3 = "Death"),
       cohort_name = coh,
-      result_type = "mms_probabilities"
+      country = cou,
+      result_type = "msm_probabilities"
     ) |>
     arrange(time, state) |>
     filter(time <= 1830)
   ######
   
   sum_xp <- omopgenerics::transformToSummarisedResult(
-    x = xp_adj,
+    x = xp,
     group = c("cohort_name"),
+    strata = c("country"),
     estimates = c("probability"),
     additional = c("time", "state"),
     settings = c("result_type")
@@ -338,88 +333,139 @@ for (coh in cohorts) {
     mutate(cdm_name = omopgenerics::cdmName(cdm))
   
   
-  msm_results[[paste0("msm_prob_",coh)]] <- sum_xp
-  
-  # coefficients
-  
-    res_coef <- tryCatch({
-      cox_mod <- coxph(Surv(Tstart, Tstop, status) ~ age_group:strata(trans) + sex:strata(trans) + ses:strata(trans) + strata(trans) + cluster(subject_id), 
-                       data = msdata)
-      # extract coefficients
-      tidy(cox_mod) |>
-        select("variable_level" = "term", "coef" = "estimate", "se" = "std.error", "se_robust" = "robust.se") |>
-        mutate(
-          cohort_name = coh,
-          cdm_name = omopgenerics::cdmName(cdm),
-          variable_name = "Cox regression coefficients",
-          result_type = "cox_coefficients"
-        ) |>
-        omopgenerics::transformToSummarisedResult(
-          group = c("cohort_name"),
-          estimates = c("coef", "se", "se_robust"),
-          settings = c("result_type")
-        )
-    }, error = function(e) {
-      cli::cli_inform(c("x" = "Model failed to fit: {.var {e}}"))
-      NULL
-    })
+  msm_overall_results[[paste0("msm_prob_",coh,"_",cou)]] <- sum_xp
     
-    msm_results[[paste0("msm_coef_",coh)]] <- res_coef
-    
-  }
-
-all_msm_results <- msm_results |>
-  purrr::compact() |>
-  omopgenerics::bind() |>
-  omopgenerics::newSummarisedResult()
-
-results[["msm"]] <- all_msm_results
-
-
-### MSM by Country
-if(db_name == "GOLD" | db_name == "GOLD_100k"){
-  
-  cohorts <- unique(x$cohort_name)
-  countries <- unique(x$country)
-  
-  msm_results_by_country <- list()
-  
+}
+}
+} else {
   for (coh in cohorts) {
-    for(cou in countries){
-  
-    msdata <- x |>
-      filter(cohort_name == coh,
-             country == cou)
-    
-    if("60 to 69" %in% msdata$age_group & "5" %in% msdata$ses & "Female" %in% msdata$sex){
-      msdata <- msdata |>
-        mutate(
-        sex = relevel(factor(sex), ref = "Female"),
-        age_group = relevel(factor(age_group), ref = "60 to 69"),
-        ses = relevel(factor(ses), ref = "5"),
-        cohort_name = paste0(coh, "_", cou)
+      msdata <- x |>
+        filter(cohort_name == coh) 
+      
+      cli::cli_inform(c(i = "Fitting MS model for {.pkg {coh}}"))
+      
+      # Fit the transition-specific Cox model
+      cox_mod <- coxph(
+        Surv(Tstart, Tstop, status) ~ strata(trans) + cluster(subject_id),
+        data = msdata
       )
       
-    cli::cli_inform(c(i = "Fitting MS model for {.pkg {coh} {cou}}"))
+      msf <- msfit(cox_mod, trans = tmat) 
+      pt_list <- probtrans(msf, predt = 0)
+      
+      xp<- pt_list[[1]] |>
+        as_tibble() |>
+        select(time, pstate1, pstate2, pstate3) |>
+        pivot_longer(starts_with("pstate"),
+                     names_to = "state",
+                     values_to = "probability") |>
+        mutate(
+          state = recode(state,
+                         pstate1 = "Treated",
+                         pstate2 = "Discontinued",
+                         pstate3 = "Death"),
+          cohort_name = coh,
+          result_type = "msm_probabilities"
+        ) |>
+        arrange(time, state) |>
+        filter(time <= 1830)
+      ######
+      
+      sum_xp <- omopgenerics::transformToSummarisedResult(
+        x = xp,
+        group = c("cohort_name"),
+        estimates = c("probability"),
+        additional = c("time", "state"),
+        settings = c("result_type")
+      ) |>
+        mutate(cdm_name = omopgenerics::cdmName(cdm))
+      
+      
+      msm_overall_results[[paste0("msm_prob_",coh)]] <- sum_xp
+      
+    }
+  }
+
+# By sex
+msm_sex_results <- list()
+
+if(db_name == "GOLD" | db_name == "GOLD_100k") {
+  countries <- unique(x$country)
+  
+  for (coh in cohorts) {
+    for(cou in countries) {
+      for(s in sexes){
+      msdata <- x |>
+        filter(cohort_name == coh,
+               country == cou, 
+               sex == s) 
+      
+      cli::cli_inform(c(i = "Fitting MS model for {.pkg {coh} {cou} {s}}"))
+      
+      # Fit the transition-specific Cox model
+      cox_mod <- coxph(
+        Surv(Tstart, Tstop, status) ~ strata(trans) + cluster(subject_id),
+        data = msdata
+      )
+      
+      msf <- msfit(cox_mod, trans = tmat) 
+      pt_list <- probtrans(msf, predt = 0)
+      
+      xp<- pt_list[[1]] |>
+        as_tibble() |>
+        select(time, pstate1, pstate2, pstate3) |>
+        pivot_longer(starts_with("pstate"),
+                     names_to = "state",
+                     values_to = "probability") |>
+        mutate(
+          state = recode(state,
+                         pstate1 = "Treated",
+                         pstate2 = "Discontinued",
+                         pstate3 = "Death"),
+          cohort_name = coh,
+          country = cou,
+          sex = s,
+          result_type = "msm_probabilities"
+        ) |>
+        arrange(time, state) |>
+        filter(time <= 1830)
+      ######
+      
+      sum_xp <- omopgenerics::transformToSummarisedResult(
+        x = xp,
+        group = c("cohort_name"),
+        strata = c("country", "sex"),
+        estimates = c("probability"),
+        additional = c("time", "state"),
+        settings = c("result_type")
+      ) |>
+        mutate(cdm_name = omopgenerics::cdmName(cdm))
+      
+      
+      msm_sex_results[[paste0("msm_prob_",coh,"_",cou, "_", s)]] <- sum_xp
+      
+    }
+    }
+  }
+} else {
+  for (coh in cohorts) {
+    for(s in sexes){
+    msdata <- x |>
+      filter(cohort_name == coh,
+             sex == s) 
     
-    # fit probabilities over time 
-    cox_mod_adj <- coxph(
-      Surv(Tstart, Tstop, status) ~ age_group + sex + ses + strata(trans) + cluster(subject_id),
-      data = msdata,
-      method = "breslow"
+    cli::cli_inform(c(i = "Fitting MS model for {.pkg {coh} {s}}"))
+    
+    # Fit the transition-specific Cox model
+    cox_mod <- coxph(
+      Surv(Tstart, Tstop, status) ~ strata(trans) + cluster(subject_id),
+      data = msdata
     )
-    newdata_adj <- data.frame(
-      trans  = seq_len(max(msdata$trans)),
-      strata = seq_len(max(msdata$trans)),
-      age_group    = factor("60 to 69", levels = levels(msdata$age_group)),
-      sex    = factor("Female", levels = levels(msdata$sex)),
-      ses    = factor("5", levels = levels(msdata$ses))
-    )
     
-    msf_adj <- msfit(cox_mod_adj, newdata = newdata_adj, trans = tmat)
-    pt_adj  <- probtrans(msf_adj, predt = 0)
+    msf <- msfit(cox_mod, trans = tmat) 
+    pt_list <- probtrans(msf, predt = 0)
     
-    xp_adj <- pt_adj[[1]] |>
+    xp<- pt_list[[1]] |>
       as_tibble() |>
       select(time, pstate1, pstate2, pstate3) |>
       pivot_longer(starts_with("pstate"),
@@ -430,16 +476,18 @@ if(db_name == "GOLD" | db_name == "GOLD_100k"){
                        pstate1 = "Treated",
                        pstate2 = "Discontinued",
                        pstate3 = "Death"),
-        cohort_name = paste0(coh, "_", cou),
-        result_type = "mms_probabilities"
+        cohort_name = coh,
+        sex = s,
+        result_type = "msm_probabilities"
       ) |>
       arrange(time, state) |>
       filter(time <= 1830)
     ######
     
     sum_xp <- omopgenerics::transformToSummarisedResult(
-      x = xp_adj,
+      x = xp,
       group = c("cohort_name"),
+      strata = c("sex"),
       estimates = c("probability"),
       additional = c("time", "state"),
       settings = c("result_type")
@@ -447,45 +495,273 @@ if(db_name == "GOLD" | db_name == "GOLD_100k"){
       mutate(cdm_name = omopgenerics::cdmName(cdm))
     
     
-    msm_results_by_country[[paste0("msm_prob_",coh, "_", cou)]] <- sum_xp
+    msm_sex_results[[paste0("msm_prob_",coh, "_", s)]] <- sum_xp
     
-    # fit adjusted model
-      
-      # fit adjusted model
-      res_coef <- tryCatch({
-        cox_mod <- coxph(Surv(Tstart, Tstop, status) ~ age_group:strata(trans) + sex:strata(trans) + ses:strata(trans) + strata(trans) + cluster(subject_id), 
-                         data = msdata)
-        tidy(cox_mod) |>
-          select("variable_level" = "term", "coef" = "estimate", "se" = "std.error", "se_robust" = "robust.se") |>
-          mutate(
-            cohort_name = paste0(coh, "_", cou),
-            cdm_name = omopgenerics::cdmName(cdm),
-            variable_name = "Cox regression coefficients",
-            result_type = "cox_coefficients"
-          ) |>
-          omopgenerics::transformToSummarisedResult(
-            group = c("cohort_name"),
-            estimates = c("coef", "se", "se_robust"),
-            settings = c("result_type")
-          )
-      }, error = function(e) {
-        cli::cli_inform(c("x" = "Model failed to fit: {.var {e}}"))
-        NULL
-      })
-      
-      msm_results_by_country[[paste0("msm_coef_",coh, "_", cou)]] <- res_coef
-    } else {
-      cli::cli_inform(c(i = "Missing reference groups for {.pkg {coh} {cou}}. Skipped."))
     }
   }
 }
+
+# By SES
+msm_ses_results <- list()
+
+if(db_name == "GOLD" | db_name == "GOLD_100k") {
+  countries <- unique(x$country)
   
-  country_msm_results <- msm_results_by_country |>
-    purrr::compact() |>
-    omopgenerics::bind() |>
-    omopgenerics::newSummarisedResult()
-  
-  results[["msm_by_country"]] <- country_msm_results
-  
-  
+  for (coh in cohorts) {
+    for(cou in countries) {
+      if(cou == "Northern Ireland") {
+        sesq <- c("2", "3", "4", "5")
+      } else {
+        sesq <- c("1", "2", "3", "4", "5")
+      }
+      for(q in sesq){
+        msdata <- x |>
+          filter(cohort_name == coh,
+                 country == cou, 
+                 ses == q) 
+        
+        cli::cli_inform(c(i = "Fitting MS model for {.pkg {coh} {cou} {q}}"))
+        
+        # Fit the transition-specific Cox model
+        cox_mod <- coxph(
+          Surv(Tstart, Tstop, status) ~ strata(trans) + cluster(subject_id),
+          data = msdata
+        )
+        
+        msf <- msfit(cox_mod, trans = tmat) 
+        pt_list <- probtrans(msf, predt = 0)
+        
+        xp<- pt_list[[1]] |>
+          as_tibble() |>
+          select(time, pstate1, pstate2, pstate3) |>
+          pivot_longer(starts_with("pstate"),
+                       names_to = "state",
+                       values_to = "probability") |>
+          mutate(
+            state = recode(state,
+                           pstate1 = "Treated",
+                           pstate2 = "Discontinued",
+                           pstate3 = "Death"),
+            cohort_name = coh,
+            country = cou,
+            ses = q,
+            result_type = "msm_probabilities"
+          ) |>
+          arrange(time, state) |>
+          filter(time <= 1830)
+        ######
+        
+        sum_xp <- omopgenerics::transformToSummarisedResult(
+          x = xp,
+          group = c("cohort_name"),
+          strata = c("country", "ses"),
+          estimates = c("probability"),
+          additional = c("time", "state"),
+          settings = c("result_type")
+        ) |>
+          mutate(cdm_name = omopgenerics::cdmName(cdm))
+        
+        
+        msm_ses_results[[paste0("msm_prob_", coh, "_", cou, "_", q)]] <- sum_xp
+        
+      }
+    }
+  }
+} else {
+  for (coh in cohorts) {
+    for(q in sesq){
+      msdata <- x |>
+        filter(cohort_name == coh,
+               ses == q) 
+      
+      cli::cli_inform(c(i = "Fitting MS model for {.pkg {coh} {q}}"))
+      
+      # Fit the transition-specific Cox model
+      cox_mod <- coxph(
+        Surv(Tstart, Tstop, status) ~ strata(trans) + cluster(subject_id),
+        data = msdata
+      )
+      
+      msf <- msfit(cox_mod, trans = tmat) 
+      pt_list <- probtrans(msf, predt = 0)
+      
+      xp<- pt_list[[1]] |>
+        as_tibble() |>
+        select(time, pstate1, pstate2, pstate3) |>
+        pivot_longer(starts_with("pstate"),
+                     names_to = "state",
+                     values_to = "probability") |>
+        mutate(
+          state = recode(state,
+                         pstate1 = "Treated",
+                         pstate2 = "Discontinued",
+                         pstate3 = "Death"),
+          cohort_name = coh,
+          ses = q,
+          result_type = "msm_probabilities"
+        ) |>
+        arrange(time, state) |>
+        filter(time <= 1830)
+      ######
+      
+      sum_xp <- omopgenerics::transformToSummarisedResult(
+        x = xp,
+        group = c("cohort_name"),
+        strata = c("ses"),
+        estimates = c("probability"),
+        additional = c("time", "state"),
+        settings = c("result_type")
+      ) |>
+        mutate(cdm_name = omopgenerics::cdmName(cdm))
+      
+      
+      msm_ses_results[[paste0("msm_prob_",coh, "_", q)]] <- sum_xp
+      
+    }
+  }
 }
+
+# By age_group
+msm_age_results <- list()
+
+if(db_name == "GOLD" | db_name == "GOLD_100k") {
+  countries <- unique(x$country)
+  
+  for (coh in cohorts) {
+    for(cou in countries) {
+      for(age in age_groups){
+        msdata <- x |>
+          filter(cohort_name == coh,
+                 country == cou, 
+                 age_group == age) 
+        
+        cli::cli_inform(c(i = "Fitting MS model for {.pkg {coh} {cou} {age}}"))
+        
+        # Fit the transition-specific Cox model
+        cox_mod <- coxph(
+          Surv(Tstart, Tstop, status) ~ strata(trans) + cluster(subject_id),
+          data = msdata
+        )
+        
+        msf <- msfit(cox_mod, trans = tmat) 
+        pt_list <- probtrans(msf, predt = 0)
+        
+        xp<- pt_list[[1]] |>
+          as_tibble() |>
+          select(time, pstate1, pstate2, pstate3) |>
+          pivot_longer(starts_with("pstate"),
+                       names_to = "state",
+                       values_to = "probability") |>
+          mutate(
+            state = recode(state,
+                           pstate1 = "Treated",
+                           pstate2 = "Discontinued",
+                           pstate3 = "Death"),
+            cohort_name = coh,
+            country = cou,
+            age_group = age,
+            result_type = "msm_probabilities"
+          ) |>
+          arrange(time, state) |>
+          filter(time <= 1830)
+        ######
+        
+        sum_xp <- omopgenerics::transformToSummarisedResult(
+          x = xp,
+          group = c("cohort_name"),
+          strata = c("country", "age_group"),
+          estimates = c("probability"),
+          additional = c("time", "state"),
+          settings = c("result_type")
+        ) |>
+          mutate(cdm_name = omopgenerics::cdmName(cdm))
+        
+        
+        msm_age_results[[paste0("msm_prob_", coh, "_", cou, "_", age)]] <- sum_xp
+        
+      }
+    }
+  }
+} else {
+  for (coh in cohorts) {
+    for(age in age_groups){
+      msdata <- x |>
+        filter(cohort_name == coh,
+               age_group == age) 
+      
+      cli::cli_inform(c(i = "Fitting MS model for {.pkg {coh} {age}}"))
+      
+      # Fit the transition-specific Cox model
+      cox_mod <- coxph(
+        Surv(Tstart, Tstop, status) ~ strata(trans) + cluster(subject_id),
+        data = msdata
+      )
+      
+      msf <- msfit(cox_mod, trans = tmat) 
+      pt_list <- probtrans(msf, predt = 0)
+      
+      xp<- pt_list[[1]] |>
+        as_tibble() |>
+        select(time, pstate1, pstate2, pstate3) |>
+        pivot_longer(starts_with("pstate"),
+                     names_to = "state",
+                     values_to = "probability") |>
+        mutate(
+          state = recode(state,
+                         pstate1 = "Treated",
+                         pstate2 = "Discontinued",
+                         pstate3 = "Death"),
+          cohort_name = coh,
+          age_group = age,
+          result_type = "msm_probabilities"
+        ) |>
+        arrange(time, state) |>
+        filter(time <= 1830)
+      ######
+      
+      sum_xp <- omopgenerics::transformToSummarisedResult(
+        x = xp,
+        group = c("cohort_name"),
+        strata = c("age_group"),
+        estimates = c("probability"),
+        additional = c("time", "state"),
+        settings = c("result_type")
+      ) |>
+        mutate(cdm_name = omopgenerics::cdmName(cdm))
+      
+      
+      msm_age_results[[paste0("msm_prob_",coh, "_", age)]] <- sum_xp
+      
+    }
+  }
+}
+
+overall_msm_results <- msm_overall_results |>
+  purrr::compact() |>
+  omopgenerics::bind() |>
+  omopgenerics::newSummarisedResult()
+
+results[["msm_overall"]] <- overall_msm_results
+
+sex_msm_results <- msm_sex_results |>
+  purrr::compact() |>
+  omopgenerics::bind() |>
+  omopgenerics::newSummarisedResult()
+
+results[["msm_sex"]] <- sex_msm_results
+
+ses_msm_results <- msm_ses_results |>
+  purrr::compact() |>
+  omopgenerics::bind() |>
+  omopgenerics::newSummarisedResult()
+
+results[["msm_ses"]] <- ses_msm_results
+
+age_msm_results <- msm_age_results |>
+  purrr::compact() |>
+  omopgenerics::bind() |>
+  omopgenerics::newSummarisedResult()
+
+results[["msm_age"]] <- age_msm_results
+
+
