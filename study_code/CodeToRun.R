@@ -68,7 +68,8 @@ cdm <- CDMConnector::cdmFromCon(
   cdmSchema = cdm_schema,
   writeSchema = write_schema,
   cdmName = db_name,
-  writePrefix = study_prefix
+  writePrefix = study_prefix,
+  achillesSchema = write_schema
 )
 
 
