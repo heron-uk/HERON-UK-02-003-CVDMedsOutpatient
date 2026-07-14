@@ -150,10 +150,10 @@ char <- summariseCharacteristics(cdm$study_chars,
                                           c(-28, 28)
                                         )
                                       ),
-                                      "Prior comorbidities (-Inf, -1)" = list(
+                                      "Prior comorbidities (-Inf, 0)" = list(
                                         targetCohortTable = "comorbs",
                                         window = list(
-                                          c(-Inf, -1)
+                                          c(-Inf, 0)
                                         )
                                       ) 
                                       ),

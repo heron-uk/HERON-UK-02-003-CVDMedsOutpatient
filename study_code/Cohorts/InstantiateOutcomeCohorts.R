@@ -6,11 +6,6 @@ acute_mi_cl <- CodelistGenerator::importCodelist(
   type = "csv"
 )
 
-acute_mi_cl <- acute_mi_cl |>
-  addConcepts(cdm = cdm,
-              concepts = c(4198141, 4121477, 4119953, 4096808, 4108220),
-              codelistName = "acute_mi")
-
 cdm$acute_mi <- conceptCohort(
   cdm = cdm,
   conceptSet = acute_mi_cl,
